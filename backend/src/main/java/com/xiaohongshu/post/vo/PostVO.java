@@ -87,6 +87,11 @@ public class PostVO implements Serializable {
     private Integer collectCount;
 
     /**
+     * 当前登录用户是否已点赞（未登录时为false）
+     */
+    private Boolean liked;
+
+    /**
      * 状态
      */
     private Integer status;

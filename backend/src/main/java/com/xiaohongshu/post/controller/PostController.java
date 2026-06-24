@@ -74,8 +74,18 @@ public class PostController {
      * 分页查询笔记列表
      */
     @GetMapping("/list")
-    public Result<IPage<PostVO>> getPostPage(@Valid PostQueryDTO queryDTO) {
-        IPage<PostVO> page = postService.getPostPage(queryDTO);
+    public Result<IPage<PostVO>> getPostPage(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @Valid PostQueryDTO queryDTO) {
+        Long userId = null;
+        if (token != null) {
+            try {
+                userId = jwtUtil.getUserIdFromToken(token);
+            } catch (Exception ignored) {
+                // token无效时当作未登录处理
+            }
+        }
+        IPage<PostVO> page = postService.getPostPage(queryDTO, userId);
         return Result.success(page);
     }
 

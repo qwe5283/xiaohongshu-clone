@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xiaohongshu.common.exception.BusinessException;
 import com.xiaohongshu.common.result.ResultCode;
+import com.xiaohongshu.interact.entity.UserAction;
+import com.xiaohongshu.interact.mapper.UserActionMapper;
 import com.xiaohongshu.post.dto.PostCreateDTO;
 import com.xiaohongshu.post.dto.PostQueryDTO;
 import com.xiaohongshu.post.dto.PostUpdateDTO;
@@ -42,6 +44,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     private final PostImageService postImageService;
     private final UserService userService;
+    // 直接注入 Mapper 查点赞状态，避免 PostService ↔ UserActionService 循环依赖
+    private final UserActionMapper userActionMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -205,6 +209,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     @Override
     public IPage<PostVO> getPostPage(PostQueryDTO queryDTO) {
+        return getPostPage(queryDTO, null);
+    }
+
+    @Override
+    public IPage<PostVO> getPostPage(PostQueryDTO queryDTO, Long userId) {
         // 构建查询条件
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
 
@@ -239,6 +248,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
         // 转换为VO
         IPage<PostVO> voPage = postPage.convert(this::convertToPostVO);
+
+        // 批量填充当前用户的点赞状态
+        if (userId != null && !voPage.getRecords().isEmpty()) {
+            fillLikedStatus(userId, voPage.getRecords());
+        }
 
         return voPage;
     }
@@ -277,6 +291,28 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 .collect(Collectors.toList());
 
         return result;
+    }
+
+    /**
+     * 批量填充笔记列表的点赞状态
+     */
+    private void fillLikedStatus(Long userId, List<PostVO> posts) {
+        try {
+            List<Long> postIds = posts.stream().map(PostVO::getId).collect(Collectors.toList());
+            // 直接查 user_action 表，避免循环依赖
+            List<UserAction> likedActions = userActionMapper.selectList(
+                    new LambdaQueryWrapper<UserAction>()
+                            .eq(UserAction::getUserId, userId)
+                            .eq(UserAction::getTargetType, 1)   // 笔记
+                            .eq(UserAction::getActionType, 1)   // 点赞
+                            .in(UserAction::getTargetId, postIds));
+            java.util.Set<Long> likedPostIds = likedActions.stream()
+                    .map(UserAction::getTargetId)
+                    .collect(Collectors.toSet());
+            posts.forEach(post -> post.setLiked(likedPostIds.contains(post.getId())));
+        } catch (Exception e) {
+            log.warn("批量获取点赞状态失败：{}", e.getMessage());
+        }
     }
 
     /**

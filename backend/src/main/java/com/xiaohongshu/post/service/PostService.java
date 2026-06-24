@@ -58,6 +58,15 @@ public interface PostService extends IService<Post> {
     IPage<PostVO> getPostPage(PostQueryDTO queryDTO);
 
     /**
+     * 分页查询笔记列表（填充当前用户的点赞状态）
+     *
+     * @param queryDTO 查询条件
+     * @param userId   当前登录用户ID（可为null，未登录时不填充）
+     * @return 分页结果
+     */
+    IPage<PostVO> getPostPage(PostQueryDTO queryDTO, Long userId);
+
+    /**
      * 获取用户的笔记列表
      *
      * @param userId   用户ID
