@@ -4,7 +4,7 @@ import SearchBar from './SearchBar.vue'
 import CategoryTabs from './CategoryTabs.vue'
 import PostCard from '../post/PostCard.vue'
 
-const emit = defineEmits(['openPost'])
+const emit = defineEmits(['openPost', 'openProfile'])
 
 const activeCategory = ref('推荐')
 
@@ -88,6 +88,7 @@ const handlePostClick = (postId) => {
           :key="post.id"
           :post="post"
           @click="handlePostClick(post.id)"
+          @open-profile="emit('openProfile')"
         />
       </div>
     </section>

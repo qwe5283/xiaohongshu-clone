@@ -8,7 +8,14 @@ import notifyIcon from '../../assets/icons/notify.svg?raw'
 import moreIcon from '../../assets/icons/more.svg?raw'
 import aboutIcon from '../../assets/icons/about.svg?raw'
 
-const emit = defineEmits(['login'])
+const props = defineProps({
+  currentPage: {
+    type: String,
+    default: 'home'
+  }
+})
+
+const emit = defineEmits(['login', 'navigate-home', 'navigate-profile'])
 
 const activeMenu = ref('home')
 
@@ -19,7 +26,7 @@ const menuItems = [
   { key: 'notify', label: '通知', icon: notifyIcon }
 ]
 
-const isLoggedIn = ref(false)
+const isLoggedIn = ref(true)
 const userInfo = ref({
   avatar: 'https://picsum.photos/id/1005/100/100',
   nickname: '我'
@@ -27,6 +34,9 @@ const userInfo = ref({
 
 const setActiveMenu = (key) => {
   activeMenu.value = key
+  if (key === 'home') {
+    emit('navigate-home')
+  }
 }
 </script>
 
@@ -51,7 +61,10 @@ const setActiveMenu = (key) => {
       </li>
 
       <!-- 登录后显示用户头像 -->
-      <li v-if="isLoggedIn" class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-gray-100">
+      <li v-if="isLoggedIn"
+        class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-gray-100"
+        :class="{ 'bg-gray-100 font-bold text-primary': props.currentPage === 'profile' }"
+        @click="emit('navigate-profile')">
         <span class="mr-3 flex items-center justify-center size-6">
           <img class="size-[22px] rounded-full" :src="userInfo.avatar" />
         </span>

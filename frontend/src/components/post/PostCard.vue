@@ -8,6 +8,8 @@ const props = defineProps({
   }
 })
 
+const emit = defineEmits(['openProfile'])
+
 const formatLikeCount = (count) => {
   if (count >= 10000) {
     return (count / 10000).toFixed(1) + '万'
@@ -38,7 +40,7 @@ const formatLikeCount = (count) => {
 
     <!-- 底部信息 -->
     <div class="flex justify-between items-center text-xs text-gray-500 px-3 pb-3">
-      <div class="flex items-center gap-1.5">
+      <div class="flex items-center gap-1.5 cursor-pointer hover:underline" @click.stop="emit('openProfile')">
         <img :src="post.author.avatar" class="size-5 rounded-full object-cover" />
         <span>{{ post.author.nickname }}</span>
       </div>
