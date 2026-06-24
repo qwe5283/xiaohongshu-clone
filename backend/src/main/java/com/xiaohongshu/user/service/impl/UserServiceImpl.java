@@ -5,10 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xiaohongshu.common.exception.BusinessException;
 import com.xiaohongshu.common.result.ResultCode;
-import com.xiaohongshu.post.entity.Post;
-import com.xiaohongshu.post.mapper.PostMapper;
-import com.xiaohongshu.social.entity.UserFollow;
-import com.xiaohongshu.social.mapper.UserFollowMapper;
 import com.xiaohongshu.user.dto.UserLoginDTO;
 import com.xiaohongshu.user.dto.UserRegisterDTO;
 import com.xiaohongshu.user.dto.UserUpdateDTO;
@@ -24,8 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 /**
  * 用户服务实现类
  */
@@ -36,10 +30,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-
-    // 直接注入 Mapper 查社交统计，避免 UserService ↔ FollowService/PostService 循环依赖
-    private final UserFollowMapper userFollowMapper;
-    private final PostMapper postMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -165,43 +155,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserVO userVO = new UserVO();
         BeanUtil.copyProperties(user, userVO);
 
-        // 填充社交统计（直接查 Mapper，避免循环依赖）
-        try {
-            Long userId = user.getId();
+        // 将实体中的社交统计字段映射到VO（字段名不同，需显式赋值）
+        long followingCount = user.getFollowingCount() != null ? user.getFollowingCount() : 0;
+        long fansCount = user.getFansCount() != null ? user.getFansCount() : 0;
+        long likeCount = user.getLikedCount() != null ? user.getLikedCount() : 0;
+        long collectCount = user.getCollectedCount() != null ? user.getCollectedCount() : 0;
 
-            // 关注数：该用户关注了多少人
-            Long followingCount = userFollowMapper.selectCount(
-                new LambdaQueryWrapper<UserFollow>().eq(UserFollow::getUserId, userId)
-            );
-            userVO.setFollowingCount(followingCount);
-
-            // 粉丝数：该用户被多少人关注
-            Long followersCount = userFollowMapper.selectCount(
-                new LambdaQueryWrapper<UserFollow>().eq(UserFollow::getFollowUserId, userId)
-            );
-            userVO.setFollowersCount(followersCount);
-
-            // 获赞数与收藏数：该用户所有笔记的 like_count 和 collect_count 之和
-            // Post 有 @TableLogic，selectList 会自动过滤已删除的帖子
-            List<Post> userPosts = postMapper.selectList(
-                new LambdaQueryWrapper<Post>()
-                    .eq(Post::getUserId, userId)
-                    .select(Post::getLikeCount, Post::getCollectCount)
-            );
-            long likeCount = userPosts.stream()
-                .mapToLong(p -> p.getLikeCount() != null ? p.getLikeCount() : 0)
-                .sum();
-            long collectCount = userPosts.stream()
-                .mapToLong(p -> p.getCollectCount() != null ? p.getCollectCount() : 0)
-                .sum();
-            userVO.setLikeCount(likeCount);
-            userVO.setCollectCount(collectCount);
-            // 保留合并字段，兼容前端已有的展示
-            userVO.setLikeAndCollectCount(likeCount + collectCount);
-        } catch (Exception e) {
-            log.warn("获取用户社交统计失败：{}", e.getMessage());
-            // 降级处理：统计字段保持 null
-        }
+        userVO.setFollowingCount(followingCount);
+        userVO.setFollowersCount(fansCount);
+        userVO.setLikeCount(likeCount);
+        userVO.setCollectCount(collectCount);
+        userVO.setLikeAndCollectCount(likeCount + collectCount);
 
         return userVO;
     }

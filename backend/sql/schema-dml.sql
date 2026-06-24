@@ -9,18 +9,18 @@ USE xiaohongshu;
 -- ==================== 插入测试用户 ====================
 -- 密码均为: 123456 (BCrypt加密)
 -- 生成方式: new BCryptPasswordEncoder().encode("123456")
-INSERT INTO `sys_user` (`username`, `password`, `nickname`, `avatar`, `gender`, `phone`, `email`, `bio`) VALUES
-('admin',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '管理员',       'https://picsum.photos/id/1005/100/100', 1, '13800138000', 'admin@xiaohongshu.com',   '系统管理员，负责社区运营'),
-('user1',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '小红书用户1',   'https://picsum.photos/id/1012/100/100', 2, '13800138001', 'user1@example.com',      '热爱生活，热爱分享，每天记录美好瞬间'),
-('user2',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '小红书用户2',   'https://picsum.photos/id/1025/100/100', 1, '13800138002', 'user2@example.com',      '美食博主，分享各种美食做法'),
-('user3',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '旅行达人小王',  'https://picsum.photos/id/1027/100/100', 1, '13800138003', 'user3@example.com',      '环球旅行爱好者，用脚步丈量世界'),
-('user4',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '时尚博主Lily', 'https://picsum.photos/id/1011/100/100', 2, '13800138004', 'user4@example.com',      '时尚穿搭分享，做最闪亮的自己'),
-('user5',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '程序员小张',   'https://picsum.photos/id/1006/100/100', 1, '13800138005', 'user5@example.com',      '全栈开发者，分享技术干货'),
-('user6',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '健身教练Jack', 'https://picsum.photos/id/1074/100/100', 1, '13800138006', 'user6@example.com',      '专业健身教练，带你科学健身'),
-('user7',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '摄影爱好者',   'https://picsum.photos/id/1036/100/100', 2, '13800138007', 'user7@example.com',      '用镜头捕捉生活中的美好'),
-('user8',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '读书会小美',   'https://picsum.photos/id/1062/100/100', 2, '13800138008', 'user8@example.com',      '读书使人明智，分享读书心得'),
-('user9',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '宠物达人',     'https://picsum.photos/id/1024/100/100', 2, '13800138009', 'user9@example.com',      '家有三只猫，分享养宠日常'),
-('user10',   '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '音乐人小李',   'https://picsum.photos/id/1040/100/100', 1, '13800138010', 'user10@example.com',     '独立音乐人，用音乐表达情感');
+INSERT INTO `sys_user` (`username`, `password`, `nickname`, `avatar`, `gender`, `phone`, `email`, `bio`, `following_count`, `fans_count`, `liked_count`, `collected_count`) VALUES
+('admin',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '管理员',       'https://picsum.photos/id/1005/100/100', 1, '13800138000', 'admin@xiaohongshu.com',   '系统管理员，负责社区运营',            4,  10, 500,  200),
+('user1',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '小红书用户1',   'https://picsum.photos/id/1012/100/100', 2, '13800138001', 'user1@example.com',      '热爱生活，热爱分享，每天记录美好瞬间',  9,  10, 1450, 630),
+('user2',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '小红书用户2',   'https://picsum.photos/id/1025/100/100', 1, '13800138002', 'user2@example.com',      '美食博主，分享各种美食做法',            4,  6,  6850, 3250),
+('user3',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '旅行达人小王',  'https://picsum.photos/id/1027/100/100', 1, '13800138003', 'user3@example.com',      '环球旅行爱好者，用脚步丈量世界',         5,  7,  9000, 4230),
+('user4',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '时尚博主Lily', 'https://picsum.photos/id/1011/100/100', 2, '13800138004', 'user4@example.com',      '时尚穿搭分享，做最闪亮的自己',          5,  6,  2080, 970),
+('user5',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '程序员小张',   'https://picsum.photos/id/1006/100/100', 1, '13800138005', 'user5@example.com',      '全栈开发者，分享技术干货',              5,  7,  2720, 1250),
+('user6',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '健身教练Jack', 'https://picsum.photos/id/1074/100/100', 1, '13800138006', 'user6@example.com',      '专业健身教练，带你科学健身',             5,  6,  5800, 2690),
+('user7',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '摄影爱好者',   'https://picsum.photos/id/1036/100/100', 2, '13800138007', 'user7@example.com',      '用镜头捕捉生活中的美好',               4,  5,  1680, 690),
+('user8',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '读书会小美',   'https://picsum.photos/id/1062/100/100', 2, '13800138008', 'user8@example.com',      '读书使人明智，分享读书心得',             4,  5,  1870, 830),
+('user9',    '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '宠物达人',     'https://picsum.photos/id/1024/100/100', 2, '13800138009', 'user9@example.com',      '家有三只猫，分享养宠日常',              4,  5,  2800, 1230),
+('user10',   '$2a$10$.c3kAZ1MFSmMQfe0RlA9rOnxWrIX7N/CTFirwmf4/OTAu.n5XTuum', '音乐人小李',   'https://picsum.photos/id/1040/100/100', 1, '13800138010', 'user10@example.com',     '独立音乐人，用音乐表达情感',            3,  4,  2150, 920);
 
 -- ==================== 插入测试笔记 ====================
 -- 图文笔记 (type=0)
@@ -74,7 +74,7 @@ INSERT INTO `post` (`user_id`, `title`, `content`, `type`, `cover_image`, `video
 -- 视频笔记 (type=1)
 (3, '5分钟学会做红烧肉',        '超详细的红烧肉做法，保证一学就会！', 1, 'https://picsum.photos/id/1080/400/500', 'https://example.com/videos/hongshaorou.mp4', 8500, 3200, 350, 1500, 1),
 (4, '东京街头漫步Vlog',         '带你逛逛东京的街头，感受日本文化。', 1, 'https://picsum.photos/id/1040/400/500', 'https://example.com/videos/tokyo-vlog.mp4', 6800, 2600, 280, 1200, 1),
-(7, '10分钟HIIT燃脂训练',       '高效燃脂训练，每天10分钟，轻松减脂！', 1, 'https://picsum.photos/id/1074/400/500', 'https://example.com/videos/hiit-training.mp4', 7200, 2800, 300, 1350, 1);
+(7, '10分钟HIIT燃脂训练',       '高效燃脂训练，每天10分钟，轻松减脂！', 1, 'https://picsum.photos/id/1074/400/500', 'https://media.w3.org/2010/05/sintel/trailer.mp4', 7200, 2800, 300, 1350, 1);
 
 -- ==================== 插入测试图片 ====================
 -- 每篇笔记插入多张图片
@@ -586,39 +586,28 @@ INSERT INTO `user_action` (`user_id`, `target_id`, `target_type`, `action_type`)
 INSERT INTO `user_follow` (`user_id`, `follow_user_id`) VALUES
 -- admin 被所有人关注
 (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (11, 1),
-
 -- admin 关注一些人
 (1, 2), (1, 3), (1, 4), (1, 5),
-
 -- user1 的关注关系
 (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (2, 10), (2, 11),
-
 -- user2 的关注关系
-(3, 1), (3, 2), (3, 4), (3, 5), (3, 6),
-
+(3, 2), (3, 4), (3, 5), (3, 6),
 -- user3 的关注关系
-(4, 1), (4, 2), (4, 3), (4, 5), (4, 7), (4, 8),
-
+(4, 2), (4, 3), (4, 5), (4, 7), (4, 8),
 -- user4 的关注关系
-(5, 1), (5, 2), (5, 3), (5, 4), (5, 6), (5, 9),
-
+(5, 2), (5, 3), (5, 4), (5, 6), (5, 9),
 -- user5 的关注关系
-(6, 1), (6, 2), (6, 3), (6, 5), (6, 7), (6, 10),
-
+(6, 2), (6, 3), (6, 5), (6, 7), (6, 10),
 -- user6 的关注关系
-(7, 1), (7, 2), (7, 4), (7, 6), (7, 8), (7, 11),
-
+(7, 2), (7, 4), (7, 6), (7, 8), (7, 11),
 -- user7 的关注关系
-(8, 1), (8, 2), (8, 4), (8, 7), (8, 9),
-
+(8, 2), (8, 4), (8, 7), (8, 9),
 -- user8 的关注关系
-(9, 1), (9, 2), (9, 5), (9, 8), (9, 10),
-
+(9, 2), (9, 5), (9, 8), (9, 10),
 -- user9 的关注关系
-(10, 1), (10, 2), (10, 6), (10, 9), (10, 11),
-
+(10, 2), (10, 6), (10, 9), (10, 11),
 -- user10 的关注关系
-(11, 1), (11, 2), (11, 7), (11, 10);
+(11, 2), (11, 7), (11, 10);
 
 -- ==================== 数据统计验证 ====================
 -- 以下查询可用于验证数据插入是否正确

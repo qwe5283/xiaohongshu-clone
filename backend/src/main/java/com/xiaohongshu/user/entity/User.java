@@ -62,6 +62,26 @@ public class User implements Serializable {
     private String bio;
 
     /**
+     * 关注数
+     */
+    private Integer followingCount;
+
+    /**
+     * 粉丝数
+     */
+    private Integer fansCount;
+
+    /**
+     * 获赞数
+     */
+    private Integer likedCount;
+
+    /**
+     * 获藏数
+     */
+    private Integer collectedCount;
+
+    /**
      * 状态：0-禁用，1-正常
      */
     private Integer status;

@@ -14,6 +14,8 @@ import com.xiaohongshu.post.entity.Post;
 import com.xiaohongshu.post.service.PostService;
 import com.xiaohongshu.interact.entity.Comment;
 import com.xiaohongshu.interact.service.CommentService;
+import com.xiaohongshu.user.entity.User;
+import com.xiaohongshu.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,7 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
 
     private final PostService postService;
     private final CommentService commentService;
+    private final UserService userService;
 
     /**
      * 目标类型：笔记
@@ -60,15 +63,27 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
             throw new BusinessException(ResultCode.POST_NOT_FOUND);
         }
 
+        Long postAuthorId = post.getUserId();
+
         return toggleAction(userId, postId, TARGET_TYPE_POST, ACTION_TYPE_LIKE,
-                // 点赞数+1
-                () -> postService.update(new LambdaUpdateWrapper<Post>()
-                        .eq(Post::getId, postId)
-                        .setSql("like_count = like_count + 1")),
-                // 点赞数-1
-                () -> postService.update(new LambdaUpdateWrapper<Post>()
-                        .eq(Post::getId, postId)
-                        .setSql("like_count = like_count - 1")));
+                // 点赞数+1，同时更新笔记作者的获赞数
+                () -> {
+                    postService.update(new LambdaUpdateWrapper<Post>()
+                            .eq(Post::getId, postId)
+                            .setSql("like_count = like_count + 1"));
+                    userService.update(new LambdaUpdateWrapper<User>()
+                            .eq(User::getId, postAuthorId)
+                            .setSql("liked_count = liked_count + 1"));
+                },
+                // 点赞数-1，同时更新笔记作者的获赞数
+                () -> {
+                    postService.update(new LambdaUpdateWrapper<Post>()
+                            .eq(Post::getId, postId)
+                            .setSql("like_count = like_count - 1"));
+                    userService.update(new LambdaUpdateWrapper<User>()
+                            .eq(User::getId, postAuthorId)
+                            .setSql("liked_count = liked_count - 1"));
+                });
     }
 
     @Override
@@ -100,15 +115,27 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
             throw new BusinessException(ResultCode.POST_NOT_FOUND);
         }
 
+        Long postAuthorId = post.getUserId();
+
         return toggleAction(userId, postId, TARGET_TYPE_POST, ACTION_TYPE_COLLECT,
-                // 收藏数+1
-                () -> postService.update(new LambdaUpdateWrapper<Post>()
-                        .eq(Post::getId, postId)
-                        .setSql("collect_count = collect_count + 1")),
-                // 收藏数-1
-                () -> postService.update(new LambdaUpdateWrapper<Post>()
-                        .eq(Post::getId, postId)
-                        .setSql("collect_count = collect_count - 1")));
+                // 收藏数+1，同时更新笔记作者的获藏数
+                () -> {
+                    postService.update(new LambdaUpdateWrapper<Post>()
+                            .eq(Post::getId, postId)
+                            .setSql("collect_count = collect_count + 1"));
+                    userService.update(new LambdaUpdateWrapper<User>()
+                            .eq(User::getId, postAuthorId)
+                            .setSql("collected_count = collected_count + 1"));
+                },
+                // 收藏数-1，同时更新笔记作者的获藏数
+                () -> {
+                    postService.update(new LambdaUpdateWrapper<Post>()
+                            .eq(Post::getId, postId)
+                            .setSql("collect_count = collect_count - 1"));
+                    userService.update(new LambdaUpdateWrapper<User>()
+                            .eq(User::getId, postAuthorId)
+                            .setSql("collected_count = collected_count - 1"));
+                });
     }
 
     @Override

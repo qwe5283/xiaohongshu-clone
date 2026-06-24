@@ -21,6 +21,8 @@
 
 ## 1. 用户模块
 
+> **社交统计字段说明**: 用户信息中的 `followingCount`（关注数）、`followersCount`（粉丝数）、`likeCount`（获赞数）、`collectCount`（获藏数）存储在 `sys_user` 表中，在关注/取消关注、点赞/取消点赞、收藏/取消收藏操作时自动维护，无需实时计算。
+
 ### 1.1 用户注册
 
 - **URL**: `POST /api/user/register`

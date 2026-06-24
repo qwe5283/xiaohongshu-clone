@@ -52,6 +52,15 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
         if (existing != null) {
             // 已关注，取消关注
             removeById(existing.getId());
+
+            // 更新用户的关注数和粉丝数
+            userService.update(new LambdaUpdateWrapper<User>()
+                    .eq(User::getId, userId)
+                    .setSql("following_count = following_count - 1"));
+            userService.update(new LambdaUpdateWrapper<User>()
+                    .eq(User::getId, followUserId)
+                    .setSql("fans_count = fans_count - 1"));
+
             log.info("取消关注成功，用户ID：{}，被关注用户ID：{}", userId, followUserId);
             return false;
         } else {
@@ -60,6 +69,15 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
             follow.setUserId(userId);
             follow.setFollowUserId(followUserId);
             save(follow);
+
+            // 更新用户的关注数和粉丝数
+            userService.update(new LambdaUpdateWrapper<User>()
+                    .eq(User::getId, userId)
+                    .setSql("following_count = following_count + 1"));
+            userService.update(new LambdaUpdateWrapper<User>()
+                    .eq(User::getId, followUserId)
+                    .setSql("fans_count = fans_count + 1"));
+
             log.info("关注成功，用户ID：{}，被关注用户ID：{}", userId, followUserId);
             return true;
         }
