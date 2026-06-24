@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
 import logo from '../../assets/logo.png'
 import homeIcon from '../../assets/icons/home.svg?raw'
 import exploreIcon from '../../assets/icons/explore.svg?raw'
@@ -7,6 +7,8 @@ import publishIcon from '../../assets/icons/publish.svg?raw'
 import notifyIcon from '../../assets/icons/notify.svg?raw'
 import moreIcon from '../../assets/icons/more.svg?raw'
 import aboutIcon from '../../assets/icons/about.svg?raw'
+import { useUserStore } from '@/stores/user'
+import { showToast } from '@/utils/toast'
 
 const props = defineProps({
   currentPage: {
@@ -17,7 +19,17 @@ const props = defineProps({
 
 const emit = defineEmits(['login', 'navigate-home', 'navigate-profile'])
 
-const activeMenu = ref('home')
+const userStore = useUserStore()
+
+// 登录态从 store 派生，刷新后由 App.vue 调 /me 恢复
+const isLoggedIn = computed(() => userStore.isLoggedIn)
+const userInfo = computed(() => userStore.userInfo)
+
+// 默认头像：后端用户若无头像，用内置 SVG 兜底
+const defaultAvatar =
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%23eee"/><text x="50%" y="55%" text-anchor="middle" font-size="18" fill="%23bbb">U</text></svg>'
+const avatarUrl = computed(() => userInfo.value?.avatar || defaultAvatar)
+const nickname = computed(() => userInfo.value?.nickname || '我')
 
 const menuItems = [
   { key: 'home', label: '首页', icon: homeIcon },
@@ -26,15 +38,24 @@ const menuItems = [
   { key: 'notify', label: '通知', icon: notifyIcon }
 ]
 
-const isLoggedIn = ref(true)
-const userInfo = ref({
-  avatar: 'https://picsum.photos/id/1005/100/100',
-  nickname: '我'
+// 当前激活菜单：以路由 name 为准，保证刷新/直接访问 URL 时高亮正确
+const activeMenu = computed(() => {
+  if (props.currentPage === 'profile') return 'profile'
+  if (props.currentPage === 'home') return 'home'
+  return props.currentPage || 'home'
 })
 
 const setActiveMenu = (key) => {
-  activeMenu.value = key
   if (key === 'home') {
+    emit('navigate-home')
+  }
+}
+
+const handleLogout = () => {
+  userStore.logout()
+  showToast('已退出登录', 'info')
+  // 退出后若停在需要登录的页面，回首页
+  if (props.currentPage === 'profile') {
     emit('navigate-home')
   }
 }
@@ -66,9 +87,9 @@ const setActiveMenu = (key) => {
         :class="{ 'bg-gray-100 font-bold text-primary': props.currentPage === 'profile' }"
         @click="emit('navigate-profile')">
         <span class="mr-3 flex items-center justify-center size-6">
-          <img class="size-[22px] rounded-full" :src="userInfo.avatar" />
+          <img class="size-[22px] rounded-full object-cover" :src="avatarUrl" />
         </span>
-        {{ userInfo.nickname }}
+        {{ nickname }}
       </li>
 
       <!-- 登录按钮 -->
@@ -77,6 +98,13 @@ const setActiveMenu = (key) => {
 
     <!-- 底部菜单 -->
     <ul class="list-none">
+      <!-- 退出登录：仅登录态显示 -->
+      <li v-if="isLoggedIn"
+        class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-gray-100"
+        @click="handleLogout">
+        <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-[22px]" v-html="moreIcon"></span>
+        退出登录
+      </li>
       <li class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-gray-100">
         <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-[22px]" v-html="moreIcon"></span>
         更多

@@ -104,7 +104,15 @@ const handleComment = () => {
                   <span v-if="comment.author.isAuthor" class="bg-[#fee] text-red-500 px-1 py-0.5 rounded text-[10px]">作者</span>
                 </span>
               </div>
-              <div class="text-sm ml-8">{{ comment.content }}</div>
+              <div class="text-sm ml-8">
+                {{ comment.content }}<br>
+                <div class="flex items-center gap-2 mb-1.5">
+                  <span class="text-xs text-gray-400">02-22 12:55</span><br>
+                  <span class="size-5 [&>svg]:size-5" v-html="heartIcon"></span>赞
+                  <span class="size-5 [&>svg]:size-5" v-html="commentIcon"></span>回复
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

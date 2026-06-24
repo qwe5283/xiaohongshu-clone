@@ -1,0 +1,52 @@
+// 笔记相关接口
+import request from './request'
+
+/**
+ * 分页查询笔记列表
+ * @param {{pageNum?:number, pageSize?:number, keyword?:string, sortType?:string}} params
+ * @returns {Promise<{records:object[], total:number, current:number, size:number}>}
+ * 后端返回 MyBatis-Plus 的 IPage，结构为 { records, total, size, current, pages }
+ */
+export function getPosts(params = {}) {
+  return request.get('/post/list', {
+    params: {
+      pageNum: params.pageNum ?? 1,
+      pageSize: params.pageSize ?? 20,
+      ...(params.keyword ? { keyword: params.keyword } : {}),
+      ...(params.sortType ? { sortType: params.sortType } : {}),
+    },
+  })
+}
+
+/**
+ * 获取笔记详情
+ * @param {number|string} postId
+ * @returns {Promise<object>} PostVO
+ */
+export function getPostDetail(postId) {
+  return request.get(`/post/${postId}`)
+}
+
+/**
+ * 把后端 PostVO 适配成前端 PostCard 期望的形状
+ * 差异：后端用 authorNickname/authorAvatar 拍平字段，前端用 author.{nickname,avatar}
+ *      后端无 isTextCard，前端用它区分纯文字卡片
+ */
+export function adaptPost(post) {
+  if (!post) return post
+  const isTextCard = !post.coverImage && post.type === 0
+  return {
+    ...post,
+    // 拍平的作者字段 → 嵌套对象，兼容 PostCard 的 post.author.xxx
+    author: {
+      id: post.userId,
+      nickname: post.authorNickname || '未知用户',
+      avatar:
+        post.authorAvatar ||
+        'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%23eee"/><text x="50%" y="55%" text-anchor="middle" font-size="18" fill="%23bbb">U</text></svg>',
+    },
+    isTextCard,
+    likeCount: post.likeCount ?? 0,
+    commentCount: post.commentCount ?? 0,
+  }
+}
