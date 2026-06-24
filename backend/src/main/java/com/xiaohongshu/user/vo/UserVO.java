@@ -56,6 +56,31 @@ public class UserVO implements Serializable {
     private String bio;
 
     /**
+     * 关注数
+     */
+    private Long followingCount;
+
+    /**
+     * 粉丝数
+     */
+    private Long followersCount;
+
+    /**
+     * 获赞总数
+     */
+    private Long likeCount;
+
+    /**
+     * 收藏总数
+     */
+    private Long collectCount;
+
+    /**
+     * 获赞与收藏总数
+     */
+    private Long likeAndCollectCount;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

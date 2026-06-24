@@ -51,6 +51,11 @@
     "phone": "13900001111",
     "email": "",
     "bio": "",
+    "followingCount": 0,
+    "followersCount": 0,
+    "likeCount": 0,
+    "collectCount": 0,
+    "likeAndCollectCount": 0,
     "createTime": "2026-06-23T16:00:00"
   }
 }
@@ -93,6 +98,11 @@
       "phone": "13800138000",
       "email": "",
       "bio": "系统管理员",
+      "followingCount": 5,
+      "followersCount": 10,
+      "likeCount": 100,
+      "collectCount": 50,
+      "likeAndCollectCount": 150,
       "createTime": "2026-06-23T09:22:47"
     }
   }
@@ -495,8 +505,33 @@
 
 - **URL**: `GET /api/follow/following/{userId}`
 - **权限**: 公开
+- **请求头**: `Authorization`（可选，Bearer token，携带时会填充 `followed` 字段）
 - **查询参数**: `pageNum`, `pageSize`
-- **响应**: 分页用户列表（含 `id`, `nickname`, `avatar`, `bio`, `followTime`）
+- **响应**:
+
+```json
+{
+  "code": 200,
+  "data": {
+    "records": [
+      {
+        "id": 2,
+        "nickname": "用户A",
+        "avatar": "https://...",
+        "bio": "个人简介",
+        "followTime": "2026-06-23T10:00:00",
+        "followed": true
+      }
+    ],
+    "total": 50,
+    "pageNum": 1,
+    "pageSize": 10,
+    "pages": 5
+  }
+}
+```
+
+- **说明**: `followed` 字段仅在携带有效 token 时有值，表示当前登录用户是否关注了该用户
 
 ---
 
@@ -504,6 +539,7 @@
 
 - **URL**: `GET /api/follow/followers/{userId}`
 - **权限**: 公开
+- **请求头**: `Authorization`（可选，Bearer token，携带时会填充 `followed` 字段）
 - **查询参数**: `pageNum`, `pageSize`
 - **响应**: 同 6.3
 

@@ -73,7 +73,7 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
     }
 
     @Override
-    public IPage<FollowUserVO> getFollowingList(Long userId, PageRequest queryDTO) {
+    public IPage<FollowUserVO> getFollowingList(Long userId, PageRequest queryDTO, Long currentUserId) {
         Page<UserFollow> page = new Page<>(queryDTO.getPageNumSafe(), queryDTO.getPageSizeSafe());
 
         LambdaQueryWrapper<UserFollow> wrapper = new LambdaQueryWrapper<UserFollow>()
@@ -82,11 +82,11 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
 
         IPage<UserFollow> followPage = page(page, wrapper);
 
-        return followPage.convert(follow -> convertToFollowUserVO(follow, true));
+        return followPage.convert(follow -> convertToFollowUserVO(follow, true, currentUserId));
     }
 
     @Override
-    public IPage<FollowUserVO> getFollowersList(Long userId, PageRequest queryDTO) {
+    public IPage<FollowUserVO> getFollowersList(Long userId, PageRequest queryDTO, Long currentUserId) {
         Page<UserFollow> page = new Page<>(queryDTO.getPageNumSafe(), queryDTO.getPageSizeSafe());
 
         LambdaQueryWrapper<UserFollow> wrapper = new LambdaQueryWrapper<UserFollow>()
@@ -95,7 +95,7 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
 
         IPage<UserFollow> followPage = page(page, wrapper);
 
-        return followPage.convert(follow -> convertToFollowUserVO(follow, false));
+        return followPage.convert(follow -> convertToFollowUserVO(follow, false, currentUserId));
     }
 
     @Override
@@ -118,10 +118,11 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
     /**
      * 将UserFollow转换为FollowUserVO
      *
-     * @param follow       关注记录
-     * @param isFollowing true-查询关注列表（取followUserId），false-查询粉丝列表（取userId）
+     * @param follow        关注记录
+     * @param isFollowing   true-查询关注列表（取followUserId），false-查询粉丝列表（取userId）
+     * @param currentUserId 当前登录用户ID（可为 null，用于填充 followed 字段）
      */
-    private FollowUserVO convertToFollowUserVO(UserFollow follow, boolean isFollowing) {
+    private FollowUserVO convertToFollowUserVO(UserFollow follow, boolean isFollowing, Long currentUserId) {
         FollowUserVO vo = new FollowUserVO();
 
         // 获取目标用户ID
@@ -141,6 +142,11 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
         }
 
         vo.setFollowTime(follow.getCreateTime());
+
+        // 填充 followed 字段：当前登录用户是否关注了该用户
+        if (currentUserId != null) {
+            vo.setFollowed(isFollowing(currentUserId, targetUserId));
+        }
 
         return vo;
     }

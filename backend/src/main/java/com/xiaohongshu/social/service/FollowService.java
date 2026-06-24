@@ -33,20 +33,22 @@ public interface FollowService extends IService<UserFollow> {
     /**
      * 获取用户的关注列表
      *
-     * @param userId    用户ID
-     * @param queryDTO  分页参数
+     * @param userId        用户ID
+     * @param queryDTO      分页参数
+     * @param currentUserId 当前登录用户ID（可为 null，用于填充 followed 字段）
      * @return 关注用户列表
      */
-    IPage<FollowUserVO> getFollowingList(Long userId, PageRequest queryDTO);
+    IPage<FollowUserVO> getFollowingList(Long userId, PageRequest queryDTO, Long currentUserId);
 
     /**
      * 获取用户的粉丝列表
      *
-     * @param userId    用户ID
-     * @param queryDTO  分页参数
+     * @param userId        用户ID
+     * @param queryDTO      分页参数
+     * @param currentUserId 当前登录用户ID（可为 null，用于填充 followed 字段）
      * @return 粉丝用户列表
      */
-    IPage<FollowUserVO> getFollowersList(Long userId, PageRequest queryDTO);
+    IPage<FollowUserVO> getFollowersList(Long userId, PageRequest queryDTO, Long currentUserId);
 
     /**
      * 获取用户的关注数和粉丝数

@@ -61,9 +61,17 @@ public class FollowController {
      */
     @GetMapping("/following/{userId}")
     public Result<IPage<FollowUserVO>> getFollowingList(
+            @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable Long userId,
             @Valid PageRequest queryDTO) {
-        IPage<FollowUserVO> page = followService.getFollowingList(userId, queryDTO);
+        // 可选 token：已登录时用于填充 followed 字段
+        Long currentUserId = null;
+        try {
+            currentUserId = jwtUtil.getUserIdFromToken(token);
+        } catch (Exception e) {
+            // token 无效或未携带，followed 字段保持 null
+        }
+        IPage<FollowUserVO> page = followService.getFollowingList(userId, queryDTO, currentUserId);
         return Result.success(page);
     }
 
@@ -72,9 +80,16 @@ public class FollowController {
      */
     @GetMapping("/followers/{userId}")
     public Result<IPage<FollowUserVO>> getFollowersList(
+            @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable Long userId,
             @Valid PageRequest queryDTO) {
-        IPage<FollowUserVO> page = followService.getFollowersList(userId, queryDTO);
+        Long currentUserId = null;
+        try {
+            currentUserId = jwtUtil.getUserIdFromToken(token);
+        } catch (Exception e) {
+            // token 无效或未携带
+        }
+        IPage<FollowUserVO> page = followService.getFollowersList(userId, queryDTO, currentUserId);
         return Result.success(page);
     }
 
