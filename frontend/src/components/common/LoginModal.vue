@@ -17,131 +17,28 @@ const handleClose = () => {
 </script>
 
 <template>
-  <div class="login-modal-overlay" @click.self="handleClose">
-    <div class="login-modal-content">
-      <button class="login-modal-close" @click="handleClose">X</button>
-      <div class="login-modal-header">
-        <h2>登录小红书</h2>
+  <div class="fixed inset-0 bg-black/30 z-[100] flex justify-center items-center" @click.self="handleClose">
+    <div class="relative bg-white rounded-2xl p-10 w-[400px] max-w-[90%] shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+      <button class="absolute top-4 right-4 bg-transparent border-none text-2xl cursor-pointer text-gray-500 p-0 size-8 flex items-center justify-center rounded-full transition-colors duration-300 hover:bg-gray-100" @click="handleClose">X</button>
+      <div class="flex justify-center items-center mb-[30px]">
+        <h2 class="text-xl font-bold text-gray-800">登录小红书</h2>
       </div>
-      <div class="login-modal-body">
+      <div class="flex flex-col gap-5">
         <input
           v-model="username"
           type="text"
-          class="login-input"
+          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-gray-300 focus:bg-[#EEEEEE]"
           placeholder="输入用户名"
         />
         <input
           v-model="password"
           type="password"
-          class="login-input"
+          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-gray-300 focus:bg-[#EEEEEE]"
           placeholder="输入密码"
         />
-        <button class="btn-login login-btn" @click="handleLogin">登录</button>
-        <p class="register-hint">没有账号? <a href="#">前往注册</a></p>
+        <button class="bg-primary text-white border-none p-3 rounded-3xl text-base font-bold cursor-pointer w-full mt-2.5" @click="handleLogin">登录</button>
+        <p class="text-center mt-5 text-sm text-gray-400">没有账号? <a href="#" class="text-primary no-underline">前往注册</a></p>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.login-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: 100;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.login-modal-content {
-  position: relative;
-  background: #fff;
-  border-radius: 16px;
-  padding: 40px;
-  width: 400px;
-  max-width: 90%;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-}
-
-.login-modal-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.login-modal-header h2 {
-  font-size: 20px;
-  font-weight: bold;
-  color: var(--text-main);
-}
-
-.login-modal-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: var(--text-secondary);
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.3s;
-}
-
-.login-modal-close:hover {
-  background-color: #f0f0f0;
-}
-
-.login-modal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.login-input {
-  width: 100%;
-  padding: 14px 16px;
-  border: none;
-  background: #F7F7F7;
-  border-radius: 999px;
-  font-size: 16px;
-  outline: none;
-  transition: background-color 0.3s;
-}
-
-.login-input:focus {
-  background-color: #EEEEEE;
-}
-
-.login-input::placeholder {
-  color: lightgray;
-}
-
-.login-btn {
-  width: 100%;
-  margin-top: 10px;
-}
-
-.register-hint {
-  text-align: center;
-  margin-top: 20px;
-  font-size: 14px;
-  color: var(--text-light);
-}
-
-.register-hint a {
-  color: var(--primary-red);
-  text-decoration: none;
-}
-</style>

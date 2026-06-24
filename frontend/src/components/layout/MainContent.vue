@@ -67,9 +67,9 @@ const handlePostClick = (postId) => {
 </script>
 
 <template>
-  <div class="main-wrapper">
+  <div class="ml-[164px] flex-1 px-10 max-w-[1600px] bg-white">
     <!-- 顶部搜索栏 -->
-    <header class="top-header">
+    <header class="sticky top-0 bg-white py-7 z-[5]">
       <SearchBar />
     </header>
 
@@ -81,8 +81,8 @@ const handlePostClick = (postId) => {
     />
 
     <!-- 瀑布流笔记列表 -->
-    <section class="feed-section">
-      <div class="masonry-container">
+    <section class="mb-16">
+      <div class="[column-count:5] [column-gap:20px]">
         <PostCard
           v-for="post in posts"
           :key="post.id"
@@ -93,30 +93,3 @@ const handlePostClick = (postId) => {
     </section>
   </div>
 </template>
-
-<style scoped>
-.main-wrapper {
-  margin-left: var(--sidebar-width);
-  flex: 1;
-  padding: 0 40px;
-  max-width: 1600px;
-  background-color: var(--bg-color);
-}
-
-.top-header {
-  position: sticky;
-  top: 0;
-  background: var(--bg-color);
-  padding: 28px 0;
-  z-index: 5;
-}
-
-.feed-section {
-  margin-bottom: 60px;
-}
-
-.masonry-container {
-  column-count: 5;
-  column-gap: 20px;
-}
-</style>

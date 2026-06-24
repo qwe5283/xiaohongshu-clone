@@ -18,12 +18,12 @@ const handleChange = (category) => {
 </script>
 
 <template>
-  <div class="category-tabs">
+  <div class="py-4 flex justify-center gap-7 text-base text-gray-500 mb-5 overflow-x-auto">
     <div
       v-for="category in categories"
       :key="category"
-      class="tab-item"
-      :class="{ active: active === category }"
+      class="cursor-pointer relative transition-all duration-300 whitespace-nowrap hover:text-gray-800"
+      :class="{ 'text-gray-800 font-bold tab-active': active === category }"
       @click="handleChange(category)"
     >
       {{ category }}
@@ -32,34 +32,7 @@ const handleChange = (category) => {
 </template>
 
 <style scoped>
-.category-tabs {
-  padding: 16px 0;
-  display: flex;
-  justify-content: center;
-  gap: 28px;
-  font-size: 16px;
-  color: var(--text-secondary);
-  margin-bottom: 20px;
-  overflow-x: auto;
-}
-
-.tab-item {
-  cursor: pointer;
-  position: relative;
-  transition: all 0.3s;
-  white-space: nowrap;
-}
-
-.tab-item:hover {
-  color: var(--text-main);
-}
-
-.tab-item.active {
-  color: var(--text-main);
-  font-weight: bold;
-}
-
-.tab-item.active::after {
+.tab-active::after {
   content: '';
   position: absolute;
   bottom: -8px;
@@ -67,7 +40,7 @@ const handleChange = (category) => {
   transform: translateX(-50%);
   width: 28px;
   height: 3px;
-  background: var(--primary-red);
+  background: #ff2442;
   border-radius: 2px;
 }
 </style>
