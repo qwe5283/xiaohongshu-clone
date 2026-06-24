@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { showToast } from '@/utils/toast'
+import closeIcon from '../../assets/icons/close.svg?raw'
 
 const emit = defineEmits(['close', 'login-success'])
 
@@ -106,7 +107,9 @@ const handleClose = () => {
       <button
         class="absolute top-4 right-4 bg-transparent border-none text-2xl cursor-pointer text-gray-500 p-0 size-8 flex items-center justify-center rounded-full transition-colors duration-300 hover:bg-gray-100"
         @click="handleClose"
-      >X</button>
+      >
+        <span class="[&>svg]:size-4 text-gray-500" v-html="closeIcon"></span>
+      </button>
 
       <div class="flex justify-center items-center mb-[30px]">
         <h2 class="text-xl font-bold text-gray-800">{{ mode === 'login' ? '登录小红书' : '注册小红书' }}</h2>
@@ -120,10 +123,10 @@ const handleClose = () => {
       <!-- 登录表单 -->
       <div v-if="mode === 'login'" class="flex flex-col gap-5">
         <input v-model="loginForm.username" type="text"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-gray-300 focus:bg-[#EEEEEE]"
+          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
           placeholder="输入用户名" @keyup.enter="handleLogin" />
         <input v-model="loginForm.password" type="password"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-gray-300 focus:bg-[#EEEEEE]"
+          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
           placeholder="输入密码" @keyup.enter="handleLogin" />
         <button
           class="bg-primary text-white border-none p-3 rounded-3xl text-base font-bold cursor-pointer w-full mt-2.5 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -139,16 +142,16 @@ const handleClose = () => {
       <!-- 注册表单 -->
       <div v-else class="flex flex-col gap-5">
         <input v-model="registerForm.username" type="text"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-gray-300 focus:bg-[#EEEEEE]"
+          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
           placeholder="设置用户名（3-20字符）" />
         <input v-model="registerForm.password" type="password"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-gray-300 focus:bg-[#EEEEEE]"
+          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
           placeholder="设置密码（6-20字符）" />
         <input v-model="registerForm.nickname" type="text"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-gray-300 focus:bg-[#EEEEEE]"
+          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
           placeholder="昵称（选填）" />
         <input v-model="registerForm.phone" type="text"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-gray-300 focus:bg-[#EEEEEE]"
+          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
           placeholder="手机号（选填）" />
         <button
           class="bg-primary text-white border-none p-3 rounded-3xl text-base font-bold cursor-pointer w-full mt-2.5 disabled:opacity-60 disabled:cursor-not-allowed"

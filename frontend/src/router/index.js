@@ -3,7 +3,7 @@ import { useUserStore } from '@/stores/user'
 import { showToast } from '@/utils/toast'
 
 // 首页直接用现有 MainContent 组件作为路由组件
-// ProfilePage、详情弹窗由 App.vue 在路由变化时统一控制显隐
+// ProfilePage 由路由懒加载；详情弹窗由 App.vue 用 history.pushState 管理，不走路由
 import MainContent from '@/components/layout/MainContent.vue'
 
 const routes = [
@@ -20,12 +20,12 @@ const routes = [
     // 路由级代码分割
     component: () => import('@/components/user/ProfilePage.vue'),
   },
-  // 详情弹窗：复用首页作为底页，PostDetailModal 由 App.vue 监听路由 param 控制
+  // /post/:id：直接访问地址栏时渲染 MainContent 作为背景
+  // 应用内打开弹窗走 history.pushState，不会触发此路由的组件切换
   {
     path: '/post/:id',
     name: 'post-detail',
     component: MainContent,
-    meta: { isPostDetail: true },
   },
   // 兜底：未匹配路径回首页
   { path: '/:pathMatch(.*)*', redirect: '/' },
@@ -34,8 +34,9 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  // 禁用自动滚动到顶部，保留用户当前滚动位置
   scrollBehavior() {
-    return { top: 0 }
+    return false
   },
 })
 

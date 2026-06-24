@@ -1,5 +1,8 @@
 <script setup>
+import { computed } from 'vue'
 import heartIcon from '../../assets/icons/heart.svg?raw'
+import heartFilledIcon from '../../assets/icons/heart-filled.svg?raw'
+import { usePostStore } from '@/stores/post'
 
 const props = defineProps({
   post: {
@@ -9,6 +12,13 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['openProfile'])
+const postStore = usePostStore()
+
+// 优先从 store 读取最新状态（详情弹窗修改后会同步），兜底用 prop 初始值
+const liked = computed(() => postStore.getPostState(props.post.id)?.liked ?? props.post.liked)
+const likeCount = computed(() => postStore.getPostState(props.post.id)?.likeCount ?? props.post.likeCount)
+
+const currentHeartIcon = computed(() => liked.value ? heartFilledIcon : heartIcon)
 
 const formatLikeCount = (count) => {
   if (count >= 10000) {
@@ -45,8 +55,12 @@ const formatLikeCount = (count) => {
           <span>{{ post.author.nickname }}</span>
         </div>
       <div class="flex items-center gap-1">
-        <span class="size-4 [&>svg]:size-4 text-gray-500" v-html="heartIcon"></span>
-        {{ formatLikeCount(post.likeCount) }}
+        <span
+          class="size-4 [&>svg]:size-4 transition-colors"
+          :class="liked ? 'text-red-500' : 'text-gray-500'"
+          v-html="currentHeartIcon"
+        ></span>
+        <span :class="liked ? 'text-red-500' : 'text-gray-500'">{{ formatLikeCount(likeCount) }}</span>
       </div>
     </div>
   </div>

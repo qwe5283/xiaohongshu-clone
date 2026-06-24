@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import heartIcon from '../../assets/icons/heart.svg?raw'
 import { getUserById } from '@/api/auth'
@@ -13,6 +13,7 @@ import { adaptPost } from '@/api/post'
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const openPostDetail = inject('openPostDetail')
 
 // 路由 id 可能是 'me'（已在上层路由守卫解析，但组件内仍需考虑刷新/边界情况）
 const userId = computed(() => Number(route.params.id) || null)
@@ -119,7 +120,7 @@ const handleToggleFollow = async () => {
 }
 
 const goPostDetail = (postId) => {
-  router.push({ name: 'post-detail', params: { id: postId } })
+  openPostDetail(postId)
 }
 
 const formatCount = (num) => {
@@ -149,38 +150,40 @@ const formatCount = (num) => {
 
     <template v-else-if="user">
       <!-- 个人资料区域 -->
-      <section class="bg-white p-10 rounded-2xl mb-16 border border-gray-200">
+      <section class="bg-white p-10 rounded-2xl mb-16">
         <!-- 头像和信息 -->
-        <div class="flex gap-10 mb-10 pb-5 border-b border-gray-200">
-          <img :src="user.avatar || defaultAvatar" class="size-[120px] rounded-full object-cover shrink-0" />
-          <div class="flex-1">
-            <!-- 名字行 -->
-            <div class="flex items-center gap-5 mb-2.5">
-              <span class="text-2xl font-bold">{{ user.nickname || user.username }}</span>
-              <button
-                v-if="!isMe"
-                class="border border-primary w-24 px-4 py-2 rounded-[20px] text-sm font-bold cursor-pointer transition-all duration-200"
-                :class="isFollowed ? 'bg-white text-primary' : 'bg-primary text-white'"
-                @click="handleToggleFollow"
-              >
-                {{ isFollowed ? '已关注' : '关注' }}
-              </button>
-              <button
-                v-else
-                class="border border-primary w-24 px-4 py-2 rounded-[20px] text-sm font-bold bg-white text-primary cursor-pointer transition-all duration-200"
-              >
-                编辑资料
-              </button>
-            </div>
-            <!-- ID -->
-            <div class="text-xs text-gray-400 mb-2.5">小红书号：{{ user.id }}</div>
-            <!-- 简介 -->
-            <div class="text-sm text-gray-500 mb-5 leading-[1.6] whitespace-pre-line">{{ user.bio || '这个人很懒，还没有写简介～' }}</div>
-            <!-- 统计数据 -->
-            <div class="flex gap-[30px] text-sm">
-              <div><span class="font-bold text-gray-800 mr-1">{{ formatCount(user.followingCount) }}</span>关注</div>
-              <div><span class="font-bold text-gray-800 mr-1">{{ formatCount(user.followersCount) }}</span>粉丝</div>
-              <div><span class="font-bold text-gray-800 mr-1">{{ formatCount(user.likeAndCollectCount) }}</span>获赞与收藏</div>
+        <div class="flex justify-center">
+          <div class="flex gap-10 mb-10 pb-5">
+            <img :src="user.avatar || defaultAvatar" class="size-40 rounded-full object-cover shrink-0" />
+            <div class="flex-1">
+              <!-- 名字行 -->
+              <div class="flex items-center gap-5 mb-2.5 w-[480px]">
+                <span class="text-2xl font-bold">{{ user.nickname || user.username }}</span>
+                <button
+                    v-if="!isMe"
+                    class="border border-primary w-24 px-4 py-2 rounded-[20px] text-sm font-bold cursor-pointer transition-all duration-200 ml-auto"
+                    :class="isFollowed ? 'bg-white text-primary' : 'bg-primary text-white'"
+                    @click="handleToggleFollow"
+                >
+                  {{ isFollowed ? '已关注' : '关注' }}
+                </button>
+                <button
+                    v-else
+                    class="border border-primary w-24 px-4 py-2 rounded-[20px] text-sm font-bold bg-white text-primary cursor-pointer transition-all duration-200 ml-auto"
+                >
+                  编辑资料
+                </button>
+              </div>
+              <!-- ID -->
+              <div class="text-xs text-gray-400 mb-2.5">小红书号：{{ user.id }}</div>
+              <!-- 简介 -->
+              <div class="text-sm text-gray-500 mb-5 leading-[1.6] whitespace-pre-line">{{ user.bio || '这个人很懒，还没有写简介～' }}</div>
+              <!-- 统计数据 -->
+              <div class="flex gap-5 text-sm text-gray-500 mb-5">
+                <div><span class="font-bold text-gray-800 mr-1">{{ formatCount(user.followingCount) }}</span>关注</div>
+                <div><span class="font-bold text-gray-800 mr-1">{{ formatCount(user.followersCount) }}</span>粉丝</div>
+                <div><span class="font-bold text-gray-800 mr-1">{{ formatCount(user.likeAndCollectCount) }}</span>获赞与收藏</div>
+              </div>
             </div>
           </div>
         </div>

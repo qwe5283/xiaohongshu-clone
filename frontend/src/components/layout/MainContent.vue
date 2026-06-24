@@ -1,12 +1,15 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import SearchBar from './SearchBar.vue'
 import CategoryTabs from './CategoryTabs.vue'
 import PostCard from '../post/PostCard.vue'
 import { getPosts, adaptPost } from '@/api/post'
+import { usePostStore } from '@/stores/post'
 
 const router = useRouter()
+const postStore = usePostStore()
+const openPostDetail = inject('openPostDetail')
 
 const activeCategory = ref('推荐')
 
@@ -25,7 +28,10 @@ const loadPosts = async () => {
     const page = await getPosts({ pageNum: 1, pageSize: 20 })
     // 后端返回 MyBatis-Plus 的 IPage，数组在 records 字段
     const list = page?.records || []
-    posts.value = list.map(adaptPost)
+    const adapted = list.map(adaptPost)
+    posts.value = adapted
+    // 将后端返回的 liked/likeCount 等状态同步到全局 store，供详情弹窗跨组件同步
+    postStore.initPosts(adapted)
   } catch (e) {
     error.value = e.message || '加载失败'
   } finally {
@@ -40,9 +46,9 @@ const handleCategoryChange = (category) => {
   // 本次只接通首页基础数据，分类筛选留到后续批次
 }
 
-// 点击卡片 → 路由跳转详情（弹窗由 App.vue 监听路由渲染）
+// 点击卡片 → 打开详情弹窗（不触发路由组件切换，保留滚动位置）
 const handlePostClick = (postId) => {
-  router.push({ name: 'post-detail', params: { id: postId } })
+  openPostDetail(postId)
 }
 
 // 点击作者 → 跳转用户主页

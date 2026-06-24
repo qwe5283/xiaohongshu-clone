@@ -1,8 +1,11 @@
 <script setup>
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import heartIcon from '../../assets/icons/heart.svg?raw'
+import heartFilledIcon from '../../assets/icons/heart-filled.svg?raw'
 import starIcon from '../../assets/icons/star.svg?raw'
+import starFilledIcon from '../../assets/icons/star-filled.svg?raw'
+import closeIcon from '../../assets/icons/close.svg?raw'
 import commentIcon from '../../assets/icons/comment.svg?raw'
 import { getPostDetail } from '@/api/post'
 import { getComments, getReplies, createComment } from '@/api/comment'
@@ -10,6 +13,7 @@ import { toggleLikePost, getLikeStatusPost } from '@/api/like'
 import { toggleCollectPost, getCollectStatusPost } from '@/api/collect'
 import { toggleFollow, getFollowStatus } from '@/api/follow'
 import { useUserStore } from '@/stores/user'
+import { usePostStore } from '@/stores/post'
 import { showToast } from '@/utils/toast'
 
 const props = defineProps({
@@ -19,6 +23,8 @@ const emit = defineEmits(['close'])
 
 const router = useRouter()
 const userStore = useUserStore()
+const postStore = usePostStore()
+const closePostDetailSilent = inject('closePostDetailSilent')
 
 const post = ref(null)
 const loading = ref(true)
@@ -42,6 +48,9 @@ const displayImages = computed(() => {
 const isSelf = computed(() => {
   return !!(post.value && userStore.userInfo && post.value.userId === userStore.userInfo.id)
 })
+
+const currentHeartIcon = computed(() => isLiked.value ? heartFilledIcon : heartIcon)
+const currentStarIcon = computed(() => isCollected.value ? starFilledIcon : starIcon)
 
 function formatTime(iso) {
   if (!iso) return ''
@@ -84,31 +93,41 @@ const loadDetail = async () => {
 
 onMounted(loadDetail)
 
-// 点赞 toggle（乐观更新）
+// 点赞 toggle（乐观更新 + 同步 store）
 const handleToggleLike = async () => {
   if (!userStore.isLoggedIn) { showToast('请先登录', 'error'); return }
   const wasLiked = isLiked.value
-  isLiked.value = !wasLiked
-  post.value.likeCount += wasLiked ? -1 : 1
+  const newLiked = !wasLiked
+  const newCount = post.value.likeCount + (wasLiked ? -1 : 1)
+  isLiked.value = newLiked
+  post.value.likeCount = newCount
+  // 同步到 store，让首页卡片即时刷新
+  postStore.updateLike(props.postId, newLiked, newCount)
   try {
     await toggleLikePost(props.postId)
   } catch (e) {
     isLiked.value = wasLiked
     post.value.likeCount += wasLiked ? 1 : -1
+    postStore.updateLike(props.postId, wasLiked, post.value.likeCount)
   }
 }
 
-// 收藏 toggle
+// 收藏 toggle（乐观更新 + 同步 store）
 const handleToggleCollect = async () => {
   if (!userStore.isLoggedIn) { showToast('请先登录', 'error'); return }
   const wasCollected = isCollected.value
-  isCollected.value = !wasCollected
-  post.value.collectCount += wasCollected ? -1 : 1
+  const newCollected = !wasCollected
+  const newCount = post.value.collectCount + (wasCollected ? -1 : 1)
+  isCollected.value = newCollected
+  post.value.collectCount = newCount
+  // 同步到 store，让首页卡片即时刷新
+  postStore.updateCollect(props.postId, newCollected, newCount)
   try {
     await toggleCollectPost(props.postId)
   } catch (e) {
     isCollected.value = wasCollected
     post.value.collectCount += wasCollected ? 1 : -1
+    postStore.updateCollect(props.postId, wasCollected, post.value.collectCount)
   }
 }
 
@@ -175,7 +194,8 @@ const nextImage = () => {
 
 const goAuthorProfile = () => {
   if (!post.value?.userId) return
-  emit('close')
+  // 静默关闭弹窗（不触发 history.back），再由 router.push 接管 URL 变更
+  closePostDetailSilent()
   router.push({ name: 'user-profile', params: { id: post.value.userId } })
 }
 
@@ -188,7 +208,9 @@ const handleClose = () => emit('close')
     <button
       class="absolute top-5 left-5 text-white text-2xl cursor-pointer z-[101] bg-black/50 size-8 rounded-full flex items-center justify-center"
       @click="handleClose"
-    >X</button>
+    >
+      <span class="[&>svg]:size-4 text-white" v-html="closeIcon"></span>
+    </button>
 
     <!-- 主容器 -->
     <div v-if="loading" class="w-[1000px] h-[700px] bg-white rounded-2xl flex items-center justify-center">
@@ -316,7 +338,7 @@ const handleClose = () => emit('close')
               <span
                 class="size-5 [&>svg]:size-5 transition-colors"
                 :class="isLiked ? 'text-red-500' : 'text-gray-500'"
-                v-html="heartIcon"
+                v-html="currentHeartIcon"
               ></span>
               <span :class="isLiked ? 'text-red-500' : 'text-gray-500'">{{ post.likeCount }}</span>
             </div>
@@ -324,7 +346,7 @@ const handleClose = () => emit('close')
               <span
                 class="size-5 [&>svg]:size-5 transition-colors"
                 :class="isCollected ? 'text-amber-400' : 'text-gray-500'"
-                v-html="starIcon"
+                v-html="currentStarIcon"
               ></span>
               <span :class="isCollected ? 'text-amber-400' : 'text-gray-500'">{{ post.collectCount }}</span>
             </div>

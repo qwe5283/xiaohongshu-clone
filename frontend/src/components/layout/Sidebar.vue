@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import logo from '../../assets/logo.png'
 import homeIcon from '../../assets/icons/home.svg?raw'
 import exploreIcon from '../../assets/icons/explore.svg?raw'
@@ -56,6 +56,44 @@ const handleLogout = () => {
   showToast('已退出登录', 'info')
   // 退出后统一回首页，避免停留在需要登录态的页面
   emit('navigate-home')
+  showMoreMenu.value = false
+}
+
+// 更多菜单状态
+const showMoreMenu = ref(false)
+const moreMenuRef = ref(null)
+
+const toggleMoreMenu = () => {
+  showMoreMenu.value = !showMoreMenu.value
+}
+
+const closeMoreMenu = () => {
+  showMoreMenu.value = false
+}
+
+// 点击外部区域关闭菜单
+const handleClickOutside = (event) => {
+  if (moreMenuRef.value && !moreMenuRef.value.contains(event.target)) {
+    closeMoreMenu()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+const handleUserAgreement = () => {
+  showToast('用户协议功能开发中', 'info')
+  closeMoreMenu()
+}
+
+const handleCommunityGuidelines = () => {
+  showToast('社区规范功能开发中', 'info')
+  closeMoreMenu()
 }
 </script>
 
@@ -96,16 +134,48 @@ const handleLogout = () => {
 
     <!-- 底部菜单 -->
     <ul class="list-none">
-      <!-- 退出登录：仅登录态显示 -->
-      <li v-if="isLoggedIn"
-        class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#F2F2F2]"
-        @click="handleLogout">
-        <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-5.5" v-html="moreIcon"></span>
-        退出登录
-      </li>
-      <li class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#F2F2F2]">
-        <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-5.5" v-html="moreIcon"></span>
-        更多
+      <!-- 更多：带弹出菜单 -->
+      <li ref="moreMenuRef" class="relative">
+        <div
+          class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#F2F2F2]"
+          @click="toggleMoreMenu">
+          <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-5.5" v-html="moreIcon"></span>
+          更多
+        </div>
+
+        <!-- 弹出菜单 -->
+        <div v-if="showMoreMenu"
+          class="absolute bottom-full left-0 mb-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+          <div class="px-4 py-2 text-sm text-gray-500 font-medium border-b border-gray-100">
+            更多选项
+          </div>
+          <button
+            class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 flex items-center"
+            @click="handleUserAgreement">
+            <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            用户协议
+          </button>
+          <button
+            class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 flex items-center"
+            @click="handleCommunityGuidelines">
+            <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            社区规范
+          </button>
+          <div v-if="isLoggedIn" class="border-t border-gray-100 mt-1 pt-1">
+            <button
+              class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150 flex items-center"
+              @click="handleLogout">
+              <svg class="w-4 h-4 mr-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+              </svg>
+              退出登录
+            </button>
+          </div>
+        </div>
       </li>
       <li class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#F2F2F2]">
         <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-5.5" v-html="aboutIcon"></span>
