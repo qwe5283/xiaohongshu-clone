@@ -12,18 +12,18 @@ const routes = [
     name: 'home',
     component: MainContent,
   },
+  // /profile 重定向到 /user/me，再由守卫解析成真实 id
+  { path: '/profile', redirect: '/user/me' },
   {
-    path: '/profile',
-    name: 'profile',
+    path: '/user/:id',
+    name: 'user-profile',
     // 路由级代码分割
     component: () => import('@/components/user/ProfilePage.vue'),
-    meta: { requiresAuth: true },
   },
-  // 详情弹窗：复用首页/个人中心作为底页，PostDetailModal 由 App.vue 监听路由 param 控制
+  // 详情弹窗：复用首页作为底页，PostDetailModal 由 App.vue 监听路由 param 控制
   {
     path: '/post/:id',
     name: 'post-detail',
-    // 底层仍渲染首页组件，弹窗叠加其上；这样关闭弹窗 router.back 后回到来源页
     component: MainContent,
     meta: { isPostDetail: true },
   },
@@ -39,14 +39,24 @@ const router = createRouter({
   },
 })
 
-// 全局前置守卫：仅校验 requiresAuth
-router.beforeEach((to) => {
-  if (to.meta.requiresAuth) {
+// 全局前置守卫
+router.beforeEach(async (to) => {
+  // 访问 /user/me：未登录回首页，已登录解析成真实 id
+  if (to.name === 'user-profile' && to.params.id === 'me') {
     const userStore = useUserStore()
     if (!userStore.isLoggedIn) {
       showToast('请先登录', 'error')
       return { name: 'home' }
     }
+    // userInfo 可能尚未加载（直接访问 URL），先 fetchMe
+    if (!userStore.userInfo) {
+      await userStore.fetchMe()
+    }
+    if (userStore.userInfo?.id) {
+      return { name: 'user-profile', params: { id: userStore.userInfo.id } }
+    }
+    // fetchMe 失败（token 失效等），回首页
+    return { name: 'home' }
   }
   return true
 })

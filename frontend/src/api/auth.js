@@ -26,3 +26,12 @@ export function register(data) {
 export function getMe() {
   return request.get('/user/me')
 }
+
+/**
+ * 根据用户ID获取用户信息
+ * @param {number|string} userId
+ * @returns {Promise<object>} UserVO
+ */
+export function getUserById(userId) {
+  return request.get(`/user/${userId}`)
+}

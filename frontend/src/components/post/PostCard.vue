@@ -24,7 +24,7 @@ const formatLikeCount = (count) => {
     <div v-if="!post.isTextCard && post.coverImage" class="m-1 relative overflow-hidden rounded-xl shadow-[0_0_1px_rgba(0,0,0,0.6)] group">
       <img :src="post.coverImage" class="w-full block object-cover transition-transform duration-300 group-hover:scale-105" alt="cover" />
       <!-- 悬浮渐变遮罩 -->
-      <div class="absolute inset-0 bg-gradient-to-b from-black/5 to-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+      <div class="absolute inset-0 bg-linear-to-b from-black/5 to-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
     </div>
 
     <!-- 纯文字卡片 -->
@@ -38,12 +38,12 @@ const formatLikeCount = (count) => {
       <div class="text-sm font-medium leading-[1.4] mb-3 line-clamp-2">{{ post.title }}</div>
     </div>
 
-    <!-- 底部信息 -->
-    <div class="flex justify-between items-center text-xs text-gray-500 px-3 pb-3">
-      <div class="flex items-center gap-1.5 cursor-pointer hover:underline" @click.stop="emit('openProfile')">
-        <img :src="post.author.avatar" class="size-5 rounded-full object-cover" />
-        <span>{{ post.author.nickname }}</span>
-      </div>
+      <!-- 底部信息 -->
+      <div class="flex justify-between items-center text-xs text-gray-500 px-3 pb-3">
+        <div class="flex items-center gap-1.5 cursor-pointer hover:underline" @click.stop="emit('openProfile', post.author?.id)">
+          <img :src="post.author.avatar" class="size-5 rounded-full object-cover" />
+          <span>{{ post.author.nickname }}</span>
+        </div>
       <div class="flex items-center gap-1">
         <span class="size-4 [&>svg]:size-4 text-gray-500" v-html="heartIcon"></span>
         {{ formatLikeCount(post.likeCount) }}

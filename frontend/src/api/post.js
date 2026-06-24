@@ -28,6 +28,36 @@ export function getPostDetail(postId) {
 }
 
 /**
+ * 获取指定用户的笔记列表（分页）
+ * @param {number|string} userId
+ * @param {{pageNum?:number, pageSize?:number, sortType?:string}} params
+ * @returns {Promise<{records:object[], total:number, current:number, size:number, pages:number}>}
+ */
+export function getUserPosts(userId, params = {}) {
+  return request.get(`/post/user/${userId}`, {
+    params: {
+      pageNum: params.pageNum ?? 1,
+      pageSize: params.pageSize ?? 20,
+      ...(params.sortType ? { sortType: params.sortType } : {}),
+    },
+  })
+}
+
+/**
+ * 获取当前登录用户的笔记列表（分页，需 auth）
+ * @param {{pageNum?:number, pageSize?:number, sortType?:string}} params
+ */
+export function getMyPosts(params = {}) {
+  return request.get('/post/my', {
+    params: {
+      pageNum: params.pageNum ?? 1,
+      pageSize: params.pageSize ?? 20,
+      ...(params.sortType ? { sortType: params.sortType } : {}),
+    },
+  })
+}
+
+/**
  * 把后端 PostVO 适配成前端 PostCard 期望的形状
  * 差异：后端用 authorNickname/authorAvatar 拍平字段，前端用 author.{nickname,avatar}
  *      后端无 isTextCard，前端用它区分纯文字卡片

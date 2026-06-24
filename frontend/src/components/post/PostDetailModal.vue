@@ -1,94 +1,258 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import heartIcon from '../../assets/icons/heart.svg?raw'
 import starIcon from '../../assets/icons/star.svg?raw'
 import commentIcon from '../../assets/icons/comment.svg?raw'
+import { getPostDetail } from '@/api/post'
+import { getComments, getReplies, createComment } from '@/api/comment'
+import { toggleLikePost, getLikeStatusPost } from '@/api/like'
+import { toggleCollectPost, getCollectStatusPost } from '@/api/collect'
+import { toggleFollow, getFollowStatus } from '@/api/follow'
+import { useUserStore } from '@/stores/user'
+import { showToast } from '@/utils/toast'
 
 const props = defineProps({
-  postId: {
-    type: Number,
-    required: true
-  }
+  postId: { type: [Number, String], required: true }
 })
-
 const emit = defineEmits(['close'])
 
-// 模拟笔记详情数据
-const post = ref({
-  id: props.postId,
-  title: '求秒睡教程',
-  content: '一直睡眠都不好，现在已经到每天在床上硬躺3h都睡不着的程度了。。。咋办啊。。。甚至现在午休都睡不着我求了 #睡不着 #想睡个好觉 #我的命也是命 #睡不着一点',
-  coverImage: 'https://picsum.photos/1920/1080?random=50',
-  author: {
-    nickname: 'AAA_方糕批发商61酱',
-    avatar: 'https://picsum.photos/50/50?random=60'
-  },
-  createTime: '05-22',
-  likeCount: 2839,
-  collectCount: 1465,
-  commentCount: 491
+const router = useRouter()
+const userStore = useUserStore()
+
+const post = ref(null)
+const loading = ref(true)
+const comments = ref([])
+const repliesMap = reactive({})      // commentId -> replies[]
+const showRepliesMap = reactive({})   // commentId -> boolean
+const isLiked = ref(false)
+const isCollected = ref(false)
+const isFollowed = ref(false)
+const currentImageIndex = ref(0)
+const commentText = ref('')
+const submitting = ref(false)
+
+const displayImages = computed(() => {
+  if (!post.value) return []
+  if (post.value.images && post.value.images.length) return post.value.images
+  if (post.value.coverImage) return [{ imageUrl: post.value.coverImage }]
+  return []
 })
 
-const comments = ref([
-  {
-    id: 1,
-    author: {
-      nickname: 'AAA_方糕批发商61酱',
-      avatar: 'https://picsum.photos/30/30?random=60',
-      isAuthor: true
-    },
-    content: '昨天晚上再创新高，5点都没睡着。。。'
-  },
-  {
-    id: 2,
-    author: {
-      nickname: 'yang 🌿',
-      avatar: 'https://picsum.photos/30/30?random=61',
-      isAuthor: false
-    },
-    content: '强烈推荐黄芪麦冬枸杞红枣煮水喝，每次煮二十分钟，我一直失眠，只喝了两天晚上就倒头大睡了，见效特别快'
-  }
-])
+const isSelf = computed(() => {
+  return !!(post.value && userStore.userInfo && post.value.userId === userStore.userInfo.id)
+})
 
-const commentText = ref('')
-
-const handleClose = () => {
-  emit('close')
+function formatTime(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  const now = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  const md = `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  if (d.getFullYear() === now.getFullYear()) return md
+  return `${d.getFullYear()}-${md}`
 }
 
-const handleComment = () => {
-  if (commentText.value.trim()) {
-    console.log('发表评论:', commentText.value)
+const loadDetail = async () => {
+  loading.value = true
+  try {
+    const [detail, commentPage] = await Promise.all([
+      getPostDetail(props.postId),
+      getComments(props.postId, { pageNum: 1, pageSize: 20 }),
+    ])
+    post.value = detail
+    comments.value = commentPage?.records || []
+
+    if (userStore.isLoggedIn && detail) {
+      const [likeRes, collectRes] = await Promise.all([
+        getLikeStatusPost(props.postId).catch(() => ({ liked: false })),
+        getCollectStatusPost(props.postId).catch(() => ({ collected: false })),
+      ])
+      isLiked.value = !!likeRes.liked
+      isCollected.value = !!collectRes.collected
+      if (!isSelf.value) {
+        getFollowStatus(detail.userId).then(res => { isFollowed.value = !!res.followed }).catch(() => {})
+      }
+    }
+  } catch (e) {
+    // request 拦截器已处理错误
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadDetail)
+
+// 点赞 toggle（乐观更新）
+const handleToggleLike = async () => {
+  if (!userStore.isLoggedIn) { showToast('请先登录', 'error'); return }
+  const wasLiked = isLiked.value
+  isLiked.value = !wasLiked
+  post.value.likeCount += wasLiked ? -1 : 1
+  try {
+    await toggleLikePost(props.postId)
+  } catch (e) {
+    isLiked.value = wasLiked
+    post.value.likeCount += wasLiked ? 1 : -1
+  }
+}
+
+// 收藏 toggle
+const handleToggleCollect = async () => {
+  if (!userStore.isLoggedIn) { showToast('请先登录', 'error'); return }
+  const wasCollected = isCollected.value
+  isCollected.value = !wasCollected
+  post.value.collectCount += wasCollected ? -1 : 1
+  try {
+    await toggleCollectPost(props.postId)
+  } catch (e) {
+    isCollected.value = wasCollected
+    post.value.collectCount += wasCollected ? 1 : -1
+  }
+}
+
+// 关注 toggle
+const handleToggleFollow = async () => {
+  if (!userStore.isLoggedIn) { showToast('请先登录', 'error'); return }
+  if (isSelf.value || !post.value) return
+  const wasFollowed = isFollowed.value
+  isFollowed.value = !wasFollowed
+  try {
+    await toggleFollow(post.value.userId)
+    showToast(wasFollowed ? '已取消关注' : '关注成功', 'success')
+  } catch (e) {
+    isFollowed.value = wasFollowed
+  }
+}
+
+// 发评论
+const handleComment = async () => {
+  if (!userStore.isLoggedIn) { showToast('请先登录', 'error'); return }
+  const text = commentText.value.trim()
+  if (!text) return
+  submitting.value = true
+  try {
+    const newComment = await createComment({
+      postId: props.postId,
+      content: text,
+      parentId: 0,
+    })
+    comments.value.unshift(newComment)
+    post.value.commentCount += 1
     commentText.value = ''
+    showToast('评论成功', 'success')
+  } catch (e) {
+    // request 拦截器已处理错误
+  } finally {
+    submitting.value = false
   }
 }
+
+// 加载/切换回复
+const handleToggleReplies = async (comment) => {
+  if (showRepliesMap[comment.id]) {
+    showRepliesMap[comment.id] = false
+    return
+  }
+  if (!repliesMap[comment.id]) {
+    try {
+      const page = await getReplies(comment.id, { pageSize: 50 })
+      repliesMap[comment.id] = page?.records || []
+    } catch (e) {
+      return
+    }
+  }
+  showRepliesMap[comment.id] = true
+}
+
+const prevImage = () => {
+  if (currentImageIndex.value > 0) currentImageIndex.value--
+}
+const nextImage = () => {
+  if (currentImageIndex.value < displayImages.value.length - 1) currentImageIndex.value++
+}
+
+const goAuthorProfile = () => {
+  if (!post.value?.userId) return
+  emit('close')
+  router.push({ name: 'user-profile', params: { id: post.value.userId } })
+}
+
+const handleClose = () => emit('close')
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black/30 z-[100] flex justify-center items-center">
-    <div class="absolute top-5 left-5 text-white text-2xl cursor-pointer z-[101] bg-black/50 size-8 rounded-full flex items-center justify-center" @click="handleClose">X</div>
-    <div class="w-[1000px] h-[700px] bg-white rounded-2xl flex overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
-      <!-- 左侧图片 -->
-      <div class="flex-[1.2] bg-black flex items-center justify-center relative">
-        <img :src="post.coverImage" alt="Detail Image" class="max-w-full max-h-full object-contain" />
+  <div class="fixed inset-0 bg-black/30 z-[100] flex justify-center items-center" @click.self="handleClose">
+    <!-- 关闭按钮 -->
+    <button
+      class="absolute top-5 left-5 text-white text-2xl cursor-pointer z-[101] bg-black/50 size-8 rounded-full flex items-center justify-center"
+      @click="handleClose"
+    >X</button>
+
+    <!-- 主容器 -->
+    <div v-if="loading" class="w-[1000px] h-[700px] bg-white rounded-2xl flex items-center justify-center">
+      <span class="inline-block size-8 border-2 border-gray-300 border-t-primary rounded-full animate-spin mr-3"></span>
+      加载中...
+    </div>
+
+    <div v-else-if="!post" class="w-[1000px] h-[700px] bg-white rounded-2xl flex items-center justify-center text-gray-400">
+      笔记加载失败
+    </div>
+
+    <div v-else class="w-[1000px] h-[700px] bg-white rounded-2xl flex overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+      <!-- 左侧图片轮播 -->
+      <div class="flex-[1.2] bg-black flex items-center justify-center relative select-none">
+        <template v-if="displayImages.length">
+          <img :src="displayImages[currentImageIndex].imageUrl" alt="Detail Image" class="max-w-full max-h-full object-contain" />
+          <!-- 左右箭头 -->
+          <button
+            v-if="displayImages.length > 1"
+            class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60"
+            @click="prevImage"
+          >‹</button>
+          <button
+            v-if="displayImages.length > 1"
+            class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60"
+            @click="nextImage"
+          >›</button>
+          <!-- 底部小圆点 -->
+          <div v-if="displayImages.length > 1" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+            <span
+              v-for="(img, idx) in displayImages"
+              :key="idx"
+              class="w-2 h-2 rounded-full cursor-pointer"
+              :class="idx === currentImageIndex ? 'bg-white' : 'bg-white/40'"
+              @click="currentImageIndex = idx"
+            ></span>
+          </div>
+        </template>
+        <div v-else class="text-white">暂无图片</div>
       </div>
 
       <!-- 右侧内容 -->
-      <div class="flex-1 flex flex-col p-6">
+      <div class="flex-1 flex flex-col p-6 min-w-0">
         <!-- 作者信息 -->
         <div class="flex justify-between items-center mb-5">
-          <div class="flex items-center gap-2.5">
-            <img :src="post.author.avatar" class="size-9 rounded-full" />
-            <span class="text-sm font-medium">{{ post.author.nickname }}</span>
+          <div class="flex items-center gap-2.5 cursor-pointer" @click="goAuthorProfile">
+            <img :src="post.authorAvatar || post.author?.avatar" class="size-9 rounded-full object-cover" />
+            <span class="text-sm font-medium truncate">{{ post.authorNickname || post.author?.nickname }}</span>
           </div>
-          <button class="bg-primary text-white border-none px-6 py-2 rounded-[20px] text-sm font-bold cursor-pointer">关注</button>
+          <button
+            v-if="!isSelf"
+            class="border px-6 py-2 rounded-[20px] text-sm font-bold cursor-pointer transition-all"
+            :class="isFollowed ? 'bg-white text-primary border-primary' : 'bg-primary text-white border-primary'"
+            @click="handleToggleFollow"
+          >
+            {{ isFollowed ? '已关注' : '关注' }}
+          </button>
         </div>
 
         <!-- 内容区域 -->
-        <div class="flex-1 overflow-y-auto">
+        <div class="flex-1 overflow-y-auto min-h-0">
           <div class="text-lg font-bold mb-3">{{ post.title }}</div>
-          <div class="text-sm leading-[1.6] text-gray-800 mb-3">{{ post.content }}</div>
-          <div class="text-xs text-gray-400 mb-5">编辑于 {{ post.createTime }}</div>
+          <div class="text-sm leading-[1.6] text-gray-800 mb-3 whitespace-pre-wrap">{{ post.content }}</div>
+          <div class="text-xs text-gray-400 mb-5">编辑于 {{ formatTime(post.createTime) }}</div>
 
           <div class="text-xs text-gray-400 mb-2.5">
             共 {{ post.commentCount }} 条评论
@@ -96,29 +260,50 @@ const handleComment = () => {
 
           <!-- 评论列表 -->
           <div class="border-t border-gray-200 pt-5">
+            <div v-if="comments.length === 0" class="text-sm text-gray-400 py-4 text-center">暂无评论，来说点什么吧～</div>
             <div v-for="comment in comments" :key="comment.id" class="mb-5">
-              <div class="flex items-center gap-2 mb-1.5">
-                <img :src="comment.author.avatar" class="size-6 rounded-full" />
-                <span class="text-xs text-gray-500">
-                  {{ comment.author.nickname }}
-                  <span v-if="comment.author.isAuthor" class="bg-[#fee] text-red-500 px-1 py-0.5 rounded text-[10px]">作者</span>
-                </span>
-              </div>
-              <div class="text-sm ml-8">
-                {{ comment.content }}<br>
-                <div class="flex items-center gap-2 mb-1.5">
-                  <span class="text-xs text-gray-400">02-22 12:55</span><br>
-                  <span class="size-5 [&>svg]:size-5" v-html="heartIcon"></span>赞
-                  <span class="size-5 [&>svg]:size-5" v-html="commentIcon"></span>回复
+              <div class="flex items-start gap-2 mb-1.5">
+                <img :src="comment.userAvatar" class="size-6 rounded-full object-cover shrink-0" />
+                <div class="flex-1 min-w-0">
+                  <span class="text-xs text-gray-500">
+                    {{ comment.userNickname }}
+                    <span v-if="comment.userId === post.userId" class="bg-[#fee] text-red-500 px-1 py-0.5 rounded text-[10px] ml-1">作者</span>
+                  </span>
+                  <div class="text-sm text-gray-800 mt-0.5">{{ comment.content }}</div>
+                  <div class="flex items-center gap-3 mt-1">
+                    <span class="text-xs text-gray-400">{{ formatTime(comment.createTime) }}</span>
+                    <!-- 回复按钮（本次只做展示，不实现回复输入） -->
+                    <span class="text-xs text-gray-400 cursor-pointer hover:text-primary">回复</span>
+                  </div>
+
+                  <!-- 查看回复 -->
+                  <div v-if="(comment.replyCount || 0) > 0" class="mt-2">
+                    <button
+                      class="text-xs text-primary font-medium"
+                      @click="handleToggleReplies(comment)"
+                    >
+                      {{ showRepliesMap[comment.id] ? '收起' : `展开 ${comment.replyCount} 条回复` }}
+                    </button>
+                    <!-- 回复列表 -->
+                    <div v-if="showRepliesMap[comment.id]" class="mt-2 space-y-2 pl-3 border-l-2 border-gray-100">
+                      <div v-for="reply in repliesMap[comment.id]" :key="reply.id" class="text-sm">
+                        <span class="text-gray-500">
+                          <span class="font-medium">{{ reply.userNickname }}</span>
+                          <span v-if="reply.replyUserNickname"> 回复 <span class="font-medium">{{ reply.replyUserNickname }}</span></span>
+                          <span class="text-gray-800">：{{ reply.content }}</span>
+                        </span>
+                        <div class="text-xs text-gray-400 mt-0.5">{{ formatTime(reply.createTime) }}</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
 
         <!-- 底部操作栏 -->
-        <div class="border-t border-gray-200 pt-4 flex items-center gap-4">
+        <div class="border-t border-gray-200 pt-4 flex items-center gap-4 shrink-0">
           <input
             v-model="commentText"
             type="text"
@@ -126,16 +311,24 @@ const handleComment = () => {
             placeholder="说点什么..."
             @keyup.enter="handleComment"
           />
-          <div class="flex gap-4 text-gray-500">
-            <div class="flex items-center gap-1 text-sm cursor-pointer">
-              <span class="size-5 [&>svg]:size-5" v-html="heartIcon"></span>
-              {{ post.likeCount }}
+          <div class="flex gap-4 text-gray-500 items-center">
+            <div class="flex items-center gap-1 text-sm cursor-pointer" @click="handleToggleLike">
+              <span
+                class="size-5 [&>svg]:size-5 transition-colors"
+                :class="isLiked ? 'text-red-500' : 'text-gray-500'"
+                v-html="heartIcon"
+              ></span>
+              <span :class="isLiked ? 'text-red-500' : 'text-gray-500'">{{ post.likeCount }}</span>
             </div>
-            <div class="flex items-center gap-1 text-sm cursor-pointer">
-              <span class="size-5 [&>svg]:size-5" v-html="starIcon"></span>
-              {{ post.collectCount }}
+            <div class="flex items-center gap-1 text-sm cursor-pointer" @click="handleToggleCollect">
+              <span
+                class="size-5 [&>svg]:size-5 transition-colors"
+                :class="isCollected ? 'text-amber-400' : 'text-gray-500'"
+                v-html="starIcon"
+              ></span>
+              <span :class="isCollected ? 'text-amber-400' : 'text-gray-500'">{{ post.collectCount }}</span>
             </div>
-            <div class="flex items-center gap-1 text-sm cursor-pointer">
+            <div class="flex items-center gap-1 text-sm">
               <span class="size-5 [&>svg]:size-5" v-html="commentIcon"></span>
               {{ post.commentCount }}
             </div>

@@ -40,7 +40,7 @@ const menuItems = [
 
 // 当前激活菜单：以路由 name 为准，保证刷新/直接访问 URL 时高亮正确
 const activeMenu = computed(() => {
-  if (props.currentPage === 'profile') return 'profile'
+  if (props.currentPage === 'user-profile') return 'profile'
   if (props.currentPage === 'home') return 'home'
   return props.currentPage || 'home'
 })
@@ -54,42 +54,40 @@ const setActiveMenu = (key) => {
 const handleLogout = () => {
   userStore.logout()
   showToast('已退出登录', 'info')
-  // 退出后若停在需要登录的页面，回首页
-  if (props.currentPage === 'profile') {
-    emit('navigate-home')
-  }
+  // 退出后统一回首页，避免停留在需要登录态的页面
+  emit('navigate-home')
 }
 </script>
 
 <template>
-  <aside class="fixed left-0 top-0 h-screen w-[164px] bg-[#fafafa] pt-8 px-3 flex flex-col z-10">
+  <aside class="fixed left-0 top-0 h-screen w-41 bg-[#fafafa] pt-8 px-3 flex flex-col z-10">
     <!-- Logo -->
-    <div class="mb-[30px] ml-4">
+    <div class="mb-7.5 ml-4">
       <img :src="logo" alt="小红书Logo" width="74" height="35" />
     </div>
 
     <!-- 导航菜单 -->
-    <ul class="mt-[14px] list-none flex-1">
+    <ul class="mt-3.5 list-none flex-1">
       <li
         v-for="item in menuItems"
         :key="item.key"
         class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#f2f2f2]"
-        :class="{ 'bg-gray-100 font-bold text-primary': activeMenu === item.key }"
+        :class="{ 'bg-[#F2F2F2] font-bold': activeMenu === item.key }"
         @click="setActiveMenu(item.key)"
       >
-        <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-[22px]" v-html="item.icon"></span>
+        <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-5.5" v-html="item.icon"></span>
         {{ item.label }}
       </li>
 
       <!-- 登录后显示用户头像 -->
       <li v-if="isLoggedIn"
         class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-gray-100"
-        :class="{ 'bg-gray-100 font-bold text-primary': props.currentPage === 'profile' }"
+        :class="{ 'bg-[#F2F2F2] font-bold': props.currentPage === 'user-profile' }"
         @click="emit('navigate-profile')">
         <span class="mr-3 flex items-center justify-center size-6">
-          <img class="size-[22px] rounded-full object-cover" :src="avatarUrl" />
+          <img class="size-5.5 rounded-full object-cover" :src="avatarUrl" />
         </span>
-        {{ nickname }}
+        我
       </li>
 
       <!-- 登录按钮 -->
@@ -100,17 +98,17 @@ const handleLogout = () => {
     <ul class="list-none">
       <!-- 退出登录：仅登录态显示 -->
       <li v-if="isLoggedIn"
-        class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-gray-100"
+        class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#F2F2F2]"
         @click="handleLogout">
-        <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-[22px]" v-html="moreIcon"></span>
+        <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-5.5" v-html="moreIcon"></span>
         退出登录
       </li>
-      <li class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-gray-100">
-        <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-[22px]" v-html="moreIcon"></span>
+      <li class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#F2F2F2]">
+        <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-5.5" v-html="moreIcon"></span>
         更多
       </li>
-      <li class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-gray-100">
-        <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-[22px]" v-html="aboutIcon"></span>
+      <li class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#F2F2F2]">
+        <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-5.5" v-html="aboutIcon"></span>
         关于我们
       </li>
     </ul>

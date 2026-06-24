@@ -18,7 +18,7 @@ const handleChange = (category) => {
 </script>
 
 <template>
-  <div class="py-4 flex justify-center gap-7 text-base text-gray-500 mb-5 overflow-x-auto">
+  <div class="py-4 flex justify-center gap-7 text-base text-gray-500 mb-5 overflow-x-hidden">
     <div
       v-for="category in categories"
       :key="category"

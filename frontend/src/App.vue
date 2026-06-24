@@ -34,8 +34,9 @@ const closePostDetail = () => {
 }
 
 // Sidebar 跳转事件：home / profile
+// /profile 重定向到 /user/me，再由路由守卫解析成当前用户真实 id
 const navigateHome = () => router.push({ name: 'home' })
-const navigateProfile = () => router.push({ name: 'profile' })
+const navigateProfile = () => router.push('/user/me')
 
 // 启动恢复登录态：有 token 则校验 /me，失败会清 token
 onMounted(async () => {
@@ -60,6 +61,7 @@ onMounted(async () => {
   />
   <PostDetailModal
     v-if="showPostDetail"
+    :key="String(selectedPostId)"
     :post-id="selectedPostId"
     @close="closePostDetail"
   />

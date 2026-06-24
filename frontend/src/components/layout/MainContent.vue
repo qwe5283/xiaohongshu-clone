@@ -44,6 +44,12 @@ const handleCategoryChange = (category) => {
 const handlePostClick = (postId) => {
   router.push({ name: 'post-detail', params: { id: postId } })
 }
+
+// 点击作者 → 跳转用户主页
+const handleOpenProfile = (userId) => {
+  if (!userId) return
+  router.push({ name: 'user-profile', params: { id: userId } })
+}
 </script>
 
 <template>
@@ -86,6 +92,7 @@ const handlePostClick = (postId) => {
           :key="post.id"
           :post="post"
           @click="handlePostClick(post.id)"
+          @open-profile="handleOpenProfile"
         />
       </div>
     </section>
