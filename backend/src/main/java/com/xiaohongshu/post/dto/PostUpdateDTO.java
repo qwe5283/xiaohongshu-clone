@@ -36,22 +36,13 @@ public class PostUpdateDTO implements Serializable {
     private String content;
 
     /**
-     * 类型：0-图文，1-视频
-     */
-    private Integer type;
-
-    /**
-     * 封面图URL
-     */
-    private String coverImage;
-
-    /**
-     * 视频URL
+     * 视频URL（可选，最多1个）
      */
     private String videoUrl;
 
     /**
-     * 图片URL列表
+     * 图片URL列表（可选，最多9张）
      */
+    @Size(max = 9, message = "图片数量不能超过9张")
     private List<String> imageUrls;
 }

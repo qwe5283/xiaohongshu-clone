@@ -24,6 +24,8 @@ public enum ResultCode {
     POST_NOT_FOUND(2001, "笔记不存在"),
     POST_ALREADY_DELETED(2002, "笔记已删除"),
     POST_NO_PERMISSION(2003, "无权操作此笔记"),
+    POST_IMAGE_LIMIT_EXCEEDED(2004, "图片数量不能超过9张"),
+    POST_MEDIA_REQUIRED(2005, "笔记必须包含至少一张图片或一个视频"),
 
     // 评论相关 3xxx
     COMMENT_NOT_FOUND(3001, "评论不存在"),

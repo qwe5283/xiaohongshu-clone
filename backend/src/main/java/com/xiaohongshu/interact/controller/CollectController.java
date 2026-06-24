@@ -1,12 +1,16 @@
 package com.xiaohongshu.interact.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xiaohongshu.common.result.Result;
 import com.xiaohongshu.interact.service.UserActionService;
+import com.xiaohongshu.post.service.PostService;
+import com.xiaohongshu.post.vo.PostVO;
 import com.xiaohongshu.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,6 +22,7 @@ import java.util.Map;
 public class CollectController {
 
     private final UserActionService userActionService;
+    private final PostService postService;
     private final JwtUtil jwtUtil;
 
     /**
@@ -48,6 +53,35 @@ public class CollectController {
 
         Map<String, Boolean> data = new HashMap<>();
         data.put("collected", collected);
+        return Result.success(data);
+    }
+
+    /**
+     * 获取指定用户的收藏笔记列表（需登录，可查看他人收藏）
+     */
+    @GetMapping("/posts/{userId}")
+    public Result<Map<String, Object>> getCollectedPosts(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        // 验证登录状态
+        jwtUtil.getUserIdFromToken(token);
+
+        // 分页查询用户收藏的笔记ID
+        IPage<Long> collectedIdsPage = userActionService.getCollectedPostIds(userId, pageNum, pageSize);
+
+        // 批量获取笔记详情（保持收藏时间顺序）
+        List<PostVO> posts = postService.getPostsByIds(collectedIdsPage.getRecords());
+
+        // 组装返回结果
+        Map<String, Object> data = new HashMap<>();
+        data.put("records", posts);
+        data.put("total", collectedIdsPage.getTotal());
+        data.put("pageNum", collectedIdsPage.getCurrent());
+        data.put("pageSize", collectedIdsPage.getSize());
+        data.put("pages", collectedIdsPage.getPages());
+
         return Result.success(data);
     }
 }

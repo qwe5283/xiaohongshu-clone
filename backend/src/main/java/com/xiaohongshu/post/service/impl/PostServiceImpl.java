@@ -29,6 +29,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -45,14 +46,27 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
     @Override
     @Transactional(rollbackFor = Exception.class)
     public PostVO createPost(Long userId, PostCreateDTO createDTO) {
+        // 校验：视频和图片不能同时缺省
+        boolean hasVideo = StringUtils.hasText(createDTO.getVideoUrl());
+        boolean hasImages = !CollectionUtils.isEmpty(createDTO.getImageUrls());
+        if (!hasVideo && !hasImages) {
+            throw new BusinessException(ResultCode.POST_MEDIA_REQUIRED);
+        }
+
         // 创建笔记
         Post post = new Post();
         post.setUserId(userId);
         post.setTitle(createDTO.getTitle());
         post.setContent(createDTO.getContent());
-        post.setType(createDTO.getType() != null ? createDTO.getType() : 0);
-        post.setCoverImage(createDTO.getCoverImage());
-        post.setVideoUrl(createDTO.getVideoUrl());
+        // 自动推导 type：有视频→1，仅图片→0
+        post.setType(hasVideo ? 1 : 0);
+        if (hasVideo) {
+            post.setVideoUrl(createDTO.getVideoUrl());
+        }
+        // 自动设置封面图：取第一张图片
+        if (hasImages) {
+            post.setCoverImage(createDTO.getImageUrls().get(0));
+        }
         post.setViewCount(0);
         post.setLikeCount(0);
         post.setCommentCount(0);
@@ -63,8 +77,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // 保存笔记
         save(post);
 
-        // 保存图片列表
-        if (!CollectionUtils.isEmpty(createDTO.getImageUrls())) {
+        // 保存图片列表（视频笔记也可以附带图片）
+        if (hasImages) {
             List<PostImage> images = new ArrayList<>();
             for (int i = 0; i < createDTO.getImageUrls().size(); i++) {
                 PostImage image = new PostImage();
@@ -95,27 +109,20 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             throw new BusinessException(ResultCode.POST_NO_PERMISSION);
         }
 
-        // 更新笔记信息
+        // 更新基本信息
         if (StringUtils.hasText(updateDTO.getTitle())) {
             post.setTitle(updateDTO.getTitle());
         }
         if (updateDTO.getContent() != null) {
             post.setContent(updateDTO.getContent());
         }
-        if (updateDTO.getType() != null) {
-            post.setType(updateDTO.getType());
-        }
-        if (updateDTO.getCoverImage() != null) {
-            post.setCoverImage(updateDTO.getCoverImage());
-        }
         if (updateDTO.getVideoUrl() != null) {
             post.setVideoUrl(updateDTO.getVideoUrl());
         }
 
-        updateById(post);
-
         // 更新图片列表
-        if (updateDTO.getImageUrls() != null) {
+        boolean imagesUpdated = updateDTO.getImageUrls() != null;
+        if (imagesUpdated) {
             // 删除旧图片
             postImageService.remove(new LambdaQueryWrapper<PostImage>()
                     .eq(PostImage::getPostId, post.getId()));
@@ -133,6 +140,30 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
                 postImageService.saveBatch(images);
             }
         }
+
+        // 校验：更新后视频和图片不能同时缺省
+        boolean hasVideo = StringUtils.hasText(post.getVideoUrl());
+        boolean hasImages;
+        if (imagesUpdated) {
+            hasImages = !CollectionUtils.isEmpty(updateDTO.getImageUrls());
+        } else {
+            // 图片未更新，查询数据库确认是否仍有图片
+            hasImages = postImageService.exists(new LambdaQueryWrapper<PostImage>()
+                    .eq(PostImage::getPostId, post.getId()));
+        }
+        if (!hasVideo && !hasImages) {
+            throw new BusinessException(ResultCode.POST_MEDIA_REQUIRED);
+        }
+
+        // 自动推导 type：有视频→1，仅图片→0
+        post.setType(hasVideo ? 1 : 0);
+
+        // 自动设置封面图：取第一张图片
+        if (imagesUpdated && hasImages) {
+            post.setCoverImage(updateDTO.getImageUrls().get(0));
+        }
+
+        updateById(post);
 
         log.info("笔记更新成功，ID：{}", post.getId());
 
@@ -223,6 +254,29 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         update(new LambdaUpdateWrapper<Post>()
                 .eq(Post::getId, postId)
                 .setSql("view_count = view_count + 1"));
+    }
+
+    @Override
+    public List<PostVO> getPostsByIds(List<Long> postIds) {
+        if (postIds == null || postIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 批量查询笔记
+        List<Post> posts = listByIds(postIds);
+        if (posts.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 按传入的ID顺序排列（保持收藏时间顺序）
+        Map<Long, Post> postMap = posts.stream()
+                .collect(Collectors.toMap(Post::getId, p -> p));
+        List<PostVO> result = postIds.stream()
+                .filter(postMap::containsKey)
+                .map(id -> convertToPostVO(postMap.get(id)))
+                .collect(Collectors.toList());
+
+        return result;
     }
 
     /**

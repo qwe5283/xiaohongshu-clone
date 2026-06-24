@@ -1,5 +1,6 @@
 package com.xiaohongshu.interact.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xiaohongshu.interact.entity.UserAction;
 
@@ -81,4 +82,14 @@ public interface UserActionService extends IService<UserAction> {
      * @return 已收藏的笔记ID列表
      */
     List<Long> getCollectedPostIds(Long userId, List<Long> postIds);
+
+    /**
+     * 分页查询用户收藏的笔记ID列表
+     *
+     * @param userId   用户ID
+     * @param pageNum  页码
+     * @param pageSize 每页数量
+     * @return 收藏的笔记ID分页结果（按收藏时间倒序）
+     */
+    IPage<Long> getCollectedPostIds(Long userId, int pageNum, int pageSize);
 }

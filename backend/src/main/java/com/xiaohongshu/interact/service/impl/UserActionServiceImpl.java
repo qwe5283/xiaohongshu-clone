@@ -2,6 +2,8 @@ package com.xiaohongshu.interact.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xiaohongshu.common.exception.BusinessException;
 import com.xiaohongshu.common.result.ResultCode;
@@ -148,6 +150,20 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
                 .eq(UserAction::getActionType, ACTION_TYPE_COLLECT)
                 .in(UserAction::getTargetId, postIds));
         return actions.stream().map(UserAction::getTargetId).collect(Collectors.toList());
+    }
+
+    @Override
+    public IPage<Long> getCollectedPostIds(Long userId, int pageNum, int pageSize) {
+        // 分页查询用户收藏的笔记ID，按收藏时间倒序
+        Page<UserAction> page = new Page<>(pageNum, pageSize);
+        IPage<UserAction> actionPage = page(page, new LambdaQueryWrapper<UserAction>()
+                .eq(UserAction::getUserId, userId)
+                .eq(UserAction::getTargetType, TARGET_TYPE_POST)
+                .eq(UserAction::getActionType, ACTION_TYPE_COLLECT)
+                .orderByDesc(UserAction::getCreateTime));
+
+        // 转换为笔记ID的分页结果
+        return actionPage.convert(UserAction::getTargetId);
     }
 
     /**

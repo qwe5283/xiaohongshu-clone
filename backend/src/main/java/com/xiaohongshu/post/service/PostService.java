@@ -8,6 +8,8 @@ import com.xiaohongshu.post.dto.PostUpdateDTO;
 import com.xiaohongshu.post.entity.Post;
 import com.xiaohongshu.post.vo.PostVO;
 
+import java.util.List;
+
 /**
  * 笔记服务接口
  */
@@ -70,4 +72,12 @@ public interface PostService extends IService<Post> {
      * @param postId 笔记ID
      */
     void incrementViewCount(Long postId);
+
+    /**
+     * 根据ID列表批量获取笔记（保持传入顺序）
+     *
+     * @param postIds 笔记ID列表
+     * @return 笔记VO列表（按传入顺序）
+     */
+    List<PostVO> getPostsByIds(List<Long> postIds);
 }
