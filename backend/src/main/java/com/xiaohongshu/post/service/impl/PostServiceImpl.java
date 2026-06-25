@@ -8,7 +8,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xiaohongshu.common.exception.BusinessException;
 import com.xiaohongshu.common.result.ResultCode;
+import com.xiaohongshu.interact.entity.Comment;
 import com.xiaohongshu.interact.entity.UserAction;
+import com.xiaohongshu.interact.mapper.CommentMapper;
 import com.xiaohongshu.interact.mapper.UserActionMapper;
 import com.xiaohongshu.post.dto.PostCreateDTO;
 import com.xiaohongshu.post.dto.PostQueryDTO;
@@ -44,6 +46,7 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
 
     private final PostImageService postImageService;
     private final UserService userService;
+    private final CommentMapper commentMapper;
     // 直接注入 Mapper 查点赞状态，避免 PostService ↔ UserActionService 循环依赖
     private final UserActionMapper userActionMapper;
 
@@ -187,6 +190,18 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
             throw new BusinessException(ResultCode.POST_NO_PERMISSION);
         }
 
+        List<Comment> comments = commentMapper.selectList(new LambdaQueryWrapper<Comment>()
+                .eq(Comment::getPostId, postId));
+        List<Long> commentIds = comments.stream()
+                .map(Comment::getId)
+                .collect(Collectors.toList());
+
+        update(new LambdaUpdateWrapper<Post>()
+                .eq(Post::getId, postId)
+                .set(Post::getLikeCount, 0)
+                .set(Post::getCollectCount, 0)
+                .set(Post::getCommentCount, 0));
+
         // 删除笔记（逻辑删除）
         removeById(postId);
 
@@ -194,7 +209,34 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         postImageService.remove(new LambdaQueryWrapper<PostImage>()
                 .eq(PostImage::getPostId, postId));
 
-        log.info("笔记删除成功，ID：{}", postId);
+        // 删除笔记下的全部评论（含回复）
+        if (!comments.isEmpty()) {
+            commentMapper.delete(new LambdaQueryWrapper<Comment>()
+                    .eq(Comment::getPostId, postId));
+        }
+
+        // 删除笔记的点赞/收藏行为
+        userActionMapper.delete(new LambdaQueryWrapper<UserAction>()
+                .eq(UserAction::getTargetType, 1)
+                .eq(UserAction::getTargetId, postId));
+
+        // 删除评论的点赞行为
+        if (!commentIds.isEmpty()) {
+            userActionMapper.delete(new LambdaQueryWrapper<UserAction>()
+                    .eq(UserAction::getTargetType, 2)
+                    .in(UserAction::getTargetId, commentIds));
+        }
+
+        int postLikeCount = post.getLikeCount() != null ? post.getLikeCount() : 0;
+        int postCollectCount = post.getCollectCount() != null ? post.getCollectCount() : 0;
+        if (postLikeCount > 0 || postCollectCount > 0) {
+            userService.update(new LambdaUpdateWrapper<User>()
+                    .eq(User::getId, post.getUserId())
+                    .setSql("liked_count = GREATEST(liked_count - " + postLikeCount + ", 0), " +
+                            "collected_count = GREATEST(collected_count - " + postCollectCount + ", 0)"));
+        }
+
+        log.info("笔记删除成功，ID：{}，清理评论：{}，清理评论点赞：{}", postId, comments.size(), commentIds.size());
     }
 
     @Override

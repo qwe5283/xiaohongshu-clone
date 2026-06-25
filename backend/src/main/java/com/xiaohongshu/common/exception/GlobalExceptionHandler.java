@@ -5,6 +5,7 @@ import com.xiaohongshu.common.result.ResultCode;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -43,19 +45,20 @@ public class GlobalExceptionHandler {
      * JwtUtil在token为空时会抛出此异常
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public Result<Void> handleIllegalArgumentException(IllegalArgumentException e) {
+    public ResponseEntity<Result<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
         String msg = e.getMessage();
         // Token相关：返回401
         if (msg != null && (msg.contains("Token") || msg.contains("token")
                 || msg.contains("JWT") || msg.contains("jwt")
                 || msg.contains("CharSequence") || msg.contains("null or empty"))) {
             log.warn("认证异常：{}", msg);
-            return Result.error(ResultCode.USER_NOT_LOGIN);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Result.error(ResultCode.USER_NOT_LOGIN));
         }
         // 非认证相关的参数异常：清理消息，不泄漏框架内部信息
         log.warn("参数异常：{}", msg);
-        return Result.error(ResultCode.PARAM_ERROR.getCode(), "参数错误");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Result.error(ResultCode.PARAM_ERROR.getCode(), "参数错误"));
     }
 
     /**
@@ -111,6 +114,16 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 处理multipart请求格式异常
+     */
+    @ExceptionHandler(MultipartException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Void> handleMultipartException(MultipartException e) {
+        log.warn("文件上传请求异常：{}", e.getMessage());
+        return Result.error(ResultCode.PARAM_MISS.getCode(), "缺少文件或文件上传请求格式不正确");
+    }
+
+    /**
      * 处理资源不存在异常（Spring 6.x / Boot 3.2+ 无匹配路由时抛出）
      * 如 GET /user/ (尾斜杠)、GET /不存在的路径
      */
@@ -146,10 +159,10 @@ public class GlobalExceptionHandler {
      * 处理其他运行时异常
      */
     @ExceptionHandler(RuntimeException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Void> handleRuntimeException(RuntimeException e) {
-        log.error("运行时异常：{}", e.getMessage());
-        return Result.error(e.getMessage());
+        log.error("运行时异常：{}", e.getMessage(), e);
+        return Result.error("系统内部错误，请稍后重试");
     }
 
     /**

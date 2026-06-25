@@ -452,7 +452,8 @@ def test_post_module():
     code, body = api("POST", "/post/create", {
         "title": "测试笔记标题",
         "content": "这是一篇测试笔记的内容",
-        "type": 0
+        "type": 0,
+        "imageUrls": ["https://example.com/img1.jpg"]
     }, token=token)
     verify("笔记模块", "2.1.1 正常创建笔记", "POST", "/post/create",
            code, body, expect_http=200, expect_biz=200)
@@ -478,7 +479,8 @@ def test_post_module():
 
     # 边界值: 标题长度=200
     code, body = api("POST", "/post/create", {
-        "title": "a" * 200, "content": "内容"
+        "title": "a" * 200, "content": "内容",
+        "imageUrls": ["https://example.com/img1.jpg"]
     }, token=token)
     verify("笔记模块", "2.1.4 标题长度=200(最大值)", "POST", "/post/create",
            code, body, expect_http=200, expect_biz=200)
@@ -492,7 +494,8 @@ def test_post_module():
 
     # 边界值: 正文内容长度=10000
     code, body = api("POST", "/post/create", {
-        "title": "边界值测试", "content": "a" * 10000
+        "title": "边界值测试", "content": "a" * 10000,
+        "imageUrls": ["https://example.com/img1.jpg"]
     }, token=token)
     verify("笔记模块", "2.1.6 正文内容长度=10000(最大值)", "POST", "/post/create",
            code, body, expect_http=200, expect_biz=200)
@@ -540,7 +543,8 @@ def test_post_module():
 
     # 先创建一个用于删除的笔记
     code, body = api("POST", "/post/create", {
-        "title": "待删除的笔记", "content": "将被删除"
+        "title": "待删除的笔记", "content": "将被删除",
+        "imageUrls": ["https://example.com/img1.jpg"]
     }, token=token)
     del_post_id = body.get("data", {}).get("id") if body.get("code") == 200 else None
 

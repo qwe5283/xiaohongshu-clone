@@ -39,9 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String[] WHITE_LIST = {
             "/user/login",
             "/user/register",
-            "/user/*",
             "/post/list",
-            "/post/*",
             "/post/user/*",
             "/comment/post/*",
             "/comment/replies/*",
@@ -84,13 +82,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // 3. 检查是否需要强制认证
-        boolean isWhiteListed = false;
-        for (String path : WHITE_LIST) {
-            if (pathMatcher.match(path, requestPath)) {
-                isWhiteListed = true;
-                break;
-            }
-        }
+        boolean isWhiteListed = isWhiteListed(request.getMethod(), requestPath);
 
         // 4. 非白名单路径 + 未认证 → 返回401
         if (!isWhiteListed && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -99,6 +91,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isWhiteListed(String method, String requestPath) {
+        if ("GET".equalsIgnoreCase(method)) {
+            if (requestPath.startsWith("/user/") && !"/user/me".equals(requestPath)) {
+                return true;
+            }
+            if (requestPath.startsWith("/post/") && !"/post/my".equals(requestPath)) {
+                return true;
+            }
+        }
+        for (String path : WHITE_LIST) {
+            if (pathMatcher.match(path, requestPath)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void writeError(HttpServletResponse response, ResultCode resultCode) throws IOException {

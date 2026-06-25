@@ -12,6 +12,7 @@ import com.xiaohongshu.interact.dto.CommentCreateDTO;
 import com.xiaohongshu.interact.dto.CommentQueryDTO;
 import com.xiaohongshu.interact.entity.Comment;
 import com.xiaohongshu.interact.mapper.CommentMapper;
+import com.xiaohongshu.interact.mapper.UserActionMapper;
 import com.xiaohongshu.interact.service.CommentService;
 import com.xiaohongshu.interact.vo.CommentVO;
 import com.xiaohongshu.post.entity.Post;
@@ -23,6 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * 评论服务实现类
  */
@@ -33,6 +38,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     private final PostService postService;
     private final UserService userService;
+    private final UserActionMapper userActionMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -87,15 +93,29 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             throw new BusinessException(ResultCode.POST_NO_PERMISSION);
         }
 
-        // 删除评论（逻辑删除）
-        removeById(commentId);
+        List<Comment> commentsToDelete = new ArrayList<>();
+        commentsToDelete.add(comment);
+        if (comment.getParentId() != null && comment.getParentId() == 0L) {
+            commentsToDelete.addAll(list(new LambdaQueryWrapper<Comment>()
+                    .eq(Comment::getParentId, commentId)));
+        }
+
+        List<Long> commentIds = commentsToDelete.stream()
+                .map(Comment::getId)
+                .collect(Collectors.toList());
+
+        // 删除评论及其回复（逻辑删除）
+        removeByIds(commentIds);
+
+        // 删除评论的点赞行为
+        removeCommentActions(commentIds);
 
         // 更新笔记评论数
         postService.update(new LambdaUpdateWrapper<Post>()
                 .eq(Post::getId, comment.getPostId())
-                .setSql("comment_count = comment_count - 1"));
+                .setSql("comment_count = GREATEST(comment_count - " + commentIds.size() + ", 0)"));
 
-        log.info("评论删除成功，ID：{}", commentId);
+        log.info("评论删除成功，ID：{}，级联删除评论数：{}", commentId, commentIds.size());
     }
 
     @Override
@@ -123,6 +143,15 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
         IPage<Comment> replyPage = page(page, wrapper);
         return replyPage.convert(this::convertToCommentVO);
+    }
+
+    private void removeCommentActions(List<Long> commentIds) {
+        if (commentIds.isEmpty()) {
+            return;
+        }
+        userActionMapper.delete(new LambdaQueryWrapper<com.xiaohongshu.interact.entity.UserAction>()
+                .eq(com.xiaohongshu.interact.entity.UserAction::getTargetType, 2)
+                .in(com.xiaohongshu.interact.entity.UserAction::getTargetId, commentIds));
     }
 
     /**
