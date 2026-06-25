@@ -1,10 +1,10 @@
-# 小红书后端服务
+# 小红书(复刻)后端服务
 
-基于 Spring Boot 3.x 的小红书后端服务。
+这是一个学习项目，基于 Spring Boot 复刻的的小红书后端服务。
 
 ## 技术栈
 
-- **框架**: Spring Boot 3.2.5
+- **框架**: Spring Boot 3.5.5
 - **ORM**: MyBatis-Plus 3.5.5
 - **数据库**: MySQL 8.0+
 - **缓存**: Redis
