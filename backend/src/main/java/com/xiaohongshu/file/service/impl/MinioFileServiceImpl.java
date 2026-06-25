@@ -48,7 +48,30 @@ public class MinioFileServiceImpl implements FileService {
                                 .bucket(minioConfig.getBucketName())
                                 .build()
                 );
-                log.info("创建存储桶：{}", minioConfig.getBucketName());
+
+                // 设置桶的公开读策略，使前端可以直接访问图片
+                String policy = """
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Principal": {"AWS": ["*"]},
+                                "Action": ["s3:GetObject"],
+                                "Resource": ["arn:aws:s3:::%s/*"]
+                            }
+                        ]
+                    }
+                    """.formatted(minioConfig.getBucketName());
+
+                minioClient.setBucketPolicy(
+                        SetBucketPolicyArgs.builder()
+                                .bucket(minioConfig.getBucketName())
+                                .config(policy)
+                                .build()
+                );
+
+                log.info("创建存储桶并设置公开读策略：{}", minioConfig.getBucketName());
             }
 
             // 生成唯一文件名
@@ -69,8 +92,12 @@ public class MinioFileServiceImpl implements FileService {
                 );
             }
 
-            // 返回文件访问URL
-            String fileUrl = minioConfig.getEndpoint() + "/" + minioConfig.getBucketName() + "/" + objectName;
+            // 返回文件访问URL（使用对外访问地址，而非 MinIO 内部端点；若未配置则回退到 endpoint）
+            String publicEndpoint = minioConfig.getPublicEndpoint();
+            if (!StringUtils.hasText(publicEndpoint)) {
+                publicEndpoint = minioConfig.getEndpoint();
+            }
+            String fileUrl = publicEndpoint + "/" + minioConfig.getBucketName() + "/" + objectName;
             log.info("文件上传成功：{}", fileUrl);
 
             return fileUrl;

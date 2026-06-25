@@ -34,6 +34,11 @@ public class MinioConfig {
      */
     private String bucketName;
 
+    /**
+     * 对外访问地址（浏览器可访问，区别于 MinIO 服务内部端点）
+     */
+    private String publicEndpoint;
+
     @Bean
     public MinioClient minioClient() {
         return MinioClient.builder()
