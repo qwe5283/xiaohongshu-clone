@@ -330,7 +330,7 @@ onUnmounted(() => {
 
       <!-- 视频上传 -->
       <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-600 mb-2">视频 <span class="text-xs text-gray-400">(最多1个)</span></label>
+        <label class="block text-sm font-medium text-gray-600 mb-2">视频 <span class="text-xs text-gray-400">(最多1个, 200MB以内)</span></label>
         <div v-if="videoFile" class="flex items-center gap-2 bg-[#F7F7F7] rounded-xl px-4 py-3">
           <span class="text-sm text-gray-700 truncate flex-1">{{ videoFile.name }}</span>
           <button

@@ -38,6 +38,11 @@ const currentMediaIndex = ref(0)
 const commentText = ref('')
 const submitting = ref(false)
 
+// 回复状态
+const replyingTo = ref(null)      // { commentId, userId, nickname } | null
+const replyText = ref('')
+const submittingReply = ref(false)
+
 // 统一媒体列表：视频在前，图片在后
 const mediaItems = computed(() => {
   if (!post.value) return []
@@ -173,6 +178,58 @@ const handleComment = async () => {
     // request 拦截器已处理错误
   } finally {
     submitting.value = false
+  }
+}
+
+// 点击"回复"按钮
+function handleReplyClick(comment) {
+  if (replyingTo.value?.commentId === comment.id) {
+    cancelReply()
+  } else {
+    replyingTo.value = {
+      commentId: comment.id,
+      userId: comment.userId,
+      nickname: comment.userNickname,
+    }
+    replyText.value = ''
+  }
+}
+
+function cancelReply() {
+  replyingTo.value = null
+  replyText.value = ''
+}
+
+// 提交回复
+async function handleReplySubmit(comment) {
+  if (!userStore.isLoggedIn) { showToast('请先登录', 'error'); return }
+  const text = replyText.value.trim()
+  if (!text) return
+  submittingReply.value = true
+  try {
+    const newReply = await createComment({
+      postId: props.postId,
+      content: text,
+      parentId: comment.id,
+      replyUserId: comment.userId,
+    })
+    // 写入本地 repliesMap
+    if (!repliesMap[comment.id]) {
+      repliesMap[comment.id] = []
+    }
+    repliesMap[comment.id].push(newReply)
+    // 自动展开回复列表
+    showRepliesMap[comment.id] = true
+    // 更新计数
+    comment.replyCount = (comment.replyCount || 0) + 1
+    post.value.commentCount += 1
+    replyText.value = ''
+    cancelReply()
+    showToast('回复成功', 'success')
+  } catch (e) {
+    // request 拦截器已处理错误
+  } finally {
+    submittingReply.value = false
   }
 }
 
@@ -317,8 +374,12 @@ const handleClose = () => emit('close')
                   <div class="text-sm text-gray-800 mt-0.5">{{ comment.content }}</div>
                   <div class="flex items-center gap-3 mt-1">
                     <span class="text-xs text-gray-400">{{ formatTime(comment.createTime) }}</span>
-                    <!-- 回复按钮（本次只做展示，不实现回复输入） -->
-                    <span class="text-xs text-gray-400 cursor-pointer hover:text-primary">回复</span>
+                    <!-- 回复按钮 -->
+                    <span
+                      class="text-xs text-gray-400 cursor-pointer hover:text-primary"
+                      :class="{ 'text-primary font-medium': replyingTo?.commentId === comment.id }"
+                      @click="handleReplyClick(comment)"
+                    >{{ replyingTo?.commentId === comment.id ? '取消回复' : '回复' }}</span>
                   </div>
 
                   <!-- 查看回复 -->
@@ -340,6 +401,18 @@ const handleClose = () => emit('close')
                         <div class="text-xs text-gray-400 mt-0.5">{{ formatTime(reply.createTime) }}</div>
                       </div>
                     </div>
+                  </div>
+
+                  <!-- 内联回复输入框 -->
+                  <div v-if="replyingTo?.commentId === comment.id" class="mt-2 flex items-center gap-2">
+                    <span class="text-xs text-gray-400 shrink-0">回复 @{{ replyingTo.nickname }}：</span>
+                    <input
+                      v-model="replyText"
+                      type="text"
+                      class="flex-1 bg-gray-100 border-none rounded-full px-3 py-1.5 text-xs outline-none"
+                      :placeholder="`回复 ${replyingTo.nickname}...`"
+                      @keyup.enter="handleReplySubmit(comment)"
+                    />
                   </div>
                 </div>
               </div>
