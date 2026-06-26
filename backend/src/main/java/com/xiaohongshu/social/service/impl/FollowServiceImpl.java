@@ -17,6 +17,7 @@ import com.xiaohongshu.user.entity.User;
 import com.xiaohongshu.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,15 +52,19 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
 
         if (existing != null) {
             // 已关注，取消关注
-            removeById(existing.getId());
+            boolean removed = removeById(existing.getId());
+            if (!removed) {
+                log.info("关注关系已被其他请求取消，用户ID：{}，被关注用户ID：{}", userId, followUserId);
+                return false;
+            }
 
             // 更新用户的关注数和粉丝数
             userService.update(new LambdaUpdateWrapper<User>()
                     .eq(User::getId, userId)
-                    .setSql("following_count = following_count - 1"));
+                    .setSql("following_count = GREATEST(following_count - 1, 0)"));
             userService.update(new LambdaUpdateWrapper<User>()
                     .eq(User::getId, followUserId)
-                    .setSql("fans_count = fans_count - 1"));
+                    .setSql("fans_count = GREATEST(fans_count - 1, 0)"));
 
             log.info("取消关注成功，用户ID：{}，被关注用户ID：{}", userId, followUserId);
             return false;
@@ -68,7 +73,12 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
             UserFollow follow = new UserFollow();
             follow.setUserId(userId);
             follow.setFollowUserId(followUserId);
-            save(follow);
+            try {
+                save(follow);
+            } catch (DuplicateKeyException e) {
+                log.info("关注关系已被其他请求创建，用户ID：{}，被关注用户ID：{}", userId, followUserId);
+                return true;
+            }
 
             // 更新用户的关注数和粉丝数
             userService.update(new LambdaUpdateWrapper<User>()

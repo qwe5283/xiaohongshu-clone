@@ -54,21 +54,15 @@ mysql -u root -p < src/main/resources/schema.sql
 
 ### 2. 修改配置
 
-编辑 `src/main/resources/application.yml`，修改数据库和Redis连接信息：
+本地运行前配置根目录 `.env`。仓库提供 `.env.example` 模板，当前开发机的 `.env` 保留原有本地开发值且不会提交到 Git。
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/xiaohongshu
-    username: your_username
-    password: your_password
+PowerShell 示例：
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      password: your_redis_password
+```powershell
+Copy-Item ..\.env.example ..\.env
 ```
+
+Docker Compose 会自动读取根目录 `.env`。如果直接用 `mvn spring-boot:run` 本地启动，需要先把 `.env` 中的变量加载到当前 shell。
 
 ### 3. 编译运行
 

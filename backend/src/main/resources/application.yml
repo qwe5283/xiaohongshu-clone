@@ -6,18 +6,18 @@ server:
 spring:
   # 数据库配置
   datasource:
-    url: jdbc:mysql://localhost:3306/xiaohongshu?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: 123456
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/xiaohongshu?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # Redis配置
   data:
     redis:
-      host: localhost
-      port: 6379
-      password:
-      database: 0
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
 
   # 文件上传配置
   servlet:
@@ -29,7 +29,7 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: ${MYBATIS_LOG_IMPL:org.apache.ibatis.logging.nologging.NoLoggingImpl}
   global-config:
     db-config:
       id-type: auto
@@ -39,18 +39,18 @@ mybatis-plus:
 
 # JWT配置
 jwt:
-  secret: xiaohongshu-jwt-secret-key-2024-must-be-at-least-256-bits
-  expiration: 604800000
+  secret: ${JWT_SECRET:xiaohongshu-jwt-secret-key-2024-must-be-at-least-256-bits}
+  expiration: ${JWT_EXPIRATION:604800000}
   token-prefix: "Bearer"
   header: Authorization
 
 # MinIO配置
 minio:
-  endpoint: http://localhost:9000
-  public-endpoint: http://localhost:9000
-  access-key: minioadmin
-  secret-key: minioadmin
-  bucket-name: xiaohongshu
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  public-endpoint: ${MINIO_PUBLIC_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket-name: ${MINIO_BUCKET:xiaohongshu}
 
 # 日志配置
 logging:

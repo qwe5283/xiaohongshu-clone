@@ -18,6 +18,7 @@ import com.xiaohongshu.user.entity.User;
 import com.xiaohongshu.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,10 +80,10 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
                 () -> {
                     postService.update(new LambdaUpdateWrapper<Post>()
                             .eq(Post::getId, postId)
-                            .setSql("like_count = like_count - 1"));
+                            .setSql("like_count = GREATEST(like_count - 1, 0)"));
                     userService.update(new LambdaUpdateWrapper<User>()
                             .eq(User::getId, postAuthorId)
-                            .setSql("liked_count = liked_count - 1"));
+                            .setSql("liked_count = GREATEST(liked_count - 1, 0)"));
                 });
     }
 
@@ -103,7 +104,7 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
                 // 评论点赞数-1
                 () -> commentService.update(new LambdaUpdateWrapper<Comment>()
                         .eq(Comment::getId, commentId)
-                        .setSql("like_count = like_count - 1")));
+                        .setSql("like_count = GREATEST(like_count - 1, 0)")));
     }
 
     @Override
@@ -131,10 +132,10 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
                 () -> {
                     postService.update(new LambdaUpdateWrapper<Post>()
                             .eq(Post::getId, postId)
-                            .setSql("collect_count = collect_count - 1"));
+                            .setSql("collect_count = GREATEST(collect_count - 1, 0)"));
                     userService.update(new LambdaUpdateWrapper<User>()
                             .eq(User::getId, postAuthorId)
-                            .setSql("collected_count = collected_count - 1"));
+                            .setSql("collected_count = GREATEST(collected_count - 1, 0)"));
                 });
     }
 
@@ -208,10 +209,15 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
 
         if (existing != null) {
             // 已存在，取消行为
-            removeById(existing.getId());
-            onRemove.run();
-            log.info("取消行为成功，用户ID：{}，目标ID：{}，目标类型：{}，行为类型：{}",
-                    userId, targetId, targetType, actionType);
+            boolean removed = removeById(existing.getId());
+            if (removed) {
+                onRemove.run();
+                log.info("取消行为成功，用户ID：{}，目标ID：{}，目标类型：{}，行为类型：{}",
+                        userId, targetId, targetType, actionType);
+            } else {
+                log.info("行为已被其他请求取消，用户ID：{}，目标ID：{}，目标类型：{}，行为类型：{}",
+                        userId, targetId, targetType, actionType);
+            }
             return false;
         } else {
             // 不存在，新增行为
@@ -220,7 +226,13 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
             action.setTargetId(targetId);
             action.setTargetType(targetType);
             action.setActionType(actionType);
-            save(action);
+            try {
+                save(action);
+            } catch (DuplicateKeyException e) {
+                log.info("行为已被其他请求创建，用户ID：{}，目标ID：{}，目标类型：{}，行为类型：{}",
+                        userId, targetId, targetType, actionType);
+                return true;
+            }
             onAdd.run();
             log.info("恢复行为成功，用户ID：{}，目标ID：{}，目标类型：{}，行为类型：{}",
                     userId, targetId, targetType, actionType);

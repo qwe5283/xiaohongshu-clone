@@ -166,8 +166,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         post.setType(hasVideo ? 1 : 0);
 
         // 自动设置封面图：取第一张图片
-        if (imagesUpdated && hasImages) {
-            post.setCoverImage(updateDTO.getImageUrls().get(0));
+        if (imagesUpdated) {
+            post.setCoverImage(hasImages ? updateDTO.getImageUrls().get(0) : "");
         }
 
         updateById(post);

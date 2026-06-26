@@ -55,6 +55,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             if (parentComment == null) {
                 throw new BusinessException(ResultCode.COMMENT_NOT_FOUND);
             }
+            if (!parentComment.getPostId().equals(createDTO.getPostId())) {
+                throw new BusinessException(ResultCode.PARAM_ERROR, "父评论不属于当前笔记");
+            }
+            if (parentComment.getParentId() != null && parentComment.getParentId() > 0) {
+                throw new BusinessException(ResultCode.PARAM_ERROR, "只能回复一级评论");
+            }
         }
 
         // 创建评论

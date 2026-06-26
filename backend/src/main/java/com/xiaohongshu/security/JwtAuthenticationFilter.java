@@ -46,7 +46,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/follow/following/*",
             "/follow/followers/*",
             "/follow/count/*",
-            "/upload/**",
             "/doc.html",
             "/swagger-ui/**",
             "/v3/api-docs/**"
