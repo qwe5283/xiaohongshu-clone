@@ -2,6 +2,8 @@ package com.xiaohongshu.post.service.impl;
 
 import com.xiaohongshu.post.dto.TextImageDTO;
 import com.xiaohongshu.post.service.TextImageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -9,6 +11,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -21,6 +24,8 @@ import java.util.Random;
  */
 @Service
 public class TextImageServiceImpl implements TextImageService {
+
+    private static final Logger log = LoggerFactory.getLogger(TextImageServiceImpl.class);
 
     /** 图片宽度 */
     private static final int WIDTH = 400;
@@ -47,29 +52,6 @@ public class TextImageServiceImpl implements TextImageService {
             {"#D8FFD3", "#B2F1AB"},
     };
 
-    /**
-     * 候选中文字体列表（按优先级降序）
-     */
-    private static final List<String> CJK_FONT_NAMES = List.of(
-            "Microsoft YaHei",
-            "SimHei",
-            "PingFang SC",
-            "Noto Sans CJK SC",
-            "WenQuanYi Micro Hei",
-            "SimSun"
-    );
-
-    /**
-     * 装饰专用黑体字体列表（按优先级降序）
-     */
-    private static final List<String> HEI_FONT_NAMES = List.of(
-            "SimHei",
-            "Microsoft YaHei",
-            "PingFang SC",
-            "Noto Sans CJK SC",
-            "WenQuanYi Micro Hei"
-    );
-
     private final Random random = new Random();
 
     @Override
@@ -95,14 +77,11 @@ public class TextImageServiceImpl implements TextImageService {
             g2d.setColor(bgColor);
             g2d.fillRect(0, 0, WIDTH, HEIGHT);
 
-            // 获取中文字体
-            Font baseFont = findCJKFont(TEXT_FONT_SIZE);
-
             // 绘制居中文本
-            drawCenteredText(g2d, text, baseFont, fgColor);
+            drawCenteredText(g2d, text, fgColor);
 
             // 绘制装饰元素
-            drawDecorations(g2d, baseFont, fgColor, decorColor);
+            drawDecorations(g2d, fgColor, decorColor);
         } finally {
             g2d.dispose();
         }
@@ -120,8 +99,12 @@ public class TextImageServiceImpl implements TextImageService {
     /**
      * 绘制水平垂直居中的文本，支持自动换行
      */
-    private void drawCenteredText(Graphics2D g2d, String text, Font baseFont, Color color) {
-        Font textFont = baseFont.deriveFont(Font.BOLD, (float) TEXT_FONT_SIZE);
+    private void drawCenteredText(Graphics2D g2d, String text, Color color) {
+        Font notoSansFont = loadFontByPath("/fonts/NotoSansSC-Regular.ttf", TEXT_FONT_SIZE);
+        if (notoSansFont == null) {
+            throw new RuntimeException("Fonts.NotoSansSC-Regular.ttf not found");
+        }
+        Font textFont = notoSansFont.deriveFont(Font.BOLD, (float) TEXT_FONT_SIZE);
         g2d.setFont(textFont);
         g2d.setColor(color);
 
@@ -150,9 +133,13 @@ public class TextImageServiceImpl implements TextImageService {
      * - 左上角：加粗前引号 "
      * - 右下角：加粗下划线
      */
-    private void drawDecorations(Graphics2D g2d, Font baseFont, Color fgColor, Color decorColor) {
+    private void drawDecorations(Graphics2D g2d, Color fgColor, Color decorColor) {
         // ---- 左上角：重加粗前引号 " ----
-        Font quoteFont = findHeiFont(DECOR_FONT_SIZE).deriveFont(Font.BOLD, (float) DECOR_FONT_SIZE);
+        Font simHeiFont = loadFontByPath("/fonts/simhei.ttf", DECOR_FONT_SIZE);
+        if (simHeiFont == null) {
+            throw new RuntimeException("Fonts.simhei.ttf not found");
+        }
+        Font quoteFont = simHeiFont.deriveFont(Font.BOLD, (float) DECOR_FONT_SIZE);
         g2d.setFont(quoteFont);
         g2d.setColor(decorColor);
         FontMetrics qfm = g2d.getFontMetrics(quoteFont);
@@ -214,37 +201,24 @@ public class TextImageServiceImpl implements TextImageService {
     }
 
     /**
-     * 查找可用的中文字体
+     * 按指定 classpath 路径加载单个字体文件
      *
+     * @param path classpath 路径（如 /fonts/simhei.ttf）
      * @param size 字号
-     * @return 支持中文显示的Font对象
+     * @return 加载成功的 Font 对象，失败返回 null
      */
-    private Font findCJKFont(int size) {
-        for (String name : CJK_FONT_NAMES) {
-            Font font = new Font(name, Font.PLAIN, size);
-            // 检测字体是否支持CJK字符渲染
-            if (font.canDisplayUpTo("中文测试") == -1) {
-                return font;
+    private Font loadFontByPath(String path, int size) {
+        try (InputStream inputStream = TextImageServiceImpl.class.getResourceAsStream(path)) {
+            if (inputStream == null) {
+                log.warn("字体文件不存在: {}", path);
+                return null;
             }
+            Font font = Font.createFont(Font.TRUETYPE_FONT, inputStream);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(font);
+            return font.deriveFont(Font.PLAIN, (float) size);
+        } catch (FontFormatException | IOException e) {
+            log.warn("加载字体失败: {}", path, e);
+            return null;
         }
-        // 回退到系统默认无衬线字体
-        return new Font(Font.SANS_SERIF, Font.PLAIN, size);
-    }
-
-    /**
-     * 查找可用的黑体字体（用于装饰元素）
-     *
-     * @param size 字号
-     * @return 支持中文显示的黑体Font对象
-     */
-    private Font findHeiFont(int size) {
-        for (String name : HEI_FONT_NAMES) {
-            Font font = new Font(name, Font.PLAIN, size);
-            if (font.canDisplayUpTo("中文测试") == -1) {
-                return font;
-            }
-        }
-        // 回退到 findCJKFont
-        return findCJKFont(size);
     }
 }
