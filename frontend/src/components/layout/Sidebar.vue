@@ -17,7 +17,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['login', 'navigate-home', 'navigate-profile'])
+const emit = defineEmits(['login', 'navigate-home', 'navigate-profile', 'publish'])
 
 const userStore = useUserStore()
 
@@ -48,6 +48,8 @@ const activeMenu = computed(() => {
 const setActiveMenu = (key) => {
   if (key === 'home') {
     emit('navigate-home')
+  } else if (key === 'publish') {
+    emit('publish')
   }
 }
 

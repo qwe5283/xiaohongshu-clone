@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, inject } from 'vue'
+import { ref, onMounted, watch, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import SearchBar from './SearchBar.vue'
 import CategoryTabs from './CategoryTabs.vue'
@@ -10,6 +10,7 @@ import { usePostStore } from '@/stores/post'
 const router = useRouter()
 const postStore = usePostStore()
 const openPostDetail = inject('openPostDetail')
+const publishVersion = inject('publishVersion', 0)
 
 const activeCategory = ref('推荐')
 
@@ -40,6 +41,11 @@ const loadPosts = async () => {
 }
 
 onMounted(loadPosts)
+
+// 发布成功后自动刷新列表
+watch(publishVersion, () => {
+  loadPosts()
+})
 
 const handleCategoryChange = (category) => {
   activeCategory.value = category

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import Sidebar from './components/layout/Sidebar.vue'
 import LoginModal from './components/common/LoginModal.vue'
 import PostDetailModal from './components/post/PostDetailModal.vue'
+import PublishModal from './components/post/PublishModal.vue'
 import { useUserStore } from './stores/user'
 
 const route = useRoute()
@@ -15,6 +16,19 @@ const showLoginModal = ref(false)
 const openLoginModal = () => { showLoginModal.value = true }
 const closeLoginModal = () => { showLoginModal.value = false }
 const onLoginSuccess = () => { showLoginModal.value = false }
+
+// ====== 发布弹窗 ======
+const showPublishModal = ref(false)
+// 发布版本号：每次发布成功后 +1，MainContent 监听此值刷新列表
+const publishVersion = ref(0)
+provide('publishVersion', publishVersion)
+
+const openPublishModal = () => { showPublishModal.value = true }
+const closePublishModal = () => { showPublishModal.value = false }
+const onPublishSuccess = () => {
+  publishVersion.value++
+}
+provide('openPublishModal', openPublishModal)
 
 // ====== 详情弹窗：用 ref + history.pushState 驱动，不走 Vue Router 导航 ======
 // 这样弹窗不会替换当前页面组件，也不会触发 scrollBehavior
@@ -99,12 +113,18 @@ onMounted(async () => {
     @login="openLoginModal"
     @navigate-home="navigateHome"
     @navigate-profile="navigateProfile"
+    @publish="openPublishModal"
   />
   <router-view />
   <LoginModal
     v-if="showLoginModal"
     @close="closeLoginModal"
     @login-success="onLoginSuccess"
+  />
+  <PublishModal
+    v-if="showPublishModal"
+    @close="closePublishModal"
+    @publish-success="onPublishSuccess"
   />
   <PostDetailModal
     v-if="showPostDetail"

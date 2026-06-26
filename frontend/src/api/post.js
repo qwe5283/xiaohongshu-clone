@@ -19,6 +19,27 @@ export function getPosts(params = {}) {
 }
 
 /**
+ * 创建笔记（需登录）
+ * @param {{title:string, content?:string, imageUrls?:string[], videoUrl?:string}} data
+ * @returns {Promise<object>} PostVO
+ */
+export function createPost(data) {
+  return request.post('/post/create', data)
+}
+
+/**
+ * 文本配图生成：根据标题文本生成一张 2:3 PNG 配图
+ * @param {string} text - 文本内容，最多20字
+ * @returns {Promise<Blob>} PNG 图片 Blob
+ */
+export function generateTextImage(text) {
+  return request.get('/post/text-image/generate', {
+    params: { text },
+    responseType: 'blob',
+  })
+}
+
+/**
  * 获取笔记详情
  * @param {number|string} postId
  * @returns {Promise<object>} PostVO

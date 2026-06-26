@@ -34,15 +34,23 @@ const showRepliesMap = reactive({})   // commentId -> boolean
 const isLiked = ref(false)
 const isCollected = ref(false)
 const isFollowed = ref(false)
-const currentImageIndex = ref(0)
+const currentMediaIndex = ref(0)
 const commentText = ref('')
 const submitting = ref(false)
 
-const displayImages = computed(() => {
+// 统一媒体列表：视频在前，图片在后
+const mediaItems = computed(() => {
   if (!post.value) return []
-  if (post.value.images && post.value.images.length) return post.value.images
-  if (post.value.coverImage) return [{ imageUrl: post.value.coverImage }]
-  return []
+  const items = []
+  if (post.value.videoUrl) {
+    items.push({ type: 'video', url: post.value.videoUrl })
+  }
+  if (post.value.images && post.value.images.length) {
+    items.push(...post.value.images.map(img => ({ type: 'image', url: img.imageUrl })))
+  } else if (post.value.coverImage && !post.value.videoUrl) {
+    items.push({ type: 'image', url: post.value.coverImage })
+  }
+  return items
 })
 
 const isSelf = computed(() => {
@@ -186,10 +194,10 @@ const handleToggleReplies = async (comment) => {
 }
 
 const prevImage = () => {
-  if (currentImageIndex.value > 0) currentImageIndex.value--
+  if (currentMediaIndex.value > 0) currentMediaIndex.value--
 }
 const nextImage = () => {
-  if (currentImageIndex.value < displayImages.value.length - 1) currentImageIndex.value++
+  if (currentMediaIndex.value < mediaItems.value.length - 1) currentMediaIndex.value++
 }
 
 const goAuthorProfile = () => {
@@ -225,27 +233,42 @@ const handleClose = () => emit('close')
     <div v-else class="w-[1000px] h-[700px] bg-white rounded-2xl flex overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
       <!-- 左侧图片轮播 -->
       <div class="flex-[1.2] bg-black flex items-center justify-center relative select-none">
-        <template v-if="displayImages.length">
-          <img :src="displayImages[currentImageIndex].imageUrl" alt="Detail Image" class="max-w-full max-h-full object-contain" />
+        <template v-if="mediaItems.length">
+          <!-- 视频 -->
+          <video
+            v-if="mediaItems[currentMediaIndex].type === 'video'"
+            :src="mediaItems[currentMediaIndex].url"
+            class="max-w-full max-h-full object-contain"
+            controls
+            autoplay
+            loop
+          ></video>
+          <!-- 图片 -->
+          <img
+            v-else
+            :src="mediaItems[currentMediaIndex].url"
+            alt="Detail Image"
+            class="max-w-full max-h-full object-contain"
+          />
           <!-- 左右箭头 -->
           <button
-            v-if="displayImages.length > 1"
-            class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60"
+            v-if="mediaItems.length > 1"
+            class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 text-2xl"
             @click="prevImage"
           >‹</button>
           <button
-            v-if="displayImages.length > 1"
-            class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60"
+            v-if="mediaItems.length > 1"
+            class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 text-2xl"
             @click="nextImage"
           >›</button>
           <!-- 底部小圆点 -->
-          <div v-if="displayImages.length > 1" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+          <div v-if="mediaItems.length > 1" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
             <span
-              v-for="(img, idx) in displayImages"
+              v-for="(item, idx) in mediaItems"
               :key="idx"
               class="w-2 h-2 rounded-full cursor-pointer"
-              :class="idx === currentImageIndex ? 'bg-white' : 'bg-white/40'"
-              @click="currentImageIndex = idx"
+              :class="idx === currentMediaIndex ? 'bg-white' : 'bg-white/40'"
+              @click="currentMediaIndex = idx"
             ></span>
           </div>
         </template>

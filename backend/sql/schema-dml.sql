@@ -72,8 +72,8 @@ INSERT INTO `post` (`user_id`, `title`, `content`, `type`, `cover_image`, `video
 (11, '吉他入门教学',            '从零开始学吉他，这些基础知识你必须掌握！', 0, 'https://picsum.photos/id/1041/400/600', '', 3500, 1200, 105, 520, 1),
 
 -- 视频笔记 (type=1)
-(3, '5分钟学会做红烧肉',        '超详细的红烧肉做法，保证一学就会！', 1, 'https://picsum.photos/id/1080/400/500', 'https://example.com/videos/hongshaorou.mp4', 8500, 3200, 350, 1500, 1),
-(4, '东京街头漫步Vlog',         '带你逛逛东京的街头，感受日本文化。', 1, 'https://picsum.photos/id/1040/400/500', 'https://example.com/videos/tokyo-vlog.mp4', 6800, 2600, 280, 1200, 1),
+(3, '5分钟学会做红烧肉',        '超详细的红烧肉做法，保证一学就会！', 1, 'https://picsum.photos/id/1080/400/500', 'https://media.w3.org/2010/05/sintel/trailer.mp4', 8500, 3200, 350, 1500, 1),
+(4, '东京街头漫步Vlog',         '带你逛逛东京的街头，感受日本文化。', 1, 'https://picsum.photos/id/1040/400/500', 'https://media.w3.org/2010/05/sintel/trailer.mp4', 6800, 2600, 280, 1200, 1),
 (7, '10分钟HIIT燃脂训练',       '高效燃脂训练，每天10分钟，轻松减脂！', 1, 'https://picsum.photos/id/1074/400/500', 'https://media.w3.org/2010/05/sintel/trailer.mp4', 7200, 2800, 300, 1350, 1);
 
 -- ==================== 插入测试图片 ====================
