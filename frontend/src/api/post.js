@@ -20,7 +20,7 @@ export function getPosts(params = {}) {
 
 /**
  * 创建笔记（需登录）
- * @param {{title:string, content?:string, imageUrls?:string[], videoUrl?:string}} data
+ * @param {{title:string, content?:string, imageUrls?:string[], videoUrl?:string, coverImage?:string}} data
  * @returns {Promise<object>} PostVO
  */
 export function createPost(data) {

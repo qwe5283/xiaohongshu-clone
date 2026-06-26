@@ -40,4 +40,9 @@ public class PostCreateDTO implements Serializable {
      */
     @Size(max = 9, message = "图片数量不能超过9张")
     private List<String> imageUrls;
+
+    /**
+     * 封面图URL（可选，显式指定时优先于自动推导。视频笔记无图片时可传入视频首帧）
+     */
+    private String coverImage;
 }

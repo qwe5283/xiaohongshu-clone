@@ -122,6 +122,54 @@ async function handleGenerateImage() {
   }
 }
 
+// ---- 视频首帧截取 ----
+function extractVideoFrame(videoFile) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video')
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+
+    video.preload = 'metadata'
+    video.muted = true
+    video.playsInline = true
+
+    const cleanup = () => {
+      video.pause()
+      URL.revokeObjectURL(video.src)
+    }
+
+    video.onloadeddata = () => {
+      // 跳过可能的纯黑首帧
+      video.currentTime = 1
+    }
+
+    video.onseeked = () => {
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
+      cleanup()
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(new File([blob], `cover-${Date.now()}.jpg`, { type: 'image/jpeg' }))
+          } else {
+            reject(new Error('无法提取视频帧'))
+          }
+        },
+        'image/jpeg',
+        0.9
+      )
+    }
+
+    video.onerror = () => {
+      cleanup()
+      reject(new Error('视频加载失败'))
+    }
+
+    video.src = URL.createObjectURL(videoFile)
+  })
+}
+
 // ---- 提交 ----
 async function handleSubmit() {
   errorMsg.value = ''
@@ -147,12 +195,26 @@ async function handleSubmit() {
       videoUrl = res.url
     }
 
-    // 3) 创建笔记
+    // 3) 视频首帧作为封面（仅视频 + 无图片时触发）
+    let coverImageUrl = ''
+    if (videoUrl && imageUrls.length === 0) {
+      try {
+        const coverFile = await extractVideoFrame(videoFile.value)
+        const coverRes = await uploadImage(coverFile)
+        coverImageUrl = coverRes.url
+      } catch (e) {
+        // 截帧失败不阻塞发布，封面降级为空
+        console.warn('视频封面提取失败:', e)
+      }
+    }
+
+    // 4) 创建笔记
     await createPost({
       title: title.value.trim(),
       content: content.value.trim() || undefined,
       imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
       videoUrl: videoUrl || undefined,
+      coverImage: coverImageUrl || undefined,
     })
 
     showToast('发布成功！', 'success')

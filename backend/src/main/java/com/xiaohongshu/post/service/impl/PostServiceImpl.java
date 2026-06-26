@@ -70,8 +70,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         if (hasVideo) {
             post.setVideoUrl(createDTO.getVideoUrl());
         }
-        // 自动设置封面图：取第一张图片
-        if (hasImages) {
+        // 自动设置封面图：优先使用显式传入的 coverImage
+        if (StringUtils.hasText(createDTO.getCoverImage())) {
+            post.setCoverImage(createDTO.getCoverImage());
+        } else if (hasImages) {
+            // 降级到使用第一张图片
             post.setCoverImage(createDTO.getImageUrls().get(0));
         }
         post.setViewCount(0);
@@ -165,8 +168,10 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // 自动推导 type：有视频→1，仅图片→0
         post.setType(hasVideo ? 1 : 0);
 
-        // 自动设置封面图：取第一张图片
-        if (imagesUpdated) {
+        // 自动设置封面图：优先使用显式传入的 coverImage
+        if (StringUtils.hasText(updateDTO.getCoverImage())) {
+            post.setCoverImage(updateDTO.getCoverImage());
+        } else if (imagesUpdated) {
             post.setCoverImage(hasImages ? updateDTO.getImageUrls().get(0) : "");
         }
 

@@ -45,4 +45,9 @@ public class PostUpdateDTO implements Serializable {
      */
     @Size(max = 9, message = "图片数量不能超过9张")
     private List<String> imageUrls;
+
+    /**
+     * 封面图URL（可选，显式指定时优先于自动推导）
+     */
+    private String coverImage;
 }
