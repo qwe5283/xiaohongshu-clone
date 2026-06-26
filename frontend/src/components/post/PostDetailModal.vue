@@ -248,7 +248,7 @@ const handleClose = () => emit('close')
             v-else
             :src="mediaItems[currentMediaIndex].url"
             alt="Detail Image"
-            class="max-w-full max-h-full object-contain"
+            class="w-full h-full object-contain"
           />
           <!-- 左右箭头 -->
           <button
