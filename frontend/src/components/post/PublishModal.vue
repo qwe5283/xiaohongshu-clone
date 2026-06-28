@@ -5,7 +5,9 @@ import { createPost, generateTextImage } from '@/api/post'
 import { useUserStore } from '@/stores/user'
 import { showToast } from '@/utils/toast'
 import closeIcon from '../../assets/icons/close.svg?raw'
-import plusIcon from '../../assets/icons/publish.svg?raw'
+import BaseButton from '@/components/common/BaseButton.vue'
+import BaseInput from '@/components/common/BaseInput.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 
 const emit = defineEmits(['close', 'publish-success'])
 const userStore = useUserStore()
@@ -18,13 +20,21 @@ const videoFile = ref(null)     // File 对象 | null
 const errorMsg = ref('')
 const submitting = ref(false)
 
-// ---- 本地预览 URL（用 createObjectURL）----
-const imagePreviews = computed(() =>
-  imageFiles.value.map((f) => URL.createObjectURL(f))
-)
-const videoPreviewUrl = computed(() =>
-  videoFile.value ? URL.createObjectURL(videoFile.value) : ''
-)
+// ---- 本地预览 URL（用 createObjectURL，删除/卸载时主动释放）----
+const imagePreviews = ref([])
+
+function appendImageFiles(files) {
+  const previews = files.map((file) => ({
+    file,
+    url: URL.createObjectURL(file),
+  }))
+  imagePreviews.value = [...imagePreviews.value, ...previews]
+  imageFiles.value = imagePreviews.value.map((item) => item.file)
+}
+
+function revokePreview(preview) {
+  if (preview?.url) URL.revokeObjectURL(preview.url)
+}
 
 // ---- 文件选择 input 引用 ----
 const imageInputRef = ref(null)
@@ -70,13 +80,15 @@ function handleImageChange(e) {
   const files = Array.from(e.target.files || [])
   const remaining = 9 - imageFiles.value.length
   const toAdd = files.slice(0, remaining)
-  imageFiles.value = [...imageFiles.value, ...toAdd]
+  appendImageFiles(toAdd)
   // 重置 input 以便重复选择同一文件
   if (imageInputRef.value) imageInputRef.value.value = ''
 }
 
 function removeImage(index) {
-  imageFiles.value = imageFiles.value.filter((_, i) => i !== index)
+  revokePreview(imagePreviews.value[index])
+  imagePreviews.value = imagePreviews.value.filter((_, i) => i !== index)
+  imageFiles.value = imagePreviews.value.map((item) => item.file)
 }
 
 // ---- 视频操作 ----
@@ -114,7 +126,7 @@ async function handleGenerateImage() {
   try {
     const blob = await generateTextImage(genText)
     const file = new File([blob], `cover-${Date.now()}.png`, { type: 'image/png' })
-    imageFiles.value = [...imageFiles.value, file]
+    appendImageFiles([file])
   } catch (e) {
     showToast('生成配图失败，请稍后重试', 'error')
   } finally {
@@ -235,16 +247,12 @@ function handleClose() {
 
 // 清理 objectURL，避免内存泄漏
 onUnmounted(() => {
-  imageFiles.value.forEach((f) => {
-    // createObjectURL 每次 computed 都会新建，这里做不了精准清理，
-    // 但组件销毁后浏览器会自动回收，影响不大
-  })
+  imagePreviews.value.forEach(revokePreview)
 })
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black/30 z-[100] flex justify-center items-center" @click.self="handleClose">
-    <div class="relative bg-white rounded-2xl p-8 w-[640px] max-w-[92%] max-h-[90vh] overflow-y-auto shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+  <BaseModal width-class="w-[640px]" panel-class="p-8 max-w-[92%] max-h-[90vh] overflow-y-auto" @close="handleClose">
       <!-- 关闭按钮 -->
       <button
         class="absolute top-4 right-4 bg-transparent border-none text-2xl cursor-pointer text-gray-500 p-0 size-8 flex items-center justify-center rounded-full transition-colors duration-300 hover:bg-gray-100"
@@ -263,11 +271,11 @@ onUnmounted(() => {
       <!-- 标题 -->
       <div class="mb-5">
         <label class="block text-sm font-medium text-gray-600 mb-1.5">标题 <span class="text-red-400">*</span></label>
-        <input
+        <BaseInput
           v-model="title"
+          variant="field"
           type="text"
           maxlength="200"
-          class="w-full px-4 py-3 border-none bg-[#F7F7F7] rounded-xl text-sm outline-none transition-colors placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
           placeholder="笔记标题（必填）"
         />
         <div class="text-xs text-gray-400 mt-1 text-right">{{ titleRemaining }}</div>
@@ -283,13 +291,13 @@ onUnmounted(() => {
       <!-- 正文 -->
       <div class="mb-5">
         <label class="block text-sm font-medium text-gray-600 mb-1.5">正文</label>
-        <textarea
+        <BaseInput
           v-model="content"
+          multiline
           maxlength="10000"
           rows="4"
-          class="w-full px-4 py-3 border-none bg-[#F7F7F7] rounded-xl text-sm outline-none resize-none transition-colors placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
           placeholder="分享你的想法..."
-        ></textarea>
+        />
         <div class="text-xs text-gray-400 mt-1 text-right">{{ contentRemaining }}</div>
       </div>
 
@@ -303,7 +311,7 @@ onUnmounted(() => {
             :key="idx"
             class="relative size-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0"
           >
-            <img :src="preview" class="w-full h-full object-cover" alt="preview" />
+            <img :src="preview.url" class="w-full h-full object-cover" alt="preview" />
             <button
               class="absolute top-0.5 right-0.5 size-5 bg-black/50 text-white rounded-full flex items-center justify-center cursor-pointer text-xs leading-none"
               @click="removeImage(idx)"
@@ -355,13 +363,12 @@ onUnmounted(() => {
       </div>
 
       <!-- 提交按钮 -->
-      <button
-        class="bg-primary text-white border-none p-3 rounded-3xl text-base font-bold cursor-pointer w-full disabled:opacity-60 disabled:cursor-not-allowed"
+      <BaseButton
+        block
         :disabled="submitting"
         @click="handleSubmit"
       >
         {{ submitting ? '发布中...' : '发布笔记' }}
-      </button>
-    </div>
-  </div>
+      </BaseButton>
+  </BaseModal>
 </template>

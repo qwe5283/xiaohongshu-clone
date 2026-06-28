@@ -259,7 +259,7 @@ const nextImage = () => {
 
 const goAuthorProfile = () => {
   if (!post.value?.userId) return
-  // 静默关闭弹窗（不触发 history.back），再由 router.push 接管 URL 变更
+  // 静默关闭弹窗，再由 router.push 接管 URL 变更
   closePostDetailSilent()
   router.push({ name: 'user-profile', params: { id: post.value.userId } })
 }

@@ -3,7 +3,7 @@ import { useUserStore } from '@/stores/user'
 import { showToast } from '@/utils/toast'
 
 // 首页直接用现有 MainContent 组件作为路由组件
-// ProfilePage 由路由懒加载；详情弹窗由 App.vue 用 history.pushState 管理，不走路由
+// ProfilePage 由路由懒加载；详情弹窗由 App.vue 根据 /post/:id 路由统一渲染
 import MainContent from '@/components/layout/MainContent.vue'
 
 const routes = [
@@ -20,8 +20,7 @@ const routes = [
     // 路由级代码分割
     component: () => import('@/components/user/ProfilePage.vue'),
   },
-  // /post/:id：直接访问地址栏时渲染 MainContent 作为背景
-  // 应用内打开弹窗走 history.pushState，不会触发此路由的组件切换
+  // /post/:id：渲染 MainContent 作为背景，App.vue 叠加详情弹窗
   {
     path: '/post/:id',
     name: 'post-detail',

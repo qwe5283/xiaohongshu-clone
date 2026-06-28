@@ -38,6 +38,8 @@ const menuItems = [
   { key: 'notify', label: '通知', icon: notifyIcon }
 ]
 
+const menuItemClass = 'flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#F2F2F2]'
+
 // 当前激活菜单：以路由 name 为准，保证刷新/直接访问 URL 时高亮正确
 const activeMenu = computed(() => {
   if (props.currentPage === 'user-profile') return 'profile'
@@ -111,8 +113,7 @@ const handleCommunityGuidelines = () => {
       <li
         v-for="item in menuItems"
         :key="item.key"
-        class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#f2f2f2]"
-        :class="{ 'bg-[#F2F2F2] font-bold': activeMenu === item.key }"
+        :class="[menuItemClass, { 'bg-[#F2F2F2] font-bold': activeMenu === item.key }]"
         @click="setActiveMenu(item.key)"
       >
         <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-5.5" v-html="item.icon"></span>
@@ -121,8 +122,7 @@ const handleCommunityGuidelines = () => {
 
       <!-- 登录后显示用户头像 -->
       <li v-if="isLoggedIn"
-        class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-gray-100"
-        :class="{ 'bg-[#F2F2F2] font-bold': props.currentPage === 'user-profile' }"
+        :class="[menuItemClass, { 'bg-[#F2F2F2] font-bold': props.currentPage === 'user-profile' }]"
         @click="emit('navigate-profile')">
         <span class="mr-3 flex items-center justify-center size-6">
           <img class="size-5.5 rounded-full object-cover" :src="avatarUrl" />
@@ -139,7 +139,7 @@ const handleCommunityGuidelines = () => {
       <!-- 更多：带弹出菜单 -->
       <li ref="moreMenuRef" class="relative">
         <div
-          class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#F2F2F2]"
+          :class="menuItemClass"
           @click="toggleMoreMenu">
           <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-5.5" v-html="moreIcon"></span>
           更多
@@ -179,7 +179,7 @@ const handleCommunityGuidelines = () => {
           </div>
         </div>
       </li>
-      <li class="flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#F2F2F2]">
+      <li :class="menuItemClass">
         <span class="mr-3 flex items-center justify-center size-6 [&>svg]:size-5.5" v-html="aboutIcon"></span>
         关于我们
       </li>

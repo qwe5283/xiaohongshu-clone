@@ -3,6 +3,7 @@ import { ref, onMounted, watch, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import SearchBar from './SearchBar.vue'
 import CategoryTabs from './CategoryTabs.vue'
+import PageShell from './PageShell.vue'
 import PostCard from '../post/PostCard.vue'
 import { getPosts, adaptPost } from '@/api/post'
 import { usePostStore } from '@/stores/post'
@@ -65,7 +66,7 @@ const handleOpenProfile = (userId) => {
 </script>
 
 <template>
-  <div class="ml-[164px] flex-1 px-10 max-w-[1600px] bg-white">
+  <PageShell>
     <!-- 顶部搜索栏 -->
     <header class="sticky top-0 bg-white py-7 z-[5]">
       <SearchBar />
@@ -108,5 +109,5 @@ const handleOpenProfile = (userId) => {
         />
       </div>
     </section>
-  </div>
+  </PageShell>
 </template>

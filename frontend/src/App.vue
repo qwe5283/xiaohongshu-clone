@@ -6,6 +6,8 @@ import LoginModal from './components/common/LoginModal.vue'
 import PostDetailModal from './components/post/PostDetailModal.vue'
 import PublishModal from './components/post/PublishModal.vue'
 import { useUserStore } from './stores/user'
+import { onAuthExpired } from './auth/session'
+import { showToast } from './utils/toast'
 
 const route = useRoute()
 const router = useRouter()
@@ -30,58 +32,46 @@ const onPublishSuccess = () => {
 }
 provide('openPublishModal', openPublishModal)
 
-// ====== 详情弹窗：用 ref + history.pushState 驱动，不走 Vue Router 导航 ======
-// 这样弹窗不会替换当前页面组件，也不会触发 scrollBehavior
+// ====== 详情弹窗：由 Vue Router 地址驱动，背景页仍渲染 MainContent ======
 const selectedPostId = ref(null)
+const postOpenedInApp = ref(false)
 const showPostDetail = computed(() => selectedPostId.value != null)
-
-// 防止 close → history.back → popstate → close 的循环
-let poppingState = false
 
 const openPostDetail = (postId) => {
   selectedPostId.value = postId
-  // 推入历史栈，支持浏览器前进/后退、地址栏可复制
-  history.pushState({ postId }, '', `/post/${postId}`)
+  postOpenedInApp.value = true
+  router.push({ name: 'post-detail', params: { id: postId } })
 }
 
 const closePostDetail = () => {
   if (selectedPostId.value === null) return
   selectedPostId.value = null
-  // 回退历史栈以恢复原 URL，用标志位阻止 popstate 重复关闭
-  if (history.state?.postId) {
-    poppingState = true
-    history.back()
-    // popstate 在当前宏任务结束后才触发，下一帧重置标志
-    requestAnimationFrame(() => { poppingState = false })
+  if (route.name === 'post-detail') {
+    if (postOpenedInApp.value) {
+      router.back()
+    } else {
+      router.push({ name: 'home' })
+    }
   }
+  postOpenedInApp.value = false
 }
 
-// 静默关闭弹窗：仅隐藏弹窗 + 清除 URL 中的 /post/:id，不触发 history.back()
-// 用于弹窗内跳转其他路由（如点击作者头像跳个人主页），避免 history.back 与 router.push 竞态
+// 静默关闭弹窗：用于弹窗内跳转其他路由（如点击作者头像跳个人主页）
 const closePostDetailSilent = () => {
   if (selectedPostId.value === null) return
   selectedPostId.value = null
-  // 用 replaceState 将 /post/:id 替换为当前实际路由的 URL，不留历史记录
-  const base = route.fullPath
-  history.replaceState({ ...history.state, postId: null }, '', base)
+  postOpenedInApp.value = false
 }
 
-// 浏览器后退按钮：popstate 触发时同步关闭弹窗
-const onPopState = () => {
-  if (poppingState) return
-  // popstate 触发后 history.state 已被浏览器更新
-  // 如果 state 里没有 postId，说明用户从弹窗状态后退了
-  if (!history.state?.postId) {
-    selectedPostId.value = null
-  }
-}
-
-// 直接访问 /post/:id 时（分享链接），由路由驱动弹窗打开
+// 路由变化时同步弹窗；直接访问 /post/:id 也会打开
 watch(
   () => ({ name: route.name, id: route.params.id }),
   (to) => {
-    if (to.name === 'post-detail' && to.id && selectedPostId.value == null) {
+    if (to.name === 'post-detail' && to.id) {
       selectedPostId.value = to.id
+    } else {
+      selectedPostId.value = null
+      postOpenedInApp.value = false
     }
   },
   { immediate: true }
@@ -91,8 +81,14 @@ watch(
 provide('openPostDetail', openPostDetail)
 provide('closePostDetailSilent', closePostDetailSilent)
 
-onMounted(() => window.addEventListener('popstate', onPopState))
-onUnmounted(() => window.removeEventListener('popstate', onPopState))
+const stopAuthExpired = onAuthExpired((message) => {
+  userStore.logout()
+  showToast(message || '登录已失效，请重新登录', 'error')
+  if (route.name !== 'home') {
+    router.push({ name: 'home' })
+  }
+})
+onUnmounted(stopAuthExpired)
 
 // ====== 导航 ======
 // /profile 重定向到 /user/me，再由路由守卫解析成当前用户真实 id

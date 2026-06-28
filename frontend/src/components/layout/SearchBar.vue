@@ -5,7 +5,7 @@ import searchIcon from '../../assets/icons/search.svg?raw'
 const searchQuery = ref('')
 
 const handleSearch = () => {
-  console.log('搜索:', searchQuery.value)
+  // 搜索接口尚未接入，保留输入状态避免提交产生副作用。
 }
 </script>
 

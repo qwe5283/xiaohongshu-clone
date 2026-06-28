@@ -3,6 +3,9 @@ import { ref } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { showToast } from '@/utils/toast'
 import closeIcon from '../../assets/icons/close.svg?raw'
+import BaseButton from './BaseButton.vue'
+import BaseInput from './BaseInput.vue'
+import BaseModal from './BaseModal.vue'
 
 const emit = defineEmits(['close', 'login-success'])
 
@@ -102,8 +105,7 @@ const handleClose = () => {
 </script>
 
 <template>
-  <div class="fixed inset-0 bg-black/30 z-[100] flex justify-center items-center" @click.self="handleClose">
-    <div class="relative bg-white rounded-2xl p-10 w-[400px] max-w-[90%] shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+  <BaseModal width-class="w-[400px]" panel-class="p-10 max-w-[90%]" @close="handleClose">
       <button
         class="absolute top-4 right-4 bg-transparent border-none text-2xl cursor-pointer text-gray-500 p-0 size-8 flex items-center justify-center rounded-full transition-colors duration-300 hover:bg-gray-100"
         @click="handleClose"
@@ -122,17 +124,16 @@ const handleClose = () => {
 
       <!-- 登录表单 -->
       <div v-if="mode === 'login'" class="flex flex-col gap-5">
-        <input v-model="loginForm.username" type="text"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
+        <BaseInput v-model="loginForm.username" type="text"
           placeholder="输入用户名" @keyup.enter="handleLogin" />
-        <input v-model="loginForm.password" type="password"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
+        <BaseInput v-model="loginForm.password" type="password"
           placeholder="输入密码" @keyup.enter="handleLogin" />
-        <button
-          class="bg-primary text-white border-none p-3 rounded-3xl text-base font-bold cursor-pointer w-full mt-2.5 disabled:opacity-60 disabled:cursor-not-allowed"
+        <BaseButton
+          class="mt-2.5"
+          block
           :disabled="loading"
           @click="handleLogin"
-        >{{ loading ? '登录中...' : '登录' }}</button>
+        >{{ loading ? '登录中...' : '登录' }}</BaseButton>
         <p class="text-center mt-5 text-sm text-gray-400">
           没有账号?
           <a href="javascript:void(0)" class="text-primary no-underline" @click="switchMode('register')">前往注册</a>
@@ -141,28 +142,24 @@ const handleClose = () => {
 
       <!-- 注册表单 -->
       <div v-else class="flex flex-col gap-5">
-        <input v-model="registerForm.username" type="text"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
+        <BaseInput v-model="registerForm.username" type="text"
           placeholder="设置用户名（3-20字符）" />
-        <input v-model="registerForm.password" type="password"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
+        <BaseInput v-model="registerForm.password" type="password"
           placeholder="设置密码（6-20字符）" />
-        <input v-model="registerForm.nickname" type="text"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
+        <BaseInput v-model="registerForm.nickname" type="text"
           placeholder="昵称（选填）" />
-        <input v-model="registerForm.phone" type="text"
-          class="w-full px-4 py-[14px] border-none bg-[#F7F7F7] rounded-full text-base outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
+        <BaseInput v-model="registerForm.phone" type="text"
           placeholder="手机号（选填）" />
-        <button
-          class="bg-primary text-white border-none p-3 rounded-3xl text-base font-bold cursor-pointer w-full mt-2.5 disabled:opacity-60 disabled:cursor-not-allowed"
+        <BaseButton
+          class="mt-2.5"
+          block
           :disabled="loading"
           @click="handleRegister"
-        >{{ loading ? '注册中...' : '注册' }}</button>
+        >{{ loading ? '注册中...' : '注册' }}</BaseButton>
         <p class="text-center mt-5 text-sm text-gray-400">
           已有账号?
           <a href="javascript:void(0)" class="text-primary no-underline" @click="switchMode('login')">前往登录</a>
         </p>
       </div>
-    </div>
-  </div>
+  </BaseModal>
 </template>

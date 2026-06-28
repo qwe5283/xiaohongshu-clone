@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import heartIcon from '../../assets/icons/heart.svg?raw'
 import { getUserById } from '@/api/auth'
 import { getUserPosts } from '@/api/post'
 import { getCollectedPosts } from '@/api/collect'
@@ -9,6 +8,10 @@ import { getFollowCount, getFollowStatus, toggleFollow } from '@/api/follow'
 import { useUserStore } from '@/stores/user'
 import { showToast } from '@/utils/toast'
 import { adaptPost } from '@/api/post'
+import SearchBar from '@/components/layout/SearchBar.vue'
+import PageShell from '@/components/layout/PageShell.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
+import PostGrid from '@/components/post/PostGrid.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -29,10 +32,6 @@ const isFollowed = ref(false)
 
 const defaultAvatar =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%23eee"/><text x="50%" y="55%" text-anchor="middle" font-size="18" fill="%23bbb">U</text></svg>'
-
-function isTextCard(post) {
-  return !post.coverImage && post.type === 0
-}
 
 const loadProfile = async () => {
   if (!userId.value) return
@@ -131,15 +130,10 @@ const formatCount = (num) => {
 </script>
 
 <template>
-  <div class="ml-[164px] flex-1 px-10 max-w-[1600px] bg-white min-h-screen">
+  <PageShell>
     <!-- 顶部搜索栏 -->
     <header class="sticky top-0 bg-white py-7 z-[5]">
-      <div class="bg-white border border-[#d9d9d9] rounded-[28px] px-[18px] py-3 flex items-center text-gray-400 max-w-[900px] mx-auto shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
-        <input type="text" placeholder="登录探索更多内容" class="border-none outline-none flex-1 text-base bg-transparent placeholder:text-gray-300" />
-        <div class="size-8 bg-gray-800 rounded-full flex items-center justify-center cursor-pointer">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-5 fill-white"><path d="M11.5 3a8.5 8.5 0 0 1 6.613 13.84l3.023 3.024a.9.9 0 1 1-1.272 1.272l-3.024-3.023A8.5 8.5 0 1 1 11.5 3m0 15.2a6.7 6.7 0 1 0 0-13.4 6.7 6.7 0 0 0 0 13.4"/></svg>
-        </div>
-      </div>
+      <SearchBar />
     </header>
 
     <!-- 加载中 -->
@@ -159,20 +153,23 @@ const formatCount = (num) => {
               <!-- 名字行 -->
               <div class="flex items-center gap-5 mb-2.5 w-[480px]">
                 <span class="text-2xl font-bold">{{ user.nickname || user.username }}</span>
-                <button
+                <BaseButton
                     v-if="!isMe"
-                    class="border border-primary w-24 px-4 py-2 rounded-[20px] text-sm font-bold cursor-pointer transition-all duration-200 ml-auto"
-                    :class="isFollowed ? 'bg-white text-primary' : 'bg-primary text-white'"
+                    class="w-24 ml-auto"
+                    :variant="isFollowed ? 'outline' : 'primary'"
+                    size="sm"
                     @click="handleToggleFollow"
                 >
                   {{ isFollowed ? '已关注' : '关注' }}
-                </button>
-                <button
+                </BaseButton>
+                <BaseButton
                     v-else
-                    class="border border-primary w-24 px-4 py-2 rounded-[20px] text-sm font-bold bg-white text-primary cursor-pointer transition-all duration-200 ml-auto"
+                    class="w-24 ml-auto"
+                    variant="outline"
+                    size="sm"
                 >
                   编辑资料
-                </button>
+                </BaseButton>
               </div>
               <!-- ID -->
               <div class="text-xs text-gray-400 mb-2.5">小红书号：{{ user.id }}</div>
@@ -203,67 +200,15 @@ const formatCount = (num) => {
         </div>
 
         <!-- 笔记网格 -->
-        <div v-if="activeTab === 'notes'" class="grid grid-cols-5 gap-5">
-          <div
-            v-for="note in notes"
-            :key="note.id"
-            class="bg-white rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-            :class="{ 'flex items-center justify-center h-[200px] border border-gray-100': isTextCard(note) }"
-            @click="goPostDetail(note.id)"
-          >
-            <template v-if="isTextCard(note)">
-              <div class="text-center font-bold text-lg whitespace-pre-line p-4">{{ note.title }}</div>
-            </template>
-            <template v-else>
-              <div class="m-1 relative overflow-hidden rounded-xl shadow-[0_0_1px_rgba(0,0,0,0.6)] group">
-                <img :src="note.coverImage" class="w-full block object-cover transition-transform duration-300 group-hover:scale-105" />
-                <div class="absolute inset-0 bg-gradient-to-b from-black/5 to-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-              </div>
-              <div class="p-3">
-                <div class="text-sm font-medium leading-[1.4] line-clamp-2">{{ note.title }}</div>
-                <div v-if="note.likeCount" class="flex justify-end items-center text-xs text-gray-500 mt-2">
-                  <span class="size-4 [&>svg]:size-4 mr-1" v-html="heartIcon"></span>
-                  {{ formatCount(note.likeCount) }}
-                </div>
-              </div>
-            </template>
-          </div>
-          <div v-if="notes.length === 0" class="col-span-5 text-center text-gray-400 py-20">暂无笔记</div>
-        </div>
+        <PostGrid v-if="activeTab === 'notes'" :posts="notes" empty-text="暂无笔记" @open="goPostDetail" />
 
         <!-- 收藏网格 -->
-        <div v-else class="grid grid-cols-5 gap-5">
-          <div
-            v-for="note in collects"
-            :key="note.id"
-            class="bg-white rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-            :class="{ 'flex items-center justify-center h-[200px] border border-gray-100': isTextCard(note) }"
-            @click="goPostDetail(note.id)"
-          >
-            <template v-if="isTextCard(note)">
-              <div class="text-center font-bold text-lg whitespace-pre-line p-4">{{ note.title }}</div>
-            </template>
-            <template v-else>
-              <div class="m-1 relative overflow-hidden rounded-xl shadow-[0_0_1px_rgba(0,0,0,0.6)] group">
-                <img :src="note.coverImage" class="w-full block object-cover transition-transform duration-300 group-hover:scale-105" />
-                <div class="absolute inset-0 bg-gradient-to-b from-black/5 to-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-              </div>
-              <div class="p-3">
-                <div class="text-sm font-medium leading-[1.4] line-clamp-2">{{ note.title }}</div>
-                <div v-if="note.likeCount" class="flex justify-end items-center text-xs text-gray-500 mt-2">
-                  <span class="size-4 [&>svg]:size-4 mr-1" v-html="heartIcon"></span>
-                  {{ formatCount(note.likeCount) }}
-                </div>
-              </div>
-            </template>
-          </div>
-          <div v-if="collects.length === 0" class="col-span-5 text-center text-gray-400 py-20">暂无收藏</div>
-        </div>
+        <PostGrid v-else :posts="collects" empty-text="暂无收藏" @open="goPostDetail" />
       </section>
     </template>
 
     <div v-else class="flex flex-col items-center py-20 text-gray-400">
       用户加载失败
     </div>
-  </div>
+  </PageShell>
 </template>

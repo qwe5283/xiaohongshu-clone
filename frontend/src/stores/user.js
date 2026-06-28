@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import * as authApi from '@/api/auth'
-import { getToken, setToken, clearToken } from '@/api/request'
+import { getToken, setToken, clearToken } from '@/auth/session'
 
 export const useUserStore = defineStore('user', () => {
   // token 初始化时从 localStorage 恢复（裸 JWT）

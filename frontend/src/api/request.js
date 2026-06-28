@@ -1,20 +1,7 @@
 // axios 封装：统一 baseURL、请求塞 Token、响应解包 Result、错误集中处理
 import axios from 'axios'
 import { showToast } from '@/utils/toast'
-
-const TOKEN_KEY = 'xhs_token'
-
-// 从 localStorage 读 token（裸 JWT，不含 Bearer 前缀）
-export function getToken() {
-  return localStorage.getItem(TOKEN_KEY) || ''
-}
-export function setToken(token) {
-  if (token) localStorage.setItem(TOKEN_KEY, token)
-  else localStorage.removeItem(TOKEN_KEY)
-}
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY)
-}
+import { getToken, clearToken, notifyAuthExpired } from '@/auth/session'
 
 const request = axios.create({
   baseURL: '/api',
@@ -50,14 +37,10 @@ request.interceptors.response.use(
     // 业务失败
     if (res.code === 1005) {
       // 未登录 / token 失效
+      const msg = res.message || '登录已失效，请重新登录'
       clearToken()
-      showToast(res.message || '登录已失效，请重新登录', 'error')
-      // 跳登录：用 location 避免与 router 循环依赖
-      // 仅当不在首页时跳，避免刷新首页被踢
-      if (location.pathname !== '/') {
-        location.href = '/'
-      }
-      return Promise.reject(new Error(res.message || '未登录'))
+      notifyAuthExpired(msg)
+      return Promise.reject(new Error(msg))
     }
     // 其他业务错误（密码错误、用户已存在等）
     showToast(res.message || '操作失败', 'error')
@@ -72,7 +55,8 @@ request.interceptors.response.use(
       if (status === 401) {
         clearToken()
         msg = (body && body.message) || '登录已失效，请重新登录'
-        if (location.pathname !== '/') location.href = '/'
+        notifyAuthExpired(msg)
+        return Promise.reject(new Error(msg))
       } else if (body && body.message) {
         msg = body.message
       } else if (status === 404) {
