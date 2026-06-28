@@ -14,7 +14,7 @@ defineProps({
     default: 'md',
     validator: (value) => ['sm', 'md'].includes(value),
   },
-})
+});
 </script>
 
 <template>
@@ -24,7 +24,8 @@ defineProps({
       size === 'sm' ? 'px-4 py-2 text-sm' : 'p-3',
       variant === 'primary' && 'bg-primary text-white border border-primary',
       variant === 'outline' && 'bg-white text-primary border border-primary',
-      variant === 'ghost' && 'bg-transparent text-gray-500 border border-transparent p-0 hover:bg-gray-100',
+      variant === 'ghost' &&
+        'bg-transparent text-gray-500 border border-transparent p-0 hover:bg-gray-100',
       block && 'w-full',
     ]"
   >

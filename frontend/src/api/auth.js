@@ -1,5 +1,5 @@
 // 鉴权相关接口
-import request from './request'
+import request from './request';
 
 /**
  * 登录
@@ -7,7 +7,7 @@ import request from './request'
  * @returns {Promise<{token:string, expiresIn:number, user:object}>}
  */
 export function login(data) {
-  return request.post('/user/login', data)
+  return request.post('/user/login', data);
 }
 
 /**
@@ -16,7 +16,7 @@ export function login(data) {
  * @returns {Promise<object>} UserVO
  */
 export function register(data) {
-  return request.post('/user/register', data)
+  return request.post('/user/register', data);
 }
 
 /**
@@ -24,7 +24,7 @@ export function register(data) {
  * @returns {Promise<object>} UserVO
  */
 export function getMe() {
-  return request.get('/user/me')
+  return request.get('/user/me');
 }
 
 /**
@@ -33,5 +33,5 @@ export function getMe() {
  * @returns {Promise<object>} UserVO
  */
 export function getUserById(userId) {
-  return request.get(`/user/${userId}`)
+  return request.get(`/user/${userId}`);
 }

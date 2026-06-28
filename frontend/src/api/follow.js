@@ -1,5 +1,5 @@
 // 关注相关接口
-import request from './request'
+import request from './request';
 
 /**
  * 关注/取消关注用户（toggle）
@@ -7,7 +7,7 @@ import request from './request'
  * @returns {Promise<{followed:boolean, message:string}>}
  */
 export function toggleFollow(userId) {
-  return request.post(`/follow/${userId}`)
+  return request.post(`/follow/${userId}`);
 }
 
 /**
@@ -16,7 +16,7 @@ export function toggleFollow(userId) {
  * @returns {Promise<{followed:boolean}>}
  */
 export function getFollowStatus(userId) {
-  return request.get(`/follow/status/${userId}`)
+  return request.get(`/follow/status/${userId}`);
 }
 
 /**
@@ -25,7 +25,7 @@ export function getFollowStatus(userId) {
  * @returns {Promise<{followingCount:number, followersCount:number}>}
  */
 export function getFollowCount(userId) {
-  return request.get(`/follow/count/${userId}`)
+  return request.get(`/follow/count/${userId}`);
 }
 
 /**
@@ -39,7 +39,7 @@ export function getFollowingList(userId, params = {}) {
       pageNum: params.pageNum ?? 1,
       pageSize: params.pageSize ?? 20,
     },
-  })
+  });
 }
 
 /**
@@ -53,5 +53,5 @@ export function getFollowersList(userId, params = {}) {
       pageNum: params.pageNum ?? 1,
       pageSize: params.pageSize ?? 20,
     },
-  })
+  });
 }

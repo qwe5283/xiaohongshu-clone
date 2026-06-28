@@ -1,5 +1,5 @@
 // 评论相关接口
-import request from './request'
+import request from './request';
 
 /**
  * 获取笔记的一级评论（分页）
@@ -13,7 +13,7 @@ export function getComments(postId, params = {}) {
       pageNum: params.pageNum ?? 1,
       pageSize: params.pageSize ?? 20,
     },
-  })
+  });
 }
 
 /**
@@ -27,7 +27,7 @@ export function getReplies(commentId, params = {}) {
       pageNum: params.pageNum ?? 1,
       pageSize: params.pageSize ?? 20,
     },
-  })
+  });
 }
 
 /**
@@ -36,7 +36,7 @@ export function getReplies(commentId, params = {}) {
  * @returns {Promise<object>} CommentVO
  */
 export function createComment(data) {
-  return request.post('/comment/create', data)
+  return request.post('/comment/create', data);
 }
 
 /**
@@ -44,5 +44,5 @@ export function createComment(data) {
  * @param {number|string} commentId
  */
 export function deleteComment(commentId) {
-  return request.delete(`/comment/delete/${commentId}`)
+  return request.delete(`/comment/delete/${commentId}`);
 }

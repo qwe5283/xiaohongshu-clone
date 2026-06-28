@@ -1,5 +1,5 @@
 // 点赞相关接口
-import request from './request'
+import request from './request';
 
 /**
  * 点赞/取消点赞笔记（toggle）
@@ -7,7 +7,7 @@ import request from './request'
  * @returns {Promise<{liked:boolean, message:string}>}
  */
 export function toggleLikePost(postId) {
-  return request.post(`/like/post/${postId}`)
+  return request.post(`/like/post/${postId}`);
 }
 
 /**
@@ -16,7 +16,7 @@ export function toggleLikePost(postId) {
  * @returns {Promise<{liked:boolean, message:string}>}
  */
 export function toggleLikeComment(commentId) {
-  return request.post(`/like/comment/${commentId}`)
+  return request.post(`/like/comment/${commentId}`);
 }
 
 /**
@@ -25,7 +25,7 @@ export function toggleLikeComment(commentId) {
  * @returns {Promise<{liked:boolean}>}
  */
 export function getLikeStatusPost(postId) {
-  return request.get(`/like/status/post/${postId}`)
+  return request.get(`/like/status/post/${postId}`);
 }
 
 /**
@@ -34,5 +34,5 @@ export function getLikeStatusPost(postId) {
  * @returns {Promise<{liked:boolean}>}
  */
 export function getLikeStatusComment(commentId) {
-  return request.get(`/like/status/comment/${commentId}`)
+  return request.get(`/like/status/comment/${commentId}`);
 }

@@ -1,5 +1,5 @@
 // 笔记相关接口
-import request from './request'
+import request from './request';
 
 /**
  * 分页查询笔记列表
@@ -15,7 +15,7 @@ export function getPosts(params = {}) {
       ...(params.keyword ? { keyword: params.keyword } : {}),
       ...(params.sortType ? { sortType: params.sortType } : {}),
     },
-  })
+  });
 }
 
 /**
@@ -24,7 +24,7 @@ export function getPosts(params = {}) {
  * @returns {Promise<object>} PostVO
  */
 export function createPost(data) {
-  return request.post('/post/create', data)
+  return request.post('/post/create', data);
 }
 
 /**
@@ -36,7 +36,7 @@ export function generateTextImage(text) {
   return request.get('/post/text-image/generate', {
     params: { text },
     responseType: 'blob',
-  })
+  });
 }
 
 /**
@@ -45,7 +45,7 @@ export function generateTextImage(text) {
  * @returns {Promise<object>} PostVO
  */
 export function getPostDetail(postId) {
-  return request.get(`/post/${postId}`)
+  return request.get(`/post/${postId}`);
 }
 
 /**
@@ -61,7 +61,7 @@ export function getUserPosts(userId, params = {}) {
       pageSize: params.pageSize ?? 20,
       ...(params.sortType ? { sortType: params.sortType } : {}),
     },
-  })
+  });
 }
 
 /**
@@ -75,7 +75,7 @@ export function getMyPosts(params = {}) {
       pageSize: params.pageSize ?? 20,
       ...(params.sortType ? { sortType: params.sortType } : {}),
     },
-  })
+  });
 }
 
 /**
@@ -84,8 +84,8 @@ export function getMyPosts(params = {}) {
  *      后端无 isTextCard，前端用它区分纯文字卡片
  */
 export function adaptPost(post) {
-  if (!post) return post
-  const isTextCard = !post.coverImage && post.type === 0
+  if (!post) return post;
+  const isTextCard = !post.coverImage && post.type === 0;
   return {
     ...post,
     // 拍平的作者字段 → 嵌套对象，兼容 PostCard 的 post.author.xxx
@@ -99,5 +99,5 @@ export function adaptPost(post) {
     isTextCard,
     likeCount: post.likeCount ?? 0,
     commentCount: post.commentCount ?? 0,
-  }
+  };
 }

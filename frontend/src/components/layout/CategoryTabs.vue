@@ -2,23 +2,25 @@
 const props = defineProps({
   categories: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   active: {
     type: String,
-    default: '推荐'
-  }
-})
+    default: '推荐',
+  },
+});
 
-const emit = defineEmits(['change'])
+const emit = defineEmits(['change']);
 
 const handleChange = (category) => {
-  emit('change', category)
-}
+  emit('change', category);
+};
 </script>
 
 <template>
-  <div class="py-4 flex justify-center gap-7 text-base text-gray-500 mb-5 overflow-x-hidden">
+  <div
+    class="py-4 flex justify-center gap-7 text-base text-gray-500 mb-5 overflow-x-hidden"
+  >
     <div
       v-for="category in categories"
       :key="category"

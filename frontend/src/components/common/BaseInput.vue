@@ -1,5 +1,5 @@
 <script setup>
-import { useAttrs } from 'vue'
+import { useAttrs } from 'vue';
 
 defineProps({
   modelValue: {
@@ -15,10 +15,10 @@ defineProps({
     type: Boolean,
     default: false,
   },
-})
+});
 
-const emit = defineEmits(['update:modelValue'])
-const attrs = useAttrs()
+const emit = defineEmits(['update:modelValue']);
+const attrs = useAttrs();
 </script>
 
 <template>
@@ -34,7 +34,11 @@ const attrs = useAttrs()
     v-bind="attrs"
     :value="modelValue"
     class="w-full px-4 border-none bg-[#F7F7F7] outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
-    :class="variant === 'field' ? 'py-3 rounded-xl text-sm' : 'py-[14px] rounded-full text-base'"
+    :class="
+      variant === 'field'
+        ? 'py-3 rounded-xl text-sm'
+        : 'py-[14px] rounded-full text-base'
+    "
     @input="emit('update:modelValue', $event.target.value)"
   />
 </template>

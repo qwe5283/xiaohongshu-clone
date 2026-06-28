@@ -1,5 +1,5 @@
 // 文件上传相关接口
-import request from './request'
+import request from './request';
 
 /**
  * 上传图片
@@ -7,11 +7,11 @@ import request from './request'
  * @returns {Promise<{url: string}>}
  */
 export function uploadImage(file) {
-  const formData = new FormData()
-  formData.append('file', file)
+  const formData = new FormData();
+  formData.append('file', file);
   return request.post('/upload/image', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  });
 }
 
 /**
@@ -20,9 +20,9 @@ export function uploadImage(file) {
  * @returns {Promise<{url: string}>}
  */
 export function uploadVideo(file) {
-  const formData = new FormData()
-  formData.append('file', file)
+  const formData = new FormData();
+  formData.append('file', file);
   return request.post('/upload/video', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  });
 }

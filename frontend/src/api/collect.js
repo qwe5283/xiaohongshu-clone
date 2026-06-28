@@ -1,5 +1,5 @@
 // 收藏相关接口
-import request from './request'
+import request from './request';
 
 /**
  * 收藏/取消收藏笔记（toggle）
@@ -7,7 +7,7 @@ import request from './request'
  * @returns {Promise<{collected:boolean, message:string}>}
  */
 export function toggleCollectPost(postId) {
-  return request.post(`/collect/post/${postId}`)
+  return request.post(`/collect/post/${postId}`);
 }
 
 /**
@@ -16,7 +16,7 @@ export function toggleCollectPost(postId) {
  * @returns {Promise<{collected:boolean}>}
  */
 export function getCollectStatusPost(postId) {
-  return request.get(`/collect/status/post/${postId}`)
+  return request.get(`/collect/status/post/${postId}`);
 }
 
 /**
@@ -31,5 +31,5 @@ export function getCollectedPosts(userId, params = {}) {
       pageNum: params.pageNum ?? 1,
       pageSize: params.pageSize ?? 20,
     },
-  })
+  });
 }

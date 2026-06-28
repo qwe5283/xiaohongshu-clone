@@ -1,10 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { showToast } from '@/utils/toast'
+import { createRouter, createWebHistory } from 'vue-router';
+import { useUserStore } from '@/stores/user';
+import { showToast } from '@/utils/toast';
 
 // 首页直接用现有 MainContent 组件作为路由组件
 // ProfilePage 由路由懒加载；详情弹窗由 App.vue 根据 /post/:id 路由统一渲染
-import MainContent from '@/components/layout/MainContent.vue'
+import MainContent from '@/components/layout/MainContent.vue';
 
 const routes = [
   {
@@ -28,37 +28,37 @@ const routes = [
   },
   // 兜底：未匹配路径回首页
   { path: '/:pathMatch(.*)*', redirect: '/' },
-]
+];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
   // 禁用自动滚动到顶部，保留用户当前滚动位置
   scrollBehavior() {
-    return false
+    return false;
   },
-})
+});
 
 // 全局前置守卫
 router.beforeEach(async (to) => {
   // 访问 /user/me：未登录回首页，已登录解析成真实 id
   if (to.name === 'user-profile' && to.params.id === 'me') {
-    const userStore = useUserStore()
+    const userStore = useUserStore();
     if (!userStore.isLoggedIn) {
-      showToast('请先登录', 'error')
-      return { name: 'home' }
+      showToast('请先登录', 'error');
+      return { name: 'home' };
     }
     // userInfo 可能尚未加载（直接访问 URL），先 fetchMe
     if (!userStore.userInfo) {
-      await userStore.fetchMe()
+      await userStore.fetchMe();
     }
     if (userStore.userInfo?.id) {
-      return { name: 'user-profile', params: { id: userStore.userInfo.id } }
+      return { name: 'user-profile', params: { id: userStore.userInfo.id } };
     }
     // fetchMe 失败（token 失效等），回首页
-    return { name: 'home' }
+    return { name: 'home' };
   }
-  return true
-})
+  return true;
+});
 
-export default router
+export default router;
