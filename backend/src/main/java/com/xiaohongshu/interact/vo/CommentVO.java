@@ -1,5 +1,6 @@
 package com.xiaohongshu.interact.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -10,68 +11,45 @@ import java.time.LocalDateTime;
  * 评论信息VO（返回给前端）
  */
 @Data
+@Schema(description = "评论信息")
 public class CommentVO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 评论ID
-     */
+    @Schema(description = "评论ID", example = "1")
     private Long id;
 
-    /**
-     * 笔记ID
-     */
+    @Schema(description = "笔记ID", example = "1")
     private Long postId;
 
-    /**
-     * 评论用户ID
-     */
+    @Schema(description = "评论用户ID", example = "1")
     private Long userId;
 
-    /**
-     * 评论用户昵称
-     */
+    @Schema(description = "评论用户昵称", example = "张三")
     private String userNickname;
 
-    /**
-     * 评论用户头像
-     */
+    @Schema(description = "评论用户头像", example = "https://example.com/avatar.jpg")
     private String userAvatar;
 
-    /**
-     * 评论内容
-     */
+    @Schema(description = "评论内容", example = "写得真好，学到了！")
     private String content;
 
-    /**
-     * 父评论ID，0表示一级评论
-     */
+    @Schema(description = "父评论ID，0表示一级评论", example = "0")
     private Long parentId;
 
-    /**
-     * 回复的用户ID
-     */
+    @Schema(description = "回复的用户ID", example = "2")
     private Long replyUserId;
 
-    /**
-     * 回复的用户昵称
-     */
+    @Schema(description = "回复的用户昵称", example = "李四")
     private String replyUserNickname;
 
-    /**
-     * 点赞数
-     */
+    @Schema(description = "点赞数", example = "5")
     private Integer likeCount;
 
-    /**
-     * 回复数量（仅一级评论有值）
-     */
+    @Schema(description = "回复数量（仅一级评论有值）", example = "3")
     private Integer replyCount;
 
-    /**
-     * 创建时间
-     */
+    @Schema(description = "创建时间", example = "2024-01-01 12:00:00")
     private LocalDateTime createTime;
 }

@@ -1,5 +1,6 @@
 package com.xiaohongshu.user.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -10,78 +11,51 @@ import java.time.LocalDateTime;
  * 用户信息VO（返回给前端）
  */
 @Data
+@Schema(description = "用户信息")
 public class UserVO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 用户ID
-     */
+    @Schema(description = "用户ID", example = "1")
     private Long id;
 
-    /**
-     * 用户名
-     */
+    @Schema(description = "用户名", example = "zhangsan")
     private String username;
 
-    /**
-     * 昵称
-     */
+    @Schema(description = "昵称", example = "张三")
     private String nickname;
 
-    /**
-     * 头像URL
-     */
+    @Schema(description = "头像URL", example = "https://example.com/avatar.jpg")
     private String avatar;
 
-    /**
-     * 性别：0-未知，1-男，2-女
-     */
+    @Schema(description = "性别：0-未知，1-男，2-女", example = "1", allowableValues = {"0", "1", "2"})
     private Integer gender;
 
-    /**
-     * 手机号
-     */
+    @Schema(description = "手机号", example = "13800138000")
     private String phone;
 
-    /**
-     * 邮箱
-     */
+    @Schema(description = "邮箱", example = "zhangsan@example.com")
     private String email;
 
-    /**
-     * 个人简介
-     */
+    @Schema(description = "个人简介", example = "热爱生活，分享美好")
     private String bio;
 
-    /**
-     * 关注数
-     */
+    @Schema(description = "关注数", example = "10")
     private Long followingCount;
 
-    /**
-     * 粉丝数
-     */
+    @Schema(description = "粉丝数", example = "100")
     private Long followersCount;
 
-    /**
-     * 获赞总数
-     */
+    @Schema(description = "获赞总数", example = "500")
     private Long likeCount;
 
-    /**
-     * 收藏总数
-     */
+    @Schema(description = "收藏总数", example = "200")
     private Long collectCount;
 
-    /**
-     * 获赞与收藏总数
-     */
+    @Schema(description = "获赞与收藏总数", example = "700")
     private Long likeAndCollectCount;
 
-    /**
-     * 创建时间
-     */
+    @Schema(description = "注册时间", example = "2024-01-01 12:00:00")
     private LocalDateTime createTime;
 }

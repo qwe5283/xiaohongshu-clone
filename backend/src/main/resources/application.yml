@@ -52,6 +52,22 @@ minio:
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
   bucket-name: ${MINIO_BUCKET:xiaohongshu}
 
+# SpringDoc / Knife4j API文档配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+  # 扫描指定包路径
+  packages-to-scan: com.xiaohongshu
+
+knife4j:
+  enable: true
+  setting:
+    language: zh-CN
+    enable-swagger-models: true
+    enable-document-manage: true
+
 # 日志配置
 logging:
   level:

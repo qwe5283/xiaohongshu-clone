@@ -23,6 +23,7 @@
         <jjwt.version>0.12.6</jjwt.version>
         <minio.version>8.5.9</minio.version>
         <hutool.version>5.8.40</hutool.version>
+        <knife4j.version>4.5.0</knife4j.version>
     </properties>
 
     <dependencies>
@@ -102,6 +103,13 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <!-- Knife4j API文档（基于SpringDoc OpenAPI） -->
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            <version>${knife4j.version}</version>
         </dependency>
 
         <!-- Spring Boot Test -->

@@ -1,5 +1,6 @@
 package com.xiaohongshu.post.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -11,98 +12,63 @@ import java.util.List;
  * 笔记信息VO（返回给前端）
  */
 @Data
+@Schema(description = "笔记信息")
 public class PostVO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 笔记ID
-     */
+    @Schema(description = "笔记ID", example = "1")
     private Long id;
 
-    /**
-     * 作者ID
-     */
+    @Schema(description = "作者用户ID", example = "1")
     private Long userId;
 
-    /**
-     * 作者昵称
-     */
+    @Schema(description = "作者昵称", example = "张三")
     private String authorNickname;
 
-    /**
-     * 作者头像
-     */
+    @Schema(description = "作者头像", example = "https://example.com/avatar.jpg")
     private String authorAvatar;
 
-    /**
-     * 标题
-     */
+    @Schema(description = "标题", example = "我的第一篇文章")
     private String title;
 
-    /**
-     * 正文内容
-     */
+    @Schema(description = "正文内容", example = "这是一篇分享笔记...")
     private String content;
 
-    /**
-     * 类型：0-图文，1-视频
-     */
+    @Schema(description = "类型：0-图文，1-视频", example = "0", allowableValues = {"0", "1"})
     private Integer type;
 
-    /**
-     * 封面图URL
-     */
+    @Schema(description = "封面图URL", example = "https://example.com/cover.jpg")
     private String coverImage;
 
-    /**
-     * 视频URL
-     */
+    @Schema(description = "视频URL", example = "https://example.com/video.mp4")
     private String videoUrl;
 
-    /**
-     * 图片列表
-     */
+    @Schema(description = "图片列表")
     private List<PostImageVO> images;
 
-    /**
-     * 浏览量
-     */
+    @Schema(description = "浏览量", example = "1000")
     private Integer viewCount;
 
-    /**
-     * 点赞数
-     */
+    @Schema(description = "点赞数", example = "50")
     private Integer likeCount;
 
-    /**
-     * 评论数
-     */
+    @Schema(description = "评论数", example = "10")
     private Integer commentCount;
 
-    /**
-     * 收藏数
-     */
+    @Schema(description = "收藏数", example = "20")
     private Integer collectCount;
 
-    /**
-     * 当前登录用户是否已点赞（未登录时为false）
-     */
+    @Schema(description = "当前登录用户是否已点赞（未登录时为false）", example = "true")
     private Boolean liked;
 
-    /**
-     * 状态
-     */
+    @Schema(description = "状态：0-草稿，1-已发布", example = "1")
     private Integer status;
 
-    /**
-     * 创建时间
-     */
+    @Schema(description = "创建时间", example = "2024-01-01 12:00:00")
     private LocalDateTime createTime;
 
-    /**
-     * 更新时间
-     */
+    @Schema(description = "更新时间", example = "2024-01-01 12:00:00")
     private LocalDateTime updateTime;
 }

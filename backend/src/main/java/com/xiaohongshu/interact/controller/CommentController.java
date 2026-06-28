@@ -7,6 +7,9 @@ import com.xiaohongshu.interact.dto.CommentQueryDTO;
 import com.xiaohongshu.interact.service.CommentService;
 import com.xiaohongshu.interact.vo.CommentVO;
 import com.xiaohongshu.security.JwtUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * 评论控制器
  */
+@Tag(name = "评论管理")
 @RestController
 @RequestMapping("/comment")
 @RequiredArgsConstructor
@@ -25,8 +29,10 @@ public class CommentController {
     /**
      * 发表评论
      */
+    @Operation(summary = "发表评论", description = "对指定笔记发表评论，支持一级评论和回复其他评论")
     @PostMapping("/create")
     public Result<CommentVO> createComment(
+            @Parameter(description = "JWT认证令牌（Bearer Token）", required = true)
             @RequestHeader(value = "Authorization", required = false) String token,
             @Valid @RequestBody CommentCreateDTO createDTO) {
         Long userId = jwtUtil.getUserIdFromToken(token);
@@ -37,9 +43,12 @@ public class CommentController {
     /**
      * 删除评论
      */
+    @Operation(summary = "删除评论", description = "删除自己发表的评论")
     @DeleteMapping("/delete/{commentId}")
     public Result<Void> deleteComment(
+            @Parameter(description = "JWT认证令牌（Bearer Token）", required = true)
             @RequestHeader(value = "Authorization", required = false) String token,
+            @Parameter(description = "评论ID", required = true, example = "1")
             @PathVariable Long commentId) {
         Long userId = jwtUtil.getUserIdFromToken(token);
         commentService.deleteComment(userId, commentId);
@@ -49,8 +58,10 @@ public class CommentController {
     /**
      * 获取笔记的评论列表（一级评论）
      */
+    @Operation(summary = "获取笔记评论列表", description = "分页查询指定笔记的一级评论")
     @GetMapping("/post/{postId}")
     public Result<IPage<CommentVO>> getCommentsByPostId(
+            @Parameter(description = "笔记ID", required = true, example = "1")
             @PathVariable Long postId,
             @Valid CommentQueryDTO queryDTO) {
         IPage<CommentVO> page = commentService.getCommentsByPostId(postId, queryDTO);
@@ -60,8 +71,10 @@ public class CommentController {
     /**
      * 获取评论的回复列表
      */
+    @Operation(summary = "获取评论回复列表", description = "分页查询指定评论的所有回复（二级评论）")
     @GetMapping("/replies/{commentId}")
     public Result<IPage<CommentVO>> getRepliesByCommentId(
+            @Parameter(description = "父评论ID", required = true, example = "1")
             @PathVariable Long commentId,
             @Valid CommentQueryDTO queryDTO) {
         IPage<CommentVO> page = commentService.getRepliesByCommentId(commentId, queryDTO);
