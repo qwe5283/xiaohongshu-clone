@@ -42,7 +42,7 @@ const onPublishSuccess = () => {
 };
 provide('openPublishModal', openPublishModal);
 
-// ====== 详情弹窗：由 Vue Router 地址驱动，背景页仍渲染 MainContent ======
+// ====== 详情弹窗：由 Vue Router query 驱动，保留当前背景页 ======
 const selectedPostId = ref(null);
 const postOpenedInApp = ref(false);
 const showPostDetail = computed(() => selectedPostId.value != null);
@@ -50,18 +50,29 @@ const showPostDetail = computed(() => selectedPostId.value != null);
 const openPostDetail = (postId) => {
   selectedPostId.value = postId;
   postOpenedInApp.value = true;
-  router.push({ name: 'post-detail', params: { id: postId } });
+  router.push({
+    name: route.name,
+    params: route.params,
+    query: { ...route.query, postId },
+  });
 };
 
 const closePostDetail = () => {
   if (selectedPostId.value === null) return;
   selectedPostId.value = null;
-  if (route.name === 'post-detail') {
+  if (route.query.postId) {
     if (postOpenedInApp.value) {
       router.back();
     } else {
-      router.push({ name: 'home' });
+      const { postId, ...restQuery } = route.query;
+      router.replace({
+        name: route.name,
+        params: route.params,
+        query: restQuery,
+      });
     }
+  } else if (route.name === 'post-detail') {
+    router.push({ name: 'home' });
   }
   postOpenedInApp.value = false;
 };
@@ -73,12 +84,18 @@ const closePostDetailSilent = () => {
   postOpenedInApp.value = false;
 };
 
-// 路由变化时同步弹窗；直接访问 /post/:id 也会打开
+// 路由变化时同步弹窗；站内用 ?postId= 保留背景页，直接访问 /post/:id 兼容打开
 watch(
-  () => ({ name: route.name, id: route.params.id }),
+  () => ({
+    name: route.name,
+    routePostId: route.params.id,
+    queryPostId: route.query.postId,
+  }),
   (to) => {
-    if (to.name === 'post-detail' && to.id) {
-      selectedPostId.value = to.id;
+    if (to.queryPostId) {
+      selectedPostId.value = to.queryPostId;
+    } else if (to.name === 'post-detail' && to.routePostId) {
+      selectedPostId.value = to.routePostId;
     } else {
       selectedPostId.value = null;
       postOpenedInApp.value = false;

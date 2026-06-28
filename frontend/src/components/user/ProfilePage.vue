@@ -6,16 +6,18 @@ import { getUserPosts } from '@/api/post';
 import { getCollectedPosts } from '@/api/collect';
 import { getFollowCount, getFollowStatus, toggleFollow } from '@/api/follow';
 import { useUserStore } from '@/stores/user';
+import { usePostStore } from '@/stores/post';
 import { showToast } from '@/utils/toast';
 import { adaptPost } from '@/api/post';
 import SearchBar from '@/components/layout/SearchBar.vue';
 import PageShell from '@/components/layout/PageShell.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
-import PostGrid from '@/components/post/PostGrid.vue';
+import WaterfallPostGrid from '@/components/post/WaterfallPostGrid.vue';
 
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
+const postStore = usePostStore();
 const openPostDetail = inject('openPostDetail');
 
 // 路由 id 可能是 'me'（已在上层路由守卫解析，但组件内仍需考虑刷新/边界情况）
@@ -27,8 +29,18 @@ const user = ref(null);
 const activeTab = ref('notes');
 const notes = ref([]);
 const collects = ref([]);
+const notesPageNum = ref(1);
+const collectsPageNum = ref(1);
+const notesHasMore = ref(true);
+const collectsHasMore = ref(true);
+const notesLoadingMore = ref(false);
+const collectsLoadingMore = ref(false);
+const notesError = ref('');
+const collectsError = ref('');
 const followStats = ref({ followingCount: 0, followersCount: 0 });
 const isFollowed = ref(false);
+
+const PAGE_SIZE = 20;
 
 const defaultAvatar =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%23eee"/><text x="50%" y="55%" text-anchor="middle" font-size="18" fill="%23bbb">U</text></svg>';
@@ -52,7 +64,7 @@ const loadProfile = async () => {
         .catch(() => {});
     }
     // 默认加载笔记
-    await loadNotes();
+    await loadNotes(true);
   } catch (e) {
     // request 拦截器已处理错误
   } finally {
@@ -60,26 +72,77 @@ const loadProfile = async () => {
   }
 };
 
-const loadNotes = async () => {
+const loadNotes = async (reset = false) => {
   if (!userId.value) return;
+  if (notesLoadingMore.value || (!reset && !notesHasMore.value)) {
+    return;
+  }
+
+  if (reset) {
+    notesPageNum.value = 1;
+    notesHasMore.value = true;
+    notes.value = [];
+  } else {
+    notesLoadingMore.value = true;
+  }
+  notesError.value = '';
+
   try {
-    const page = await getUserPosts(userId.value, { pageNum: 1, pageSize: 20 });
-    notes.value = (page?.records || []).map(adaptPost);
+    const page = await getUserPosts(userId.value, {
+      pageNum: notesPageNum.value,
+      pageSize: PAGE_SIZE,
+    });
+    const adapted = (page?.records || []).map(adaptPost);
+    notes.value = reset ? adapted : [...notes.value, ...adapted];
+    postStore.initPosts(adapted);
+
+    const current = Number(page?.current ?? notesPageNum.value);
+    const pages = Number(page?.pages ?? 0);
+    notesHasMore.value =
+      pages > 0 ? current < pages : adapted.length === PAGE_SIZE;
+    notesPageNum.value = current + 1;
   } catch (e) {
-    // request 拦截器已处理错误
+    notesError.value = e.message || '加载失败';
+  } finally {
+    notesLoadingMore.value = false;
   }
 };
 
-const loadCollects = async () => {
+const loadCollects = async (reset = false) => {
   if (!userId.value) return;
+  if (collectsLoadingMore.value || (!reset && !collectsHasMore.value)) {
+    return;
+  }
+
+  if (reset) {
+    collectsPageNum.value = 1;
+    collectsHasMore.value = true;
+    collects.value = [];
+  } else {
+    collectsLoadingMore.value = true;
+  }
+  collectsError.value = '';
+
   try {
     const res = await getCollectedPosts(userId.value, {
-      pageNum: 1,
-      pageSize: 20,
+      pageNum: collectsPageNum.value,
+      pageSize: PAGE_SIZE,
     });
-    collects.value = (res?.records || []).map(adaptPost);
+    const adapted = (res?.records || []).map(adaptPost);
+    collects.value = reset ? adapted : [...collects.value, ...adapted];
+    postStore.initPosts(adapted);
+
+    const current = Number(
+      res?.current ?? res?.pageNum ?? collectsPageNum.value,
+    );
+    const pages = Number(res?.pages ?? 0);
+    collectsHasMore.value =
+      pages > 0 ? current < pages : adapted.length === PAGE_SIZE;
+    collectsPageNum.value = current + 1;
   } catch (e) {
-    // request 拦截器已处理错误
+    collectsError.value = e.message || '加载失败';
+  } finally {
+    collectsLoadingMore.value = false;
   }
 };
 
@@ -92,6 +155,12 @@ watch(
     activeTab.value = 'notes';
     notes.value = [];
     collects.value = [];
+    notesPageNum.value = 1;
+    collectsPageNum.value = 1;
+    notesHasMore.value = true;
+    collectsHasMore.value = true;
+    notesError.value = '';
+    collectsError.value = '';
     user.value = null;
     isFollowed.value = false;
     loadProfile();
@@ -101,10 +170,18 @@ watch(
 const handleTabChange = async (tab) => {
   activeTab.value = tab;
   if (tab === 'notes' && notes.value.length === 0) {
-    await loadNotes();
+    await loadNotes(true);
   }
   if (tab === 'collect' && collects.value.length === 0) {
-    await loadCollects();
+    await loadCollects(true);
+  }
+};
+
+const handleLoadMore = () => {
+  if (activeTab.value === 'notes') {
+    loadNotes(false);
+  } else {
+    loadCollects(false);
   }
 };
 
@@ -133,6 +210,11 @@ const handleToggleFollow = async () => {
 
 const goPostDetail = (postId) => {
   openPostDetail(postId);
+};
+
+const handleOpenProfile = (targetUserId) => {
+  if (!targetUserId) return;
+  router.push({ name: 'user-profile', params: { id: targetUserId } });
 };
 
 const formatCount = (num) => {
@@ -252,20 +334,54 @@ const formatCount = (num) => {
           </div>
         </div>
 
-        <!-- 笔记网格 -->
-        <PostGrid
-          v-if="activeTab === 'notes'"
+        <div
+          v-if="activeTab === 'notes' && notesError"
+          class="flex flex-col items-center py-10 text-gray-400"
+        >
+          <div class="mb-3">{{ notesError }}</div>
+          <button
+            class="bg-primary text-white px-5 py-2 rounded-full text-sm cursor-pointer"
+            @click="loadNotes(true)"
+          >
+            重试
+          </button>
+        </div>
+
+        <WaterfallPostGrid
+          v-if="activeTab === 'notes' && !notesError"
           :posts="notes"
+          :loading-more="notesLoadingMore"
+          :has-more="notesHasMore"
+          enable-load-more
           empty-text="暂无笔记"
           @open="goPostDetail"
+          @open-profile="handleOpenProfile"
+          @load-more="handleLoadMore"
         />
 
-        <!-- 收藏网格 -->
-        <PostGrid
-          v-else
+        <div
+          v-if="activeTab === 'collect' && collectsError"
+          class="flex flex-col items-center py-10 text-gray-400"
+        >
+          <div class="mb-3">{{ collectsError }}</div>
+          <button
+            class="bg-primary text-white px-5 py-2 rounded-full text-sm cursor-pointer"
+            @click="loadCollects(true)"
+          >
+            重试
+          </button>
+        </div>
+
+        <WaterfallPostGrid
+          v-if="activeTab === 'collect' && !collectsError"
           :posts="collects"
+          :loading-more="collectsLoadingMore"
+          :has-more="collectsHasMore"
+          enable-load-more
           empty-text="暂无收藏"
           @open="goPostDetail"
+          @open-profile="handleOpenProfile"
+          @load-more="handleLoadMore"
         />
       </section>
     </template>
