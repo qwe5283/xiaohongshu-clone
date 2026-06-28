@@ -62,7 +62,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/follow/followers/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/follow/count/*").permitAll()
                         // 静态资源
-                        .requestMatchers("/doc.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/doc.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**").permitAll()
                         // 其他请求需要认证
                         .anyRequest().authenticated()
                 )

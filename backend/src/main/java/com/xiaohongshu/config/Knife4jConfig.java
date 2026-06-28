@@ -28,7 +28,6 @@ public class Knife4jConfig {
                                 + "包含用户管理、笔记管理、评论、点赞、收藏、关注、文件上传等模块。")
                         .version("1.0.0")
                         .contact(new Contact()
-                                .name("Xiaohongshu Team")
                                 .url("https://github.com")
                         )
                         .license(new License()
