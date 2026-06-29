@@ -15,6 +15,8 @@ import PageShell from '@/components/layout/PageShell.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
 import WaterfallPostGrid from '@/components/post/WaterfallPostGrid.vue';
 import EditProfileModal from '@/components/user/EditProfileModal.vue';
+import maleIcon from '../../assets/icons/male.svg?raw';
+import femaleIcon from '../../assets/icons/female.svg?raw';
 import SearchBarLegacy from "@/components/layout/SearchBarLegacy.vue";
 
 const route = useRoute();
@@ -345,9 +347,19 @@ const formatCount = (num) => {
               </div>
               <!-- 简介 -->
               <div
-                class="text-sm text-gray-500 mb-5 leading-[1.6] whitespace-pre-line"
+                class="text-sm text-gray-500 mb-2.5 leading-[1.6] whitespace-pre-line"
               >
                 {{ user.bio || '这个人很懒，还没有写简介～' }}
+              </div>
+              <!-- 性别 -->
+              <div
+                v-if="user.gender && user.gender !== 0"
+                class="size-5 rounded-full bg-[#F2F2F2] mb-2.5 flex items-center justify-center shrink-0"
+              >
+                <span
+                  class="size-4 [&>svg]:size-4"
+                  v-html="user.gender === 1 ? maleIcon : femaleIcon"
+                ></span>
               </div>
               <!-- 统计数据 -->
               <div class="flex gap-5 text-sm text-gray-500 mb-5">
@@ -375,12 +387,12 @@ const formatCount = (num) => {
         </div>
 
         <!-- 标签栏 -->
-        <div class="flex justify-center gap-10 mb-[30px]">
+        <div class="flex justify-center gap-2 mb-[30px]">
           <div
-            class="text-base cursor-pointer pb-2.5 transition-colors duration-200"
+            class="text-base cursor-pointer px-4 py-2 rounded-3xl transition-all duration-200"
             :class="
               activeTab === 'notes'
-                ? 'text-gray-800 font-bold border-b-2 border-gray-800'
+                ? 'bg-[#F2F2F2] text-gray-800 font-bold'
                 : 'text-gray-500'
             "
             @click="handleTabChange('notes')"
@@ -388,10 +400,10 @@ const formatCount = (num) => {
             笔记
           </div>
           <div
-            class="text-base cursor-pointer pb-2.5 transition-colors duration-200"
+            class="text-base cursor-pointer px-4 py-2 rounded-3xl transition-all duration-200"
             :class="
               activeTab === 'collect'
-                ? 'text-gray-800 font-bold border-b-2 border-gray-800'
+                ? 'bg-[#F2F2F2] text-gray-800 font-bold'
                 : 'text-gray-500'
             "
             @click="handleTabChange('collect')"
@@ -400,10 +412,10 @@ const formatCount = (num) => {
           </div>
           <div
             v-if="isMe"
-            class="text-base cursor-pointer pb-2.5 transition-colors duration-200"
+            class="text-base cursor-pointer px-4 py-2 rounded-3xl transition-all duration-200"
             :class="
               activeTab === 'likes'
-                ? 'text-gray-800 font-bold border-b-2 border-gray-800'
+                ? 'bg-[#F2F2F2] text-gray-800 font-bold'
                 : 'text-gray-500'
             "
             @click="handleTabChange('likes')"
