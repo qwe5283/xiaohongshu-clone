@@ -2,7 +2,10 @@
 import { computed } from 'vue';
 import heartIcon from '../../assets/icons/heart.svg?raw';
 import heartFilledIcon from '../../assets/icons/heart-filled.svg?raw';
+import { toggleLikePost } from '@/api/like';
+import { useUserStore } from '@/stores/user';
 import { usePostStore } from '@/stores/post';
+import { showToast } from '@/utils/toast';
 
 const props = defineProps({
   post: {
@@ -12,6 +15,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['openProfile']);
+const userStore = useUserStore();
 const postStore = usePostStore();
 
 // 优先从 store 读取最新状态（详情弹窗修改后会同步），兜底用 prop 初始值
@@ -34,6 +38,24 @@ const formatLikeCount = (count) => {
     return (count / 10000).toFixed(1) + '万';
   }
   return count.toString();
+};
+
+// 点赞 toggle（乐观更新 + 同步 store）
+const handleToggleLike = async () => {
+  if (!userStore.isLoggedIn) {
+    showToast('请先登录', 'error');
+    return;
+  }
+  const wasLiked = liked.value;
+  const newLiked = !wasLiked;
+  const newCount = likeCount.value + (wasLiked ? -1 : 1);
+  postStore.updateLike(props.post.id, newLiked, newCount);
+  try {
+    await toggleLikePost(props.post.id);
+  } catch (e) {
+    // 失败回滚
+    postStore.updateLike(props.post.id, wasLiked, likeCount.value);
+  }
 };
 </script>
 
@@ -92,7 +114,7 @@ const formatLikeCount = (count) => {
         />
         <span>{{ post.author.nickname }}</span>
       </div>
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-1 cursor-pointer" @click.stop="handleToggleLike">
         <span
           class="size-4 [&>svg]:size-4 transition-colors"
           :class="liked ? 'text-red-500' : 'text-gray-500'"
