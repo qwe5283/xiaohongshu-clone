@@ -36,3 +36,18 @@ export function getLikeStatusPost(postId) {
 export function getLikeStatusComment(commentId) {
   return request.get(`/like/status/comment/${commentId}`);
 }
+
+/**
+ * 分页获取用户点赞的笔记列表
+ * @param {number|string} userId
+ * @param {{pageNum?:number, pageSize?:number}} params
+ * @returns {Promise<{records:object[], total:number, pageNum:number, pageSize:number, pages:number}>}
+ */
+export function getLikedPosts(userId, params = {}) {
+  return request.get(`/like/posts/${userId}`, {
+    params: {
+      pageNum: params.pageNum ?? 1,
+      pageSize: params.pageSize ?? 20,
+    },
+  });
+}

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { getUserById } from '@/api/auth';
 import { getUserPosts } from '@/api/post';
 import { getCollectedPosts } from '@/api/collect';
+import { getLikedPosts } from '@/api/like';
 import { getFollowCount, getFollowStatus, toggleFollow } from '@/api/follow';
 import { useUserStore } from '@/stores/user';
 import { usePostStore } from '@/stores/post';
@@ -41,6 +42,11 @@ const notesLoadingMore = ref(false);
 const collectsLoadingMore = ref(false);
 const notesError = ref('');
 const collectsError = ref('');
+const likes = ref([]);
+const likesPageNum = ref(1);
+const likesHasMore = ref(true);
+const likesLoadingMore = ref(false);
+const likesError = ref('');
 const followStats = ref({ followingCount: 0, followersCount: 0 });
 const isFollowed = ref(false);
 const showEditModal = ref(false);
@@ -151,6 +157,44 @@ const loadCollects = async (reset = false) => {
   }
 };
 
+const loadLikes = async (reset = false) => {
+  if (!userId.value) return;
+  if (likesLoadingMore.value || (!reset && !likesHasMore.value)) {
+    return;
+  }
+
+  if (reset) {
+    likesPageNum.value = 1;
+    likesHasMore.value = true;
+    likes.value = [];
+  } else {
+    likesLoadingMore.value = true;
+  }
+  likesError.value = '';
+
+  try {
+    const res = await getLikedPosts(userId.value, {
+      pageNum: likesPageNum.value,
+      pageSize: PAGE_SIZE,
+    });
+    const adapted = (res?.records || []).map(adaptPost);
+    likes.value = reset ? adapted : [...likes.value, ...adapted];
+    postStore.initPosts(adapted);
+
+    const current = Number(
+      res?.current ?? res?.pageNum ?? likesPageNum.value,
+    );
+    const pages = Number(res?.pages ?? 0);
+    likesHasMore.value =
+      pages > 0 ? current < pages : adapted.length === PAGE_SIZE;
+    likesPageNum.value = current + 1;
+  } catch (e) {
+    likesError.value = e.message || '加载失败';
+  } finally {
+    likesLoadingMore.value = false;
+  }
+};
+
 onMounted(loadProfile);
 
 // 路由参数变化时重新加载（他人主页切换）
@@ -160,12 +204,16 @@ watch(
     activeTab.value = 'notes';
     notes.value = [];
     collects.value = [];
+    likes.value = [];
     notesPageNum.value = 1;
     collectsPageNum.value = 1;
+    likesPageNum.value = 1;
     notesHasMore.value = true;
     collectsHasMore.value = true;
+    likesHasMore.value = true;
     notesError.value = '';
     collectsError.value = '';
+    likesError.value = '';
     user.value = null;
     isFollowed.value = false;
     loadProfile();
@@ -180,13 +228,18 @@ const handleTabChange = async (tab) => {
   if (tab === 'collect' && collects.value.length === 0) {
     await loadCollects(true);
   }
+  if (tab === 'likes' && likes.value.length === 0) {
+    await loadLikes(true);
+  }
 };
 
 const handleLoadMore = () => {
   if (activeTab.value === 'notes') {
     loadNotes(false);
-  } else {
+  } else if (activeTab.value === 'collect') {
     loadCollects(false);
+  } else if (activeTab.value === 'likes') {
+    loadLikes(false);
   }
 };
 
@@ -345,6 +398,18 @@ const formatCount = (num) => {
           >
             收藏
           </div>
+          <div
+            v-if="isMe"
+            class="text-base cursor-pointer pb-2.5 transition-colors duration-200"
+            :class="
+              activeTab === 'likes'
+                ? 'text-gray-800 font-bold border-b-2 border-gray-800'
+                : 'text-gray-500'
+            "
+            @click="handleTabChange('likes')"
+          >
+            点赞
+          </div>
         </div>
 
         <div
@@ -392,6 +457,31 @@ const formatCount = (num) => {
           :has-more="collectsHasMore"
           enable-load-more
           empty-text="暂无收藏"
+          @open="goPostDetail"
+          @open-profile="handleOpenProfile"
+          @load-more="handleLoadMore"
+        />
+
+        <div
+          v-if="activeTab === 'likes' && likesError"
+          class="flex flex-col items-center py-10 text-gray-400"
+        >
+          <div class="mb-3">{{ likesError }}</div>
+          <button
+            class="bg-primary text-white px-5 py-2 rounded-full text-sm cursor-pointer"
+            @click="loadLikes(true)"
+          >
+            重试
+          </button>
+        </div>
+
+        <WaterfallPostGrid
+          v-if="activeTab === 'likes' && !likesError"
+          :posts="likes"
+          :loading-more="likesLoadingMore"
+          :has-more="likesHasMore"
+          enable-load-more
+          empty-text="暂无点赞"
           @open="goPostDetail"
           @open-profile="handleOpenProfile"
           @load-more="handleLoadMore"

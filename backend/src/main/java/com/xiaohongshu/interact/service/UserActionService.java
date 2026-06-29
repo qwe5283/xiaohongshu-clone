@@ -92,4 +92,14 @@ public interface UserActionService extends IService<UserAction> {
      * @return 收藏的笔记ID分页结果（按收藏时间倒序）
      */
     IPage<Long> getCollectedPostIds(Long userId, int pageNum, int pageSize);
+
+    /**
+     * 分页查询用户点赞的笔记ID列表
+     *
+     * @param userId   用户ID
+     * @param pageNum  页码
+     * @param pageSize 每页数量
+     * @return 点赞的笔记ID分页结果（按点赞时间倒序）
+     */
+    IPage<Long> getLikedPostIds(Long userId, int pageNum, int pageSize);
 }

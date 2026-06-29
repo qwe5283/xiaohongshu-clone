@@ -194,6 +194,20 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
         return actionPage.convert(UserAction::getTargetId);
     }
 
+    @Override
+    public IPage<Long> getLikedPostIds(Long userId, int pageNum, int pageSize) {
+        // 分页查询用户点赞的笔记ID，按点赞时间倒序
+        Page<UserAction> page = new Page<>(pageNum, pageSize);
+        IPage<UserAction> actionPage = page(page, new LambdaQueryWrapper<UserAction>()
+                .eq(UserAction::getUserId, userId)
+                .eq(UserAction::getTargetType, TARGET_TYPE_POST)
+                .eq(UserAction::getActionType, ACTION_TYPE_LIKE)
+                .orderByDesc(UserAction::getCreateTime));
+
+        // 转换为笔记ID的分页结果
+        return actionPage.convert(UserAction::getTargetId);
+    }
+
     /**
      * 切换行为（点赞/收藏）状态
      *

@@ -1,7 +1,10 @@
 package com.xiaohongshu.interact.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xiaohongshu.common.result.Result;
 import com.xiaohongshu.interact.service.UserActionService;
+import com.xiaohongshu.post.service.PostService;
+import com.xiaohongshu.post.vo.PostVO;
 import com.xiaohongshu.security.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,6 +26,7 @@ import java.util.Map;
 public class LikeController {
 
     private final UserActionService userActionService;
+    private final PostService postService;
     private final JwtUtil jwtUtil;
 
     /**
@@ -95,6 +100,40 @@ public class LikeController {
 
         Map<String, Boolean> data = new HashMap<>();
         data.put("liked", liked);
+        return Result.success(data);
+    }
+
+    /**
+     * 获取指定用户的点赞笔记列表（需登录，仅查看自己的点赞）
+     */
+    @Operation(summary = "获取点赞笔记列表", description = "分页查询指定用户点赞的笔记列表，需要登录")
+    @GetMapping("/posts/{userId}")
+    public Result<Map<String, Object>> getLikedPosts(
+            @Parameter(description = "JWT认证令牌（Bearer Token）", required = true)
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @Parameter(description = "用户ID", required = true, example = "1")
+            @PathVariable Long userId,
+            @Parameter(description = "页码，从1开始", example = "1")
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @Parameter(description = "每页数量，最大100", example = "10")
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        // 验证登录状态
+        jwtUtil.getUserIdFromToken(token);
+
+        // 分页查询用户点赞的笔记ID
+        IPage<Long> likedIdsPage = userActionService.getLikedPostIds(userId, pageNum, pageSize);
+
+        // 批量获取笔记详情（保持点赞时间顺序）
+        List<PostVO> posts = postService.getPostsByIds(likedIdsPage.getRecords());
+
+        // 组装返回结果
+        Map<String, Object> data = new HashMap<>();
+        data.put("records", posts);
+        data.put("total", likedIdsPage.getTotal());
+        data.put("pageNum", likedIdsPage.getCurrent());
+        data.put("pageSize", likedIdsPage.getSize());
+        data.put("pages", likedIdsPage.getPages());
+
         return Result.success(data);
     }
 }
