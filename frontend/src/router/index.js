@@ -26,6 +26,12 @@ const routes = [
     name: 'post-page',
     component: () => import('@/components/post/PostDetailPage.vue'),
   },
+  // 消息页
+  {
+    path: '/messages',
+    name: 'messages',
+    component: () => import('@/components/message/MessagePage.vue'),
+  },
   // 兜底：未匹配路径回首页
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ];

@@ -294,7 +294,7 @@ const formatCount = (num) => {
 <template>
   <PageShell>
     <!-- 顶部搜索栏 -->
-    <header class="sticky top-0 bg-white py-7 z-[5]">
+    <header class="sticky top-0 bg-white py-4 z-[5]">
       <SearchBarLegacy />
     </header>
 

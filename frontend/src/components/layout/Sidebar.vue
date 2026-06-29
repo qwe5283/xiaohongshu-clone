@@ -21,6 +21,7 @@ const emit = defineEmits([
   'login',
   'navigate-home',
   'navigate-profile',
+  'navigate-messages',
   'publish',
 ]);
 
@@ -50,12 +51,15 @@ const menuItemClass =
 const activeMenu = computed(() => {
   if (props.currentPage === 'user-profile') return 'profile';
   if (props.currentPage === 'home') return 'home';
+  if (props.currentPage === 'messages') return 'notify';
   return props.currentPage || 'home';
 });
 
 const setActiveMenu = (key) => {
   if (key === 'home') {
     emit('navigate-home');
+  } else if (key === 'notify') {
+    emit('navigate-messages');
   } else if (key === 'publish') {
     emit('publish');
   }
