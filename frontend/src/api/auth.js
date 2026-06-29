@@ -35,3 +35,12 @@ export function getMe() {
 export function getUserById(userId) {
   return request.get(`/user/${userId}`);
 }
+
+/**
+ * 更新当前登录用户信息
+ * @param {{nickname?:string, avatar?:string, gender?:number, email?:string, bio?:string}} data
+ * @returns {Promise<object>} UserVO
+ */
+export function updateUser(data) {
+  return request.put('/user/update', data);
+}

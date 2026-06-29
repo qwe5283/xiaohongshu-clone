@@ -53,6 +53,17 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
+   * 更新个人信息
+   * @param {object} data - 同 UserUpdateDTO
+   * @returns {Promise<object>} UserVO
+   */
+  async function updateProfile(data) {
+    const user = await authApi.updateUser(data);
+    userInfo.value = { ...userInfo.value, ...user };
+    return user;
+  }
+
+  /**
    * 登出：清 token + userInfo
    */
   function logout() {
@@ -68,6 +79,7 @@ export const useUserStore = defineStore('user', () => {
     login,
     register,
     fetchMe,
+    updateProfile,
     logout,
   };
 });

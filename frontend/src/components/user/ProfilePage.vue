@@ -13,6 +13,7 @@ import SearchBar from '@/components/layout/SearchBar.vue';
 import PageShell from '@/components/layout/PageShell.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
 import WaterfallPostGrid from '@/components/post/WaterfallPostGrid.vue';
+import EditProfileModal from '@/components/user/EditProfileModal.vue';
 import SearchBarLegacy from "@/components/layout/SearchBarLegacy.vue";
 
 const route = useRoute();
@@ -42,6 +43,7 @@ const notesError = ref('');
 const collectsError = ref('');
 const followStats = ref({ followingCount: 0, followersCount: 0 });
 const isFollowed = ref(false);
+const showEditModal = ref(false);
 
 const PAGE_SIZE = 20;
 
@@ -211,6 +213,13 @@ const handleToggleFollow = async () => {
   }
 };
 
+const handleEditSuccess = () => {
+  // 编辑成功后刷新当前页面用户信息
+  if (isMe.value && userStore.userInfo) {
+    user.value = { ...user.value, ...userStore.userInfo };
+  }
+};
+
 const goPostDetail = (postId) => {
   openPostDetail(postId);
 };
@@ -272,6 +281,7 @@ const formatCount = (num) => {
                   class="w-24 ml-auto"
                   variant="outline"
                   size="sm"
+                  @click="showEditModal = true"
                 >
                   编辑资料
                 </BaseButton>
@@ -392,5 +402,12 @@ const formatCount = (num) => {
     <div v-else class="flex flex-col items-center py-20 text-gray-400">
       用户加载失败
     </div>
+
+    <!-- 编辑资料弹窗 -->
+    <EditProfileModal
+      v-if="showEditModal"
+      @close="showEditModal = false"
+      @update-success="handleEditSuccess"
+    />
   </PageShell>
 </template>
