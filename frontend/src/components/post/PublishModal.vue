@@ -237,6 +237,7 @@ async function handleSubmit() {
 
     showToast('发布成功！', 'success');
     emit('publish-success');
+    submitting.value = false;
     handleClose();
   } catch (e) {
     // request 拦截器已弹 toast，这里显示在表单下方
