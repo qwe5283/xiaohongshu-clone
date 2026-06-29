@@ -1,5 +1,13 @@
 <script setup>
-import { ref, computed, provide, watch, onMounted, onUnmounted } from 'vue';
+import {
+  ref,
+  computed,
+  provide,
+  watch,
+  onMounted,
+  onUnmounted,
+  shallowRef,
+} from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Sidebar from './components/layout/Sidebar.vue';
 import LoginModal from './components/common/LoginModal.vue';
@@ -42,37 +50,50 @@ const onPublishSuccess = () => {
 };
 provide('openPublishModal', openPublishModal);
 
-// ====== 详情弹窗：由 Vue Router query 驱动，保留当前背景页 ======
+// ====== 详情弹窗：站内点击走 background route，直接访问 /post/:id 渲染完整页 ======
 const selectedPostId = ref(null);
 const postOpenedInApp = ref(false);
+const backgroundRouteLocation = shallowRef(null);
 const showPostDetail = computed(() => selectedPostId.value != null);
+const backgroundResolvedRoute = computed(() => {
+  if (!backgroundRouteLocation.value) return null;
+  return router.resolve(backgroundRouteLocation.value.fullPath);
+});
+const displayRoute = computed(() => backgroundResolvedRoute.value || route);
+const currentSidebarPage = computed(
+  () => backgroundResolvedRoute.value?.name || route.name,
+);
 
 const openPostDetail = (postId) => {
   selectedPostId.value = postId;
   postOpenedInApp.value = true;
+  backgroundRouteLocation.value = {
+    fullPath: route.fullPath,
+  };
+  const source = route.name === 'user-profile' ? 'user' : 'feed';
   router.push({
-    name: route.name,
-    params: route.params,
-    query: { ...route.query, postId },
+    name: 'post-page',
+    params: { id: postId },
+    query: { source },
+    state: {
+      modal: true,
+      background: backgroundRouteLocation.value,
+    },
   });
 };
 
 const closePostDetail = () => {
   if (selectedPostId.value === null) return;
   selectedPostId.value = null;
-  if (route.query.postId) {
+  if (route.name === 'post-page' && window.history.state?.modal) {
     if (postOpenedInApp.value) {
       router.back();
     } else {
-      const { postId, ...restQuery } = route.query;
-      router.replace({
-        name: route.name,
-        params: route.params,
-        query: restQuery,
-      });
+      const fallback = backgroundRouteLocation.value?.fullPath || '/';
+      router.replace(fallback);
     }
-  } else if (route.name === 'post-detail') {
-    router.push({ name: 'home' });
+  } else {
+    backgroundRouteLocation.value = null;
   }
   postOpenedInApp.value = false;
 };
@@ -82,22 +103,25 @@ const closePostDetailSilent = () => {
   if (selectedPostId.value === null) return;
   selectedPostId.value = null;
   postOpenedInApp.value = false;
+  backgroundRouteLocation.value = null;
 };
 
-// 路由变化时同步弹窗；站内用 ?postId= 保留背景页，直接访问 /post/:id 兼容打开
+// 路由变化时同步弹窗；只有携带 modal state 的 /post/:id 才叠加弹窗
 watch(
   () => ({
     name: route.name,
-    routePostId: route.params.id,
-    queryPostId: route.query.postId,
+    postId: route.params.id,
+    stateKey: window.history.state?.key,
+    modal: window.history.state?.modal,
+    background: window.history.state?.background,
   }),
   (to) => {
-    if (to.queryPostId) {
-      selectedPostId.value = to.queryPostId;
-    } else if (to.name === 'post-detail' && to.routePostId) {
-      selectedPostId.value = to.routePostId;
+    if (to.name === 'post-page' && to.postId && to.modal && to.background) {
+      selectedPostId.value = to.postId;
+      backgroundRouteLocation.value = to.background;
     } else {
       selectedPostId.value = null;
+      backgroundRouteLocation.value = null;
       postOpenedInApp.value = false;
     }
   },
@@ -133,14 +157,16 @@ onMounted(async () => {
 <template>
   <!-- 侧边栏 -->
   <Sidebar
-    :current-page="route.name"
+    :current-page="currentSidebarPage"
     @login="openLoginModal"
     @navigate-home="navigateHome"
     @navigate-profile="navigateProfile"
     @publish="openPublishModal"
   />
-  <!-- 主页面 -->
-  <router-view />
+  <!-- 主页面：modal route 时继续把来源路由传给 router-view -->
+  <router-view v-slot="{ Component }" :route="displayRoute">
+    <component :is="Component" :key="displayRoute.fullPath" />
+  </router-view>
   <!-- 弹窗 -->
   <LoginModal
     v-if="showLoginModal"

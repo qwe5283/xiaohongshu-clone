@@ -18,6 +18,11 @@ import { showToast } from '@/utils/toast';
 
 const props = defineProps({
   postId: { type: [Number, String], required: true },
+  displayMode: {
+    type: String,
+    default: 'modal',
+    validator: (value) => ['modal', 'page'].includes(value),
+  },
 });
 const emit = defineEmits(['close']);
 
@@ -74,6 +79,7 @@ const currentHeartIcon = computed(() =>
 const currentStarIcon = computed(() =>
   isCollected.value ? starFilledIcon : starIcon,
 );
+const isModal = computed(() => props.displayMode === 'modal');
 
 function formatTime(iso) {
   if (!iso) return '';
@@ -294,7 +300,7 @@ const nextImage = () => {
 const goAuthorProfile = () => {
   if (!post.value?.userId) return;
   // 静默关闭弹窗，再由 router.push 接管 URL 变更
-  closePostDetailSilent();
+  closePostDetailSilent?.();
   router.push({ name: 'user-profile', params: { id: post.value.userId } });
 };
 
@@ -303,11 +309,16 @@ const handleClose = () => emit('close');
 
 <template>
   <div
-    class="fixed inset-0 bg-black/30 z-[100] flex justify-center items-center"
+    :class="
+      isModal
+        ? 'fixed inset-0 bg-black/30 z-[100] flex justify-center items-center'
+        : 'min-h-screen bg-white flex justify-center px-10 py-8'
+    "
     @click.self="handleClose"
   >
     <!-- 关闭按钮 -->
     <button
+      v-if="isModal"
       class="absolute top-5 left-5 text-white text-2xl cursor-pointer z-[101] bg-black/50 size-8 rounded-full flex items-center justify-center"
       @click="handleClose"
     >
@@ -317,7 +328,11 @@ const handleClose = () => emit('close');
     <!-- 主容器 -->
     <div
       v-if="loading"
-      class="w-[1000px] h-[700px] bg-white rounded-2xl flex items-center justify-center"
+      :class="
+        isModal
+          ? 'w-[1000px] h-[700px] bg-white rounded-2xl flex items-center justify-center'
+          : 'w-full max-w-[1180px] min-h-[720px] bg-white flex items-center justify-center'
+      "
     >
       <span
         class="inline-block size-8 border-2 border-gray-300 border-t-primary rounded-full animate-spin mr-3"
@@ -327,14 +342,22 @@ const handleClose = () => emit('close');
 
     <div
       v-else-if="!post"
-      class="w-[1000px] h-[700px] bg-white rounded-2xl flex items-center justify-center text-gray-400"
+      :class="
+        isModal
+          ? 'w-[1000px] h-[700px] bg-white rounded-2xl flex items-center justify-center text-gray-400'
+          : 'w-full max-w-[1180px] min-h-[720px] bg-white flex items-center justify-center text-gray-400'
+      "
     >
       笔记加载失败
     </div>
 
     <div
       v-else
-      class="w-[1000px] h-[700px] bg-white rounded-2xl flex overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)]"
+      :class="
+        isModal
+          ? 'w-[1000px] h-[700px] bg-white rounded-2xl flex overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)]'
+          : 'w-full max-w-[1180px] min-h-[720px] bg-white flex overflow-hidden border border-gray-100 rounded-2xl'
+      "
     >
       <!-- 左侧图片轮播 -->
       <div
