@@ -44,7 +44,7 @@ const commentText = ref('');
 const submitting = ref(false);
 
 // 回复状态
-const replyingTo = ref(null); // { commentId, userId, nickname } | null
+const replyingTo = ref(null); // { commentId, rootCommentId, userId, nickname } | null
 const replyText = ref('');
 const submittingReply = ref(false);
 
@@ -218,12 +218,13 @@ const handleComment = async () => {
 };
 
 // 点击"回复"按钮
-function handleReplyClick(comment) {
+function handleReplyClick(comment, rootComment = comment) {
   if (replyingTo.value?.commentId === comment.id) {
     cancelReply();
   } else {
     replyingTo.value = {
       commentId: comment.id,
+      rootCommentId: rootComment.id,
       userId: comment.userId,
       nickname: comment.userNickname,
     };
@@ -237,30 +238,36 @@ function cancelReply() {
 }
 
 // 提交回复
-async function handleReplySubmit(comment) {
+async function handleReplySubmit() {
   if (!userStore.isLoggedIn) {
     showToast('请先登录', 'error');
     return;
   }
+  if (!replyingTo.value) return;
   const text = replyText.value.trim();
   if (!text) return;
   submittingReply.value = true;
   try {
+    const rootComment = comments.value.find(
+      (item) => item.id === replyingTo.value.rootCommentId,
+    );
     const newReply = await createComment({
       postId: props.postId,
       content: text,
-      parentId: comment.id,
-      replyUserId: comment.userId,
+      parentId: replyingTo.value.commentId,
+      replyUserId: replyingTo.value.userId,
     });
     // 写入本地 repliesMap
-    if (!repliesMap[comment.id]) {
-      repliesMap[comment.id] = [];
+    if (!repliesMap[replyingTo.value.rootCommentId]) {
+      repliesMap[replyingTo.value.rootCommentId] = [];
     }
-    repliesMap[comment.id].push(newReply);
+    repliesMap[replyingTo.value.rootCommentId].push(newReply);
     // 自动展开回复列表
-    showRepliesMap[comment.id] = true;
+    showRepliesMap[replyingTo.value.rootCommentId] = true;
     // 更新计数
-    comment.replyCount = (comment.replyCount || 0) + 1;
+    if (rootComment) {
+      rootComment.replyCount = (rootComment.replyCount || 0) + 1;
+    }
     post.value.commentCount += 1;
     replyText.value = '';
     cancelReply();
@@ -530,7 +537,12 @@ const handleClose = () => emit('close');
                           <span class="font-medium">{{
                             reply.userNickname
                           }}</span>
-                          <span v-if="reply.replyUserNickname">
+                          <span
+                            v-if="
+                              reply.parentId !== comment.id &&
+                              reply.replyUserNickname
+                            "
+                          >
                             回复
                             <span class="font-medium">{{
                               reply.replyUserNickname
@@ -540,8 +552,38 @@ const handleClose = () => emit('close');
                             >：{{ reply.content }}</span
                           >
                         </span>
-                        <div class="text-xs text-gray-400 mt-0.5">
-                          {{ formatTime(reply.createTime) }}
+                        <div class="flex items-center gap-3 text-xs mt-0.5">
+                          <span class="text-gray-400">
+                            {{ formatTime(reply.createTime) }}
+                          </span>
+                          <span
+                            class="text-gray-400 cursor-pointer hover:text-primary"
+                            :class="{
+                              'text-primary font-medium':
+                                replyingTo?.commentId === reply.id,
+                            }"
+                            @click="handleReplyClick(reply, comment)"
+                            >{{
+                              replyingTo?.commentId === reply.id
+                                ? '取消回复'
+                                : '回复'
+                            }}</span
+                          >
+                        </div>
+                        <div
+                          v-if="replyingTo?.commentId === reply.id"
+                          class="mt-2 flex items-center gap-2"
+                        >
+                          <span class="text-xs text-gray-400 shrink-0"
+                            >回复 @{{ replyingTo.nickname }}：</span
+                          >
+                          <input
+                            v-model="replyText"
+                            type="text"
+                            class="flex-1 bg-gray-100 border-none rounded-full px-3 py-1.5 text-xs outline-none"
+                            :placeholder="`回复 ${replyingTo.nickname}...`"
+                            @keyup.enter="handleReplySubmit"
+                          />
                         </div>
                       </div>
                     </div>
@@ -560,7 +602,7 @@ const handleClose = () => emit('close');
                       type="text"
                       class="flex-1 bg-gray-100 border-none rounded-full px-3 py-1.5 text-xs outline-none"
                       :placeholder="`回复 ${replyingTo.nickname}...`"
-                      @keyup.enter="handleReplySubmit(comment)"
+                      @keyup.enter="handleReplySubmit"
                     />
                   </div>
                 </div>

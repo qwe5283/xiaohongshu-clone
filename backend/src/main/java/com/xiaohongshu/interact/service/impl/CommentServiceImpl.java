@@ -25,7 +25,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -49,7 +52,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             throw new BusinessException(ResultCode.POST_NOT_FOUND);
         }
 
-        // 如果是回复，验证父评论是否存在
+        // 如果是回复，验证父评论是否存在且属于同一篇笔记
         if (createDTO.getParentId() != null && createDTO.getParentId() > 0) {
             Comment parentComment = getById(createDTO.getParentId());
             if (parentComment == null) {
@@ -58,8 +61,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             if (!parentComment.getPostId().equals(createDTO.getPostId())) {
                 throw new BusinessException(ResultCode.PARAM_ERROR, "父评论不属于当前笔记");
             }
-            if (parentComment.getParentId() != null && parentComment.getParentId() > 0) {
-                throw new BusinessException(ResultCode.PARAM_ERROR, "只能回复一级评论");
+            if (createDTO.getReplyUserId() == null || createDTO.getReplyUserId() <= 0) {
+                createDTO.setReplyUserId(parentComment.getUserId());
             }
         }
 
@@ -99,12 +102,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             throw new BusinessException(ResultCode.POST_NO_PERMISSION);
         }
 
-        List<Comment> commentsToDelete = new ArrayList<>();
-        commentsToDelete.add(comment);
-        if (comment.getParentId() != null && comment.getParentId() == 0L) {
-            commentsToDelete.addAll(list(new LambdaQueryWrapper<Comment>()
-                    .eq(Comment::getParentId, commentId)));
-        }
+        List<Comment> commentsToDelete = getCommentSubtree(comment);
 
         List<Long> commentIds = commentsToDelete.stream()
                 .map(Comment::getId)
@@ -140,15 +138,65 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     @Override
     public IPage<CommentVO> getRepliesByCommentId(Long commentId, CommentQueryDTO queryDTO) {
-        Page<Comment> page = new Page<>(queryDTO.getPageNumSafe(), queryDTO.getPageSizeSafe());
+        Comment rootComment = getById(commentId);
+        if (rootComment == null) {
+            throw new BusinessException(ResultCode.COMMENT_NOT_FOUND);
+        }
 
-        LambdaQueryWrapper<Comment> wrapper = new LambdaQueryWrapper<Comment>()
-                .eq(Comment::getParentId, commentId)
-                .eq(Comment::getStatus, 1)
-                .orderByAsc(Comment::getCreateTime);
+        List<Comment> replies = getDescendantComments(commentId);
+        replies.sort(Comparator.comparing(Comment::getCreateTime, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(Comment::getId));
 
-        IPage<Comment> replyPage = page(page, wrapper);
-        return replyPage.convert(this::convertToCommentVO);
+        long pageNum = queryDTO.getPageNumSafe();
+        long pageSize = queryDTO.getPageSizeSafe();
+        int fromIndex = (int) Math.min((pageNum - 1) * pageSize, replies.size());
+        int toIndex = (int) Math.min(fromIndex + pageSize, replies.size());
+
+        Page<CommentVO> page = new Page<>(pageNum, pageSize);
+        page.setTotal(replies.size());
+        page.setRecords(replies.subList(fromIndex, toIndex).stream()
+                .map(this::convertToCommentVO)
+                .collect(Collectors.toList()));
+        return page;
+    }
+
+    private List<Comment> getCommentSubtree(Comment rootComment) {
+        List<Comment> comments = new ArrayList<>();
+        comments.add(rootComment);
+        comments.addAll(getDescendantComments(rootComment.getId(), false));
+        return comments;
+    }
+
+    private List<Comment> getDescendantComments(Long commentId) {
+        return getDescendantComments(commentId, true);
+    }
+
+    private List<Comment> getDescendantComments(Long commentId, boolean normalOnly) {
+        List<Comment> descendants = new ArrayList<>();
+        Set<Long> currentParentIds = new HashSet<>();
+        Set<Long> visitedParentIds = new HashSet<>();
+        currentParentIds.add(commentId);
+
+        while (!currentParentIds.isEmpty()) {
+            visitedParentIds.addAll(currentParentIds);
+            LambdaQueryWrapper<Comment> wrapper = new LambdaQueryWrapper<Comment>()
+                    .in(Comment::getParentId, currentParentIds);
+            if (normalOnly) {
+                wrapper.eq(Comment::getStatus, 1);
+            }
+            List<Comment> children = list(wrapper);
+            if (children.isEmpty()) {
+                break;
+            }
+
+            descendants.addAll(children);
+            currentParentIds = children.stream()
+                    .map(Comment::getId)
+                    .filter(id -> !visitedParentIds.contains(id))
+                    .collect(Collectors.toSet());
+        }
+
+        return descendants;
     }
 
     private void removeCommentActions(List<Long> commentIds) {
@@ -192,10 +240,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
         // 如果是一级评论，查询回复数量
         if (comment.getParentId() != null && comment.getParentId() == 0) {
-            long replyCount = count(new LambdaQueryWrapper<Comment>()
-                    .eq(Comment::getParentId, comment.getId())
-                    .eq(Comment::getStatus, 1));
-            vo.setReplyCount((int) replyCount);
+            vo.setReplyCount(getDescendantComments(comment.getId()).size());
         }
 
         return vo;
