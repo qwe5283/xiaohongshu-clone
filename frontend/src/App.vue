@@ -131,6 +131,7 @@ watch(
 // 通过 provide 注入给子组件，避免逐层传递 prop / emit
 provide('openPostDetail', openPostDetail);
 provide('closePostDetailSilent', closePostDetailSilent);
+provide('displayRoute', displayRoute);
 
 const stopAuthExpired = onAuthExpired((message) => {
   userStore.logout();

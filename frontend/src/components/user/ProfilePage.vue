@@ -20,9 +20,11 @@ const router = useRouter();
 const userStore = useUserStore();
 const postStore = usePostStore();
 const openPostDetail = inject('openPostDetail');
+const displayRoute = inject('displayRoute', null);
+const pageRoute = computed(() => displayRoute?.value || route);
 
 // 路由 id 可能是 'me'（已在上层路由守卫解析，但组件内仍需考虑刷新/边界情况）
-const userId = computed(() => Number(route.params.id) || null);
+const userId = computed(() => Number(pageRoute.value.params.id) || null);
 const isMe = computed(() => userStore.userInfo?.id === userId.value);
 
 const loading = ref(false);
@@ -151,7 +153,7 @@ onMounted(loadProfile);
 
 // 路由参数变化时重新加载（他人主页切换）
 watch(
-  () => route.params.id,
+  () => pageRoute.value.params.id,
   () => {
     activeTab.value = 'notes';
     notes.value = [];
