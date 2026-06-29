@@ -86,10 +86,21 @@ function formatTime(iso) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '';
   const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  if (diffMs >= 0) {
+    const minuteMs = 60 * 1000;
+    const hourMs = 60 * minuteMs;
+    const dayMs = 24 * hourMs;
+    const minutes = Math.floor(diffMs / minuteMs);
+    if (minutes < 1) return `刚刚`;
+    if (minutes < 60) return `${minutes}分钟前`;
+    const hours = Math.floor(diffMs / hourMs);
+    if (hours < 24) return `${hours}小时前`;
+    const days = Math.floor(diffMs / dayMs);
+    if (days <= 7) return `${days}天前`;
+  }
   const pad = (n) => String(n).padStart(2, '0');
-  const md = `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  if (d.getFullYear() === now.getFullYear()) return md;
-  return `${d.getFullYear()}-${md}`;
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 const loadDetail = async () => {
