@@ -3,6 +3,7 @@ package com.xiaohongshu.common.exception;
 import com.xiaohongshu.common.result.Result;
 import com.xiaohongshu.common.result.ResultCode;
 import io.jsonwebtoken.JwtException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -204,6 +205,19 @@ public class GlobalExceptionHandler {
                 })
                 .collect(Collectors.joining(", "));
         log.warn("绑定异常：{}", message);
+        return Result.error(ResultCode.PARAM_ERROR.getCode(), message);
+    }
+
+    /**
+     * 处理方法参数校验异常（@Validated + @Min/@Max 等注解校验失败）
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Void> handleConstraintViolationException(ConstraintViolationException e) {
+        String message = e.getConstraintViolations().stream()
+                .map(v -> v.getMessage())
+                .collect(Collectors.joining(", "));
+        log.warn("参数校验异常：{}", message);
         return Result.error(ResultCode.PARAM_ERROR.getCode(), message);
     }
 

@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xiaohongshu.common.result.PageRequest;
 import com.xiaohongshu.common.exception.BusinessException;
 import com.xiaohongshu.common.result.ResultCode;
+import com.xiaohongshu.notification.service.NotificationService;
 import com.xiaohongshu.social.entity.UserFollow;
 import com.xiaohongshu.social.mapper.UserFollowMapper;
 import com.xiaohongshu.social.service.FollowService;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow> implements FollowService {
 
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -87,6 +89,7 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
             userService.update(new LambdaUpdateWrapper<User>()
                     .eq(User::getId, followUserId)
                     .setSql("fans_count = fans_count + 1"));
+            notificationService.createFollowNotification(userId, followUserId);
 
             log.info("关注成功，用户ID：{}，被关注用户ID：{}", userId, followUserId);
             return true;

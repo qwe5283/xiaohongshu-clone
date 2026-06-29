@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.xiaohongshu.interact.entity.UserAction;
 import com.xiaohongshu.interact.mapper.UserActionMapper;
 import com.xiaohongshu.interact.service.CommentService;
+import com.xiaohongshu.notification.service.NotificationService;
 import com.xiaohongshu.post.entity.Post;
 import com.xiaohongshu.post.service.PostService;
 import com.xiaohongshu.user.entity.User;
@@ -36,6 +37,8 @@ class UserActionServiceImplTest {
     private UserService userService;
     @Mock
     private UserActionMapper userActionMapper;
+    @Mock
+    private NotificationService notificationService;
     @Spy
     @InjectMocks
     private UserActionServiceImpl userActionService;

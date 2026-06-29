@@ -10,6 +10,7 @@ import com.xiaohongshu.common.result.ResultCode;
 import com.xiaohongshu.interact.entity.UserAction;
 import com.xiaohongshu.interact.mapper.UserActionMapper;
 import com.xiaohongshu.interact.service.UserActionService;
+import com.xiaohongshu.notification.service.NotificationService;
 import com.xiaohongshu.post.entity.Post;
 import com.xiaohongshu.post.service.PostService;
 import com.xiaohongshu.interact.entity.Comment;
@@ -37,6 +38,7 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
     private final PostService postService;
     private final CommentService commentService;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     /**
      * 目标类型：笔记
@@ -75,6 +77,7 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
                     userService.update(new LambdaUpdateWrapper<User>()
                             .eq(User::getId, postAuthorId)
                             .setSql("liked_count = liked_count + 1"));
+                    notificationService.createPostLikeNotification(userId, post);
                 },
                 // 点赞数-1，同时更新笔记作者的获赞数
                 () -> {
@@ -98,9 +101,12 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
 
         return toggleAction(userId, commentId, TARGET_TYPE_COMMENT, ACTION_TYPE_LIKE,
                 // 评论点赞数+1
-                () -> commentService.update(new LambdaUpdateWrapper<Comment>()
-                        .eq(Comment::getId, commentId)
-                        .setSql("like_count = like_count + 1")),
+                () -> {
+                    commentService.update(new LambdaUpdateWrapper<Comment>()
+                            .eq(Comment::getId, commentId)
+                            .setSql("like_count = like_count + 1"));
+                    notificationService.createCommentLikeNotification(userId, comment);
+                },
                 // 评论点赞数-1
                 () -> commentService.update(new LambdaUpdateWrapper<Comment>()
                         .eq(Comment::getId, commentId)
@@ -127,6 +133,7 @@ public class UserActionServiceImpl extends ServiceImpl<UserActionMapper, UserAct
                     userService.update(new LambdaUpdateWrapper<User>()
                             .eq(User::getId, postAuthorId)
                             .setSql("collected_count = collected_count + 1"));
+                    notificationService.createPostCollectNotification(userId, post);
                 },
                 // 收藏数-1，同时更新笔记作者的获藏数
                 () -> {

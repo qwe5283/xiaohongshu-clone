@@ -2,6 +2,7 @@ package com.xiaohongshu.social.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.xiaohongshu.notification.service.NotificationService;
 import com.xiaohongshu.social.entity.UserFollow;
 import com.xiaohongshu.social.mapper.UserFollowMapper;
 import com.xiaohongshu.user.entity.User;
@@ -29,6 +30,8 @@ class FollowServiceImplTest {
     private UserService userService;
     @Mock
     private UserFollowMapper userFollowMapper;
+    @Mock
+    private NotificationService notificationService;
     @Spy
     @InjectMocks
     private FollowServiceImpl followService;

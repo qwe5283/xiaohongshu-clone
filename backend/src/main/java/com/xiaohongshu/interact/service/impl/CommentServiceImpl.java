@@ -15,6 +15,7 @@ import com.xiaohongshu.interact.mapper.CommentMapper;
 import com.xiaohongshu.interact.mapper.UserActionMapper;
 import com.xiaohongshu.interact.service.CommentService;
 import com.xiaohongshu.interact.vo.CommentVO;
+import com.xiaohongshu.notification.service.NotificationService;
 import com.xiaohongshu.post.entity.Post;
 import com.xiaohongshu.post.service.PostService;
 import com.xiaohongshu.user.entity.User;
@@ -42,6 +43,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private final PostService postService;
     private final UserService userService;
     private final UserActionMapper userActionMapper;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -83,6 +85,12 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         postService.update(new LambdaUpdateWrapper<Post>()
                 .eq(Post::getId, createDTO.getPostId())
                 .setSql("comment_count = comment_count + 1"));
+
+        if (comment.getParentId() != null && comment.getParentId() > 0) {
+            notificationService.createCommentReplyNotification(userId, comment);
+        } else {
+            notificationService.createPostCommentNotification(userId, post, comment);
+        }
 
         log.info("评论创建成功，ID：{}，笔记ID：{}", comment.getId(), createDTO.getPostId());
 

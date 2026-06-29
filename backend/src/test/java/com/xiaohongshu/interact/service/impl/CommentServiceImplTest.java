@@ -7,6 +7,7 @@ import com.xiaohongshu.interact.entity.Comment;
 import com.xiaohongshu.interact.mapper.CommentMapper;
 import com.xiaohongshu.interact.mapper.UserActionMapper;
 import com.xiaohongshu.interact.vo.CommentVO;
+import com.xiaohongshu.notification.service.NotificationService;
 import com.xiaohongshu.post.entity.Post;
 import com.xiaohongshu.post.service.PostService;
 import com.xiaohongshu.user.service.UserService;
@@ -34,6 +35,8 @@ class CommentServiceImplTest {
     private UserActionMapper userActionMapper;
     @Mock
     private CommentMapper commentMapper;
+    @Mock
+    private NotificationService notificationService;
     @Spy
     @InjectMocks
     private CommentServiceImpl commentService;
@@ -85,5 +88,6 @@ class CommentServiceImplTest {
         assertThat(savedComment.getReplyUserId()).isEqualTo(200L);
         assertThat(savedComment.getContent()).isEqualTo("nested reply");
         assertThat(vo).isNotNull();
+        verify(notificationService).createCommentReplyNotification(100L, savedComment);
     }
 }

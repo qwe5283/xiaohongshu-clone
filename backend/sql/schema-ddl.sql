@@ -111,3 +111,21 @@ CREATE TABLE IF NOT EXISTS `user_follow` (
     UNIQUE KEY `uk_user_follow` (`user_id`, `follow_user_id`),
     KEY `idx_follow_user_id` (`follow_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户关注表';
+
+-- ==================== 消息通知表 ====================
+CREATE TABLE IF NOT EXISTS `sys_notification` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '消息ID',
+    `receiver_id` BIGINT NOT NULL COMMENT '接收者ID',
+    `sender_id` BIGINT NOT NULL COMMENT '触发者ID',
+    `type` TINYINT NOT NULL COMMENT '消息类型：1-点赞笔记，2-收藏笔记，3-评论笔记，4-回复评论，5-点赞评论，6-新增关注',
+    `post_id` BIGINT DEFAULT 0 COMMENT '关联笔记ID',
+    `comment_id` BIGINT DEFAULT 0 COMMENT '关联评论ID',
+    `content` VARCHAR(500) DEFAULT '' COMMENT '通知内容（如评论文字或被赞评论摘要）',
+    `is_read` TINYINT DEFAULT 0 COMMENT '是否已读：0-未读，1-已读',
+    `read_time` DATETIME DEFAULT NULL COMMENT '阅读时间',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_receiver_read_time` (`receiver_id`, `is_read`, `create_time`),
+    KEY `idx_receiver_type_time` (`receiver_id`, `type`, `create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='消息通知表';
