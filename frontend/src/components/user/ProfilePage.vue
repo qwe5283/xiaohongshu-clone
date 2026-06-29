@@ -13,6 +13,7 @@ import SearchBar from '@/components/layout/SearchBar.vue';
 import PageShell from '@/components/layout/PageShell.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
 import WaterfallPostGrid from '@/components/post/WaterfallPostGrid.vue';
+import SearchBarLegacy from "@/components/layout/SearchBarLegacy.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -228,7 +229,7 @@ const formatCount = (num) => {
   <PageShell>
     <!-- 顶部搜索栏 -->
     <header class="sticky top-0 bg-white py-7 z-[5]">
-      <SearchBar />
+      <SearchBarLegacy />
     </header>
 
     <!-- 加载中 -->

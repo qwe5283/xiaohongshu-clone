@@ -11,7 +11,7 @@ const handleSearch = () => {
 
 <template>
   <div
-    class="bg-white border border-[#d9d9d9] rounded-[28px] px-[18px] py-3 flex items-center text-gray-400 max-w-[900px] mx-auto shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
+    class="bg-white border border-[#d9d9d9] rounded-[28px] px-4.5 py-3 flex items-center text-gray-400 max-w-225 mx-auto shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
   >
     <span class="size-5 [&>svg]:size-5" v-html="searchIcon"></span>
     <input

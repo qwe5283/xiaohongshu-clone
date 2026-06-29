@@ -311,8 +311,8 @@ const handleClose = () => emit('close');
   <div
     :class="
       isModal
-        ? 'fixed inset-0 bg-black/30 z-[100] flex justify-center items-center'
-        : 'min-h-screen bg-white flex justify-center px-10 py-8'
+        ? 'fixed inset-0 bg-black/30 z-[100] p-10 flex justify-center'
+        : 'h-screen bg-white flex justify-center p-10'
     "
     @click.self="handleClose"
   >
@@ -330,8 +330,8 @@ const handleClose = () => emit('close');
       v-if="loading"
       :class="
         isModal
-          ? 'w-[1000px] h-[700px] bg-white rounded-2xl flex items-center justify-center'
-          : 'w-full max-w-[1180px] min-h-[720px] bg-white flex items-center justify-center'
+          ? 'w-250 max-w-full h-full bg-white rounded-2xl flex items-center justify-center'
+          : 'w-full max-w-295 h-full bg-white flex items-center justify-center'
       "
     >
       <span
@@ -344,8 +344,8 @@ const handleClose = () => emit('close');
       v-else-if="!post"
       :class="
         isModal
-          ? 'w-[1000px] h-[700px] bg-white rounded-2xl flex items-center justify-center text-gray-400'
-          : 'w-full max-w-[1180px] min-h-[720px] bg-white flex items-center justify-center text-gray-400'
+          ? 'w-250 max-w-full h-full bg-white rounded-2xl flex items-center justify-center text-gray-400'
+          : 'w-full max-w-295 h-full bg-white flex items-center justify-center text-gray-400'
       "
     >
       笔记加载失败
@@ -355,8 +355,8 @@ const handleClose = () => emit('close');
       v-else
       :class="
         isModal
-          ? 'w-[1000px] h-[700px] bg-white rounded-2xl flex overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)]'
-          : 'w-full max-w-[1180px] min-h-[720px] bg-white flex overflow-hidden border border-gray-100 rounded-2xl'
+          ? 'w-250 max-w-full h-full bg-white rounded-2xl flex overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)]'
+          : 'w-full max-w-295 h-full bg-white flex overflow-hidden border border-gray-100 rounded-2xl'
       "
     >
       <!-- 左侧图片轮播 -->
