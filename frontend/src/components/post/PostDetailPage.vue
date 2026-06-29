@@ -10,15 +10,19 @@ const postId = computed(() => route.params.id);
 </script>
 
 <template>
-  <!-- 顶部搜索栏 -->
-  <header class="sticky top-0 bg-white py-7 z-[5]">
-    <SearchBarLegacy />
-  </header>
+  <div class="h-screen flex flex-col overflow-hidden">
+    <!-- 顶部搜索栏 -->
+    <header class="shrink-0 bg-white py-7 z-[5]">
+      <SearchBarLegacy />
+    </header>
 
-  <PostDetailModal
-    v-if="postId"
-    :key="String(postId)"
-    :post-id="postId"
-    display-mode="page"
-  />
+    <div class="flex-1 min-h-0">
+      <PostDetailModal
+        v-if="postId"
+        :key="String(postId)"
+        :post-id="postId"
+        display-mode="page"
+      />
+    </div>
+  </div>
 </template>

@@ -330,7 +330,7 @@ const handleClose = () => emit('close');
     :class="
       isModal
         ? 'fixed inset-0 bg-black/30 z-[100] p-10 flex justify-center'
-        : 'h-screen bg-white flex justify-center p-10'
+        : 'h-full bg-white flex justify-center p-10'
     "
     @click.self="handleClose"
   >
@@ -374,7 +374,7 @@ const handleClose = () => emit('close');
       :class="
         isModal
           ? 'w-250 max-w-full h-full bg-white rounded-2xl flex overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)]'
-          : 'w-full max-w-295 h-full bg-white flex overflow-hidden border border-gray-100 rounded-2xl'
+          : 'w-full max-w-295 h-full bg-white flex overflow-hidden border border-gray-200 rounded-2xl'
       "
     >
       <!-- 左侧图片轮播 -->
