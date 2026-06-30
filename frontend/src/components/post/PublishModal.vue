@@ -1,9 +1,11 @@
 <script setup>
-import { ref, computed, onUnmounted } from 'vue';
+import { ref, computed } from 'vue';
 import { uploadImage, uploadVideo } from '@/api/upload';
 import { createPost, generateTextImage } from '@/api/post';
 import { useUserStore } from '@/stores/user';
 import { showToast } from '@/utils/toast';
+import { extractVideoFrame } from '@/utils/media';
+import { useImagePreviews } from '@/composables/useImagePreviews';
 import closeIcon from '../../assets/icons/close.svg?raw';
 import BaseButton from '@/components/common/BaseButton.vue';
 import BaseInput from '@/components/common/BaseInput.vue';
@@ -15,26 +17,11 @@ const userStore = useUserStore();
 // ---- 表单字段 ----
 const title = ref('');
 const content = ref('');
-const imageFiles = ref([]); // File 对象数组
 const videoFile = ref(null); // File 对象 | null
 const errorMsg = ref('');
 const submitting = ref(false);
-
-// ---- 本地预览 URL（用 createObjectURL，删除/卸载时主动释放）----
-const imagePreviews = ref([]);
-
-function appendImageFiles(files) {
-  const previews = files.map((file) => ({
-    file,
-    url: URL.createObjectURL(file),
-  }));
-  imagePreviews.value = [...imagePreviews.value, ...previews];
-  imageFiles.value = imagePreviews.value.map((item) => item.file);
-}
-
-function revokePreview(preview) {
-  if (preview?.url) URL.revokeObjectURL(preview.url);
-}
+const { imagePreviews, imageFiles, appendImageFiles, removeImage } =
+  useImagePreviews(9);
 
 // ---- 文件选择 input 引用 ----
 const imageInputRef = ref(null);
@@ -78,17 +65,9 @@ function triggerImageInput() {
 
 function handleImageChange(e) {
   const files = Array.from(e.target.files || []);
-  const remaining = 9 - imageFiles.value.length;
-  const toAdd = files.slice(0, remaining);
-  appendImageFiles(toAdd);
+  appendImageFiles(files);
   // 重置 input 以便重复选择同一文件
   if (imageInputRef.value) imageInputRef.value.value = '';
-}
-
-function removeImage(index) {
-  revokePreview(imagePreviews.value[index]);
-  imagePreviews.value = imagePreviews.value.filter((_, i) => i !== index);
-  imageFiles.value = imagePreviews.value.map((item) => item.file);
 }
 
 // ---- 视频操作 ----
@@ -134,58 +113,6 @@ async function handleGenerateImage() {
   } finally {
     generatingImage.value = false;
   }
-}
-
-// ---- 视频首帧截取 ----
-function extractVideoFrame(videoFile) {
-  return new Promise((resolve, reject) => {
-    const video = document.createElement('video');
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    video.preload = 'metadata';
-    video.muted = true;
-    video.playsInline = true;
-
-    const cleanup = () => {
-      video.pause();
-      URL.revokeObjectURL(video.src);
-    };
-
-    video.onloadeddata = () => {
-      // 跳过可能的纯黑首帧
-      video.currentTime = 1;
-    };
-
-    video.onseeked = () => {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-      cleanup();
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(
-              new File([blob], `cover-${Date.now()}.jpg`, {
-                type: 'image/jpeg',
-              }),
-            );
-          } else {
-            reject(new Error('无法提取视频帧'));
-          }
-        },
-        'image/jpeg',
-        0.9,
-      );
-    };
-
-    video.onerror = () => {
-      cleanup();
-      reject(new Error('视频加载失败'));
-    };
-
-    video.src = URL.createObjectURL(videoFile);
-  });
 }
 
 // ---- 提交 ----
@@ -251,11 +178,6 @@ function handleClose() {
   if (submitting.value) return;
   emit('close');
 }
-
-// 清理 objectURL，避免内存泄漏
-onUnmounted(() => {
-  imagePreviews.value.forEach(revokePreview);
-});
 </script>
 
 <template>
@@ -294,7 +216,7 @@ onUnmounted(() => {
         maxlength="200"
         placeholder="笔记标题（必填）"
       />
-      <div class="text-xs text-gray-400 mt-1 text-right">
+      <div class="field-hint mt-1 text-right">
         {{ titleRemaining }}
       </div>
       <button
@@ -316,7 +238,7 @@ onUnmounted(() => {
         rows="4"
         placeholder="分享你的想法..."
       />
-      <div class="text-xs text-gray-400 mt-1 text-right">
+      <div class="field-hint mt-1 text-right">
         {{ contentRemaining }}
       </div>
     </div>
@@ -324,7 +246,7 @@ onUnmounted(() => {
     <!-- 图片上传 -->
     <div class="mb-5">
       <label class="block text-sm font-medium text-gray-600 mb-2"
-        >图片 <span class="text-xs text-gray-400">(最多9张)</span></label
+        >图片 <span class="field-hint">(最多9张)</span></label
       >
       <div class="flex flex-wrap gap-2">
         <!-- 已选图片预览 -->
@@ -351,7 +273,7 @@ onUnmounted(() => {
           class="size-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-primary hover:bg-red-50 transition-colors flex-shrink-0"
           @click="triggerImageInput"
         >
-          <span class="text-2xl text-gray-400">+</span>
+          <span class="text-2xl text-text-muted">+</span>
         </button>
       </div>
       <input
@@ -367,12 +289,11 @@ onUnmounted(() => {
     <!-- 视频上传 -->
     <div class="mb-6">
       <label class="block text-sm font-medium text-gray-600 mb-2"
-        >视频
-        <span class="text-xs text-gray-400">(最多1个, 200MB以内)</span></label
+        >视频 <span class="field-hint">(最多1个, 200MB以内)</span></label
       >
       <div
         v-if="videoFile"
-        class="flex items-center gap-2 bg-[#F7F7F7] rounded-xl px-4 py-3"
+        class="flex items-center gap-2 bg-surface-muted rounded-xl px-4 py-3"
       >
         <span class="text-sm text-gray-700 truncate flex-1">{{
           videoFile.name
@@ -386,7 +307,7 @@ onUnmounted(() => {
       </div>
       <button
         v-else
-        class="flex items-center gap-2 text-sm text-gray-500 bg-[#F7F7F7] rounded-xl px-4 py-3 cursor-pointer hover:bg-[#EEEEEE] transition-colors"
+        class="flex items-center gap-2 text-sm text-gray-500 bg-surface-muted rounded-xl px-4 py-3 cursor-pointer hover:bg-surface-pressed transition-colors"
         @click="triggerVideoInput"
       >
         <span class="text-lg">+</span> 选择视频文件

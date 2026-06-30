@@ -7,13 +7,11 @@ import closeIcon from '../../assets/icons/close.svg?raw';
 import BaseButton from '@/components/common/BaseButton.vue';
 import BaseInput from '@/components/common/BaseInput.vue';
 import BaseModal from '@/components/common/BaseModal.vue';
+import { defaultAvatar } from '@/utils/format';
 
 const emit = defineEmits(['close', 'update-success']);
 
 const userStore = useUserStore();
-
-const defaultAvatar =
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%23eee"/><text x="50%" y="55%" text-anchor="middle" font-size="18" fill="%23bbb">U</text></svg>';
 
 // ---- 表单字段（预填当前用户信息）----
 const info = userStore.userInfo;
@@ -189,7 +187,9 @@ onUnmounted(() => {
 
         <!-- 性别 -->
         <div class="w-full">
-          <label class="block text-sm font-medium text-gray-600 mb-2">性别</label>
+          <label class="block text-sm font-medium text-gray-600 mb-2"
+            >性别</label
+          >
           <div class="flex gap-1.5">
             <button
               v-for="opt in genderOptions"
@@ -212,7 +212,9 @@ onUnmounted(() => {
       <div class="flex-1 flex flex-col gap-4 min-w-0">
         <!-- 昵称 -->
         <div>
-          <label class="block text-sm font-medium text-gray-600 mb-1.5">昵称</label>
+          <label class="block text-sm font-medium text-gray-600 mb-1.5"
+            >昵称</label
+          >
           <BaseInput
             v-model="nickname"
             variant="field"
@@ -220,14 +222,16 @@ onUnmounted(() => {
             maxlength="20"
             placeholder="设置昵称"
           />
-          <div class="text-xs text-gray-400 mt-1 text-right">
+          <div class="field-hint mt-1 text-right">
             {{ nicknameRemaining }}
           </div>
         </div>
 
         <!-- 邮箱 -->
         <div>
-          <label class="block text-sm font-medium text-gray-600 mb-1.5">邮箱</label>
+          <label class="block text-sm font-medium text-gray-600 mb-1.5"
+            >邮箱</label
+          >
           <BaseInput
             v-model="email"
             variant="field"
@@ -238,7 +242,9 @@ onUnmounted(() => {
 
         <!-- 简介 -->
         <div>
-          <label class="block text-sm font-medium text-gray-600 mb-1.5">简介</label>
+          <label class="block text-sm font-medium text-gray-600 mb-1.5"
+            >简介</label
+          >
           <BaseInput
             v-model="bio"
             variant="field"
@@ -247,7 +253,7 @@ onUnmounted(() => {
             rows="3"
             placeholder="介绍一下自己..."
           />
-          <div class="text-xs text-gray-400 mt-1 text-right">
+          <div class="field-hint mt-1 text-right">
             {{ bioRemaining }}
           </div>
         </div>

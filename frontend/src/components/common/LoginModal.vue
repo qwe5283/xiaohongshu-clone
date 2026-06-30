@@ -161,7 +161,7 @@ const handleClose = () => {
         @click="handleLogin"
         >{{ loading ? '登录中...' : '登录' }}</BaseButton
       >
-      <p class="text-center mt-5 text-sm text-gray-400">
+      <p class="text-center mt-5 text-sm text-text-muted">
         没有账号?
         <a
           href="javascript:void(0)"
@@ -201,7 +201,7 @@ const handleClose = () => {
         @click="handleRegister"
         >{{ loading ? '注册中...' : '注册' }}</BaseButton
       >
-      <p class="text-center mt-5 text-sm text-gray-400">
+      <p class="text-center mt-5 text-sm text-text-muted">
         已有账号?
         <a
           href="javascript:void(0)"

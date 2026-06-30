@@ -1,6 +1,8 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import PostCard from './PostCard.vue';
+import EmptyState from '@/components/common/EmptyState.vue';
+import LoadingState from '@/components/common/LoadingState.vue';
 
 const props = defineProps({
   posts: {
@@ -167,20 +169,12 @@ onUnmounted(() => {
     </div>
   </div>
 
-  <div v-else class="flex justify-center items-center py-20 text-gray-400">
-    {{ emptyText }}
-  </div>
+  <EmptyState v-else :text="emptyText" />
 
   <div v-if="enableLoadMore" ref="loadMoreTrigger" class="h-10"></div>
 
-  <div
-    v-if="loadingMore"
-    class="flex justify-center items-center py-4 text-gray-400"
-  >
-    <span
-      class="inline-block size-4 border-2 border-gray-300 border-t-primary rounded-full animate-spin mr-2"
-    ></span>
-    加载更多...
+  <div v-if="loadingMore" class="py-4">
+    <LoadingState text="加载更多..." size="sm" />
   </div>
 
   <div

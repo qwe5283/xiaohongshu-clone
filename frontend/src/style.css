@@ -2,4 +2,56 @@
 
 @theme {
   --color-primary: #ff2442;
+  --color-text-main: #333333;
+  --color-text-muted: #999999;
+  --color-text-subtle: #bbbbbb;
+  --color-surface-app: #fafafa;
+  --color-surface-muted: #f7f7f7;
+  --color-surface-hover: #f2f2f2;
+  --color-surface-pressed: #eeeeee;
+  --color-border-soft: #d9d9d9;
+  --color-assistant-bg: #d9edea;
+  --color-assistant-text: #157d6b;
+  --shadow-search: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+@utility control-field {
+  @apply w-full px-4 border-none bg-surface-muted outline-none transition-colors duration-300 placeholder:text-text-subtle focus:bg-surface-pressed;
+}
+
+@utility control-field-block {
+  @apply py-3 rounded-xl text-sm;
+}
+
+@utility control-field-pill {
+  @apply py-[14px] rounded-full text-base;
+}
+
+@utility nav-item {
+  @apply flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-text-main text-base font-bold transition-all duration-200 hover:bg-surface-hover;
+}
+
+@utility nav-item-active {
+  @apply bg-surface-hover font-bold;
+}
+
+@utility tab-pill {
+  @apply text-base cursor-pointer px-4 py-2 rounded-3xl transition-all duration-200;
+}
+
+@utility tab-pill-active {
+  @apply bg-surface-hover text-gray-800 font-bold;
+}
+
+@utility state-panel {
+  @apply flex justify-center items-center py-20 text-text-muted;
+}
+
+@utility state-panel-column {
+  @apply flex flex-col items-center py-20 text-text-muted;
+}
+
+@utility field-hint {
+  @apply text-xs text-text-muted;
 }

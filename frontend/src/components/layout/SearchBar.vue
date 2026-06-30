@@ -2,6 +2,18 @@
 import { ref } from 'vue';
 import searchIcon from '../../assets/icons/search.svg?raw';
 
+const props = defineProps({
+  placeholder: {
+    type: String,
+    default: '登录探索更多内容',
+  },
+  variant: {
+    type: String,
+    default: 'wide',
+    validator: (value) => ['wide', 'compact'].includes(value),
+  },
+});
+
 const searchQuery = ref('');
 
 const handleSearch = () => {
@@ -11,21 +23,44 @@ const handleSearch = () => {
 
 <template>
   <div
-    class="bg-white border border-[#d9d9d9] rounded-[28px] px-4.5 py-3 flex items-center text-gray-400 max-w-225 mx-auto shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
+    class="rounded-[28px] px-4.5 py-3 flex items-center text-text-muted mx-auto"
+    :class="
+      props.variant === 'wide'
+        ? 'bg-white border border-border-soft max-w-225 shadow-search'
+        : 'bg-surface-muted border-none max-w-130'
+    "
   >
-    <span class="size-5 [&>svg]:size-5" v-html="searchIcon"></span>
+    <span
+      v-if="props.variant === 'wide'"
+      class="size-5 [&>svg]:size-5"
+      v-html="searchIcon"
+    ></span>
     <input
       v-model="searchQuery"
       type="text"
-      placeholder="登录探索更多内容"
-      class="border-none outline-none flex-1 ml-2.5 text-base bg-transparent placeholder:text-gray-300"
+      :placeholder="props.placeholder"
+      class="border-none outline-none flex-1 bg-transparent placeholder:text-gray-300"
+      :class="
+        props.variant === 'wide'
+          ? 'ml-2.5 text-base'
+          : 'w-full h-full pl-4 pr-12 text-sm text-gray-700 placeholder:text-text-subtle'
+      "
       @keyup.enter="handleSearch"
     />
-    <div
-      class="size-8 bg-gray-800 rounded-full flex items-center justify-center cursor-pointer ml-2"
+    <button
+      type="button"
+      aria-label="搜索"
+      class="flex items-center justify-center cursor-pointer"
+      :class="
+        props.variant === 'wide' ? 'size-8 bg-gray-800 rounded-full ml-2' : ''
+      "
       @click="handleSearch"
     >
-      <span class="size-5 text-white [&>svg]:size-5" v-html="searchIcon"></span>
-    </div>
+      <span
+        class="size-5 [&>svg]:size-5"
+        :class="props.variant === 'wide' ? 'text-white' : 'text-gray-600'"
+        v-html="searchIcon"
+      ></span>
+    </button>
   </div>
 </template>

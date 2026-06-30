@@ -8,8 +8,9 @@ import notifyIcon from '../../assets/icons/notify.svg?raw';
 import moreIcon from '../../assets/icons/more.svg?raw';
 import aboutIcon from '../../assets/icons/about.svg?raw';
 import { useUserStore } from '@/stores/user';
+import { useNotificationStore } from '@/stores/notification';
 import { showToast } from '@/utils/toast';
-import { getUnreadNotificationCount } from '@/api/notification';
+import { defaultAvatar } from '@/utils/format';
 
 const props = defineProps({
   currentPage: {
@@ -28,18 +29,13 @@ const emit = defineEmits([
 ]);
 
 const userStore = useUserStore();
+const notificationStore = useNotificationStore();
 
 // 登录态从 store 派生，刷新后由 App.vue 调 /me 恢复
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 const userInfo = computed(() => userStore.userInfo);
-const unreadNotificationCount = ref(0);
-let notificationTimer = null;
-
-// 默认头像：后端用户若无头像，用内置 SVG 兜底
-const defaultAvatar =
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%23eee"/><text x="50%" y="55%" text-anchor="middle" font-size="18" fill="%23bbb">U</text></svg>';
 const avatarUrl = computed(() => userInfo.value?.avatar || defaultAvatar);
-const nickname = computed(() => userInfo.value?.nickname || '我');
+const unreadNotificationCount = computed(() => notificationStore.unreadCount);
 
 const menuItems = [
   { key: 'home', label: '首页', icon: homeIcon },
@@ -48,8 +44,7 @@ const menuItems = [
   { key: 'notify', label: '通知', icon: notifyIcon },
 ];
 
-const menuItemClass =
-  'flex items-center py-3 px-4 mb-2 rounded-3xl cursor-pointer text-[#333] text-base font-bold transition-all duration-200 hover:bg-[#F2F2F2]';
+const menuItemClass = 'nav-item';
 
 // 当前激活菜单：以路由 name 为准，保证刷新/直接访问 URL 时高亮正确
 const activeMenu = computed(() => {
@@ -72,40 +67,9 @@ const setActiveMenu = (key) => {
   }
 };
 
-const fetchUnreadNotificationCount = async () => {
-  if (!isLoggedIn.value) {
-    unreadNotificationCount.value = 0;
-    return;
-  }
-  try {
-    const data = await getUnreadNotificationCount();
-    unreadNotificationCount.value = data?.unreadCount ?? 0;
-  } catch (e) {
-    unreadNotificationCount.value = 0;
-  }
-};
-
-const startNotificationPolling = () => {
-  if (notificationTimer || !isLoggedIn.value) return;
-  fetchUnreadNotificationCount();
-  notificationTimer = window.setInterval(fetchUnreadNotificationCount, 15000);
-};
-
-const stopNotificationPolling = () => {
-  if (notificationTimer) {
-    window.clearInterval(notificationTimer);
-    notificationTimer = null;
-  }
-  unreadNotificationCount.value = 0;
-};
-
-const handleNotificationsReadAll = () => {
-  unreadNotificationCount.value = 0;
-};
-
 const handleLogout = () => {
   userStore.logout();
-  stopNotificationPolling();
+  notificationStore.stopPolling();
   showToast('已退出登录', 'info');
   // 退出后统一回首页，避免停留在需要登录态的页面
   emit('navigate-home');
@@ -133,21 +97,19 @@ const handleClickOutside = (event) => {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
-  window.addEventListener('notifications-read-all', handleNotificationsReadAll);
-  startNotificationPolling();
+  notificationStore.startPolling();
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
-  window.removeEventListener('notifications-read-all', handleNotificationsReadAll);
-  stopNotificationPolling();
+  notificationStore.stopPolling();
 });
 
 watch(isLoggedIn, (loggedIn) => {
   if (loggedIn) {
-    startNotificationPolling();
+    notificationStore.startPolling();
   } else {
-    stopNotificationPolling();
+    notificationStore.stopPolling();
   }
 });
 
@@ -164,7 +126,7 @@ const handleCommunityGuidelines = () => {
 
 <template>
   <aside
-    class="fixed left-0 top-0 h-screen w-41 bg-[#fafafa] pt-8 px-3 flex flex-col z-10"
+    class="fixed left-0 top-0 h-screen w-41 bg-surface-app pt-8 px-3 flex flex-col z-10"
   >
     <!-- Logo -->
     <div class="mb-7.5 ml-4">
@@ -179,7 +141,7 @@ const handleCommunityGuidelines = () => {
         :class="[
           menuItemClass,
           'relative',
-          { 'bg-[#F2F2F2] font-bold': activeMenu === item.key },
+          { 'nav-item-active': activeMenu === item.key },
         ]"
         @click="setActiveMenu(item.key)"
       >
@@ -190,13 +152,13 @@ const handleCommunityGuidelines = () => {
         {{ item.label }}
         <span
           v-if="item.key === 'notify' && unreadNotificationCount > 0"
-          class="absolute right-4 top-2 min-w-4 h-4 px-1 rounded-full bg-[#FF2442] text-white text-[10px] leading-4 text-center font-semibold"
+          class="absolute right-4 top-2 min-w-4 h-4 px-1 rounded-full bg-primary text-white text-[10px] leading-4 text-center font-semibold"
         >
           {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
         </span>
         <span
           v-if="item.key === 'assistant'"
-          class="ml-1 min-w-4 h-4 px-1 rounded-md bg-[#D9EDEA] text-[#157d6b] text-[10px] leading-4 text-center font-normal"
+          class="ml-1 min-w-4 h-4 px-1 rounded-md bg-assistant-bg text-assistant-text text-[10px] leading-4 text-center font-normal"
         >
           ai
         </span>
@@ -207,7 +169,7 @@ const handleCommunityGuidelines = () => {
         v-if="isLoggedIn"
         :class="[
           menuItemClass,
-          { 'bg-[#F2F2F2] font-bold': props.currentPage === 'user-profile' },
+          { 'nav-item-active': props.currentPage === 'user-profile' },
         ]"
         @click="emit('navigate-profile')"
       >
@@ -254,7 +216,7 @@ const handleCommunityGuidelines = () => {
             @click="handleUserAgreement"
           >
             <svg
-              class="w-4 h-4 mr-3 text-gray-400"
+              class="w-4 h-4 mr-3 text-text-muted"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -273,7 +235,7 @@ const handleCommunityGuidelines = () => {
             @click="handleCommunityGuidelines"
           >
             <svg
-              class="w-4 h-4 mr-3 text-gray-400"
+              class="w-4 h-4 mr-3 text-text-muted"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

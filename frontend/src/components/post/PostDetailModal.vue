@@ -1,20 +1,22 @@
 <script setup>
-import { ref, computed, onMounted, reactive, inject } from 'vue';
+import { ref, computed, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
-import heartIcon from '../../assets/icons/heart.svg?raw';
-import heartFilledIcon from '../../assets/icons/heart-filled.svg?raw';
-import starIcon from '../../assets/icons/star.svg?raw';
-import starFilledIcon from '../../assets/icons/star-filled.svg?raw';
 import closeIcon from '../../assets/icons/close.svg?raw';
-import commentIcon from '../../assets/icons/comment.svg?raw';
 import { getPostDetail } from '@/api/post';
-import { getComments, getReplies, createComment } from '@/api/comment';
-import { toggleLikePost, getLikeStatusPost } from '@/api/like';
-import { toggleCollectPost, getCollectStatusPost } from '@/api/collect';
-import { toggleFollow, getFollowStatus } from '@/api/follow';
+import { getComments } from '@/api/comment';
+import { getLikeStatusPost } from '@/api/like';
+import { getCollectStatusPost } from '@/api/collect';
 import { useUserStore } from '@/stores/user';
 import { usePostStore } from '@/stores/post';
-import { showToast } from '@/utils/toast';
+import { formatRelativeTime } from '@/utils/format';
+import { usePostActions } from '@/composables/usePostActions';
+import { useFollowToggle } from '@/composables/useFollowToggle';
+import { usePostComments } from '@/composables/usePostComments';
+import LoadingState from '@/components/common/LoadingState.vue';
+import PostMediaViewer from './PostMediaViewer.vue';
+import PostAuthorBar from './PostAuthorBar.vue';
+import PostActionBar from './PostActionBar.vue';
+import CommentList from './CommentList.vue';
 
 const props = defineProps({
   postId: { type: [Number, String], required: true },
@@ -29,24 +31,30 @@ const emit = defineEmits(['close']);
 const router = useRouter();
 const userStore = useUserStore();
 const postStore = usePostStore();
+const { toggleLike, toggleCollect } = usePostActions(userStore, postStore);
 const closePostDetailSilent = inject('closePostDetailSilent');
 
 const post = ref(null);
 const loading = ref(true);
-const comments = ref([]);
-const repliesMap = reactive({}); // commentId -> replies[]
-const showRepliesMap = reactive({}); // commentId -> boolean
 const isLiked = ref(false);
 const isCollected = ref(false);
-const isFollowed = ref(false);
 const currentMediaIndex = ref(0);
-const commentText = ref('');
-const submitting = ref(false);
-
-// 回复状态
-const replyingTo = ref(null); // { commentId, rootCommentId, userId, nickname } | null
-const replyText = ref('');
-const submittingReply = ref(false);
+const postId = computed(() => props.postId);
+const { isFollowed, loadFollowStatus, toggleFollow } =
+  useFollowToggle(userStore);
+const {
+  comments,
+  repliesMap,
+  showRepliesMap,
+  commentText,
+  replyingTo,
+  replyText,
+  setComments,
+  submitComment,
+  handleReplyClick,
+  submitReply,
+  toggleReplies,
+} = usePostComments(userStore, post, postId);
 
 // 统一媒体列表：视频在前，图片在后
 const mediaItems = computed(() => {
@@ -73,35 +81,7 @@ const isSelf = computed(() => {
   );
 });
 
-const currentHeartIcon = computed(() =>
-  isLiked.value ? heartFilledIcon : heartIcon,
-);
-const currentStarIcon = computed(() =>
-  isCollected.value ? starFilledIcon : starIcon,
-);
 const isModal = computed(() => props.displayMode === 'modal');
-
-function formatTime(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '';
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  if (diffMs >= 0) {
-    const minuteMs = 60 * 1000;
-    const hourMs = 60 * minuteMs;
-    const dayMs = 24 * hourMs;
-    const minutes = Math.floor(diffMs / minuteMs);
-    if (minutes < 1) return `刚刚`;
-    if (minutes < 60) return `${minutes}分钟前`;
-    const hours = Math.floor(diffMs / hourMs);
-    if (hours < 24) return `${hours}小时前`;
-    const days = Math.floor(diffMs / dayMs);
-    if (days <= 7) return `${days}天前`;
-  }
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
 
 const loadDetail = async () => {
   loading.value = true;
@@ -111,7 +91,7 @@ const loadDetail = async () => {
       getComments(props.postId, { pageNum: 1, pageSize: 20 }),
     ]);
     post.value = detail;
-    comments.value = commentPage?.records || [];
+    setComments(commentPage?.records || []);
 
     if (userStore.isLoggedIn && detail) {
       const [likeRes, collectRes] = await Promise.all([
@@ -120,13 +100,7 @@ const loadDetail = async () => {
       ]);
       isLiked.value = !!likeRes.liked;
       isCollected.value = !!collectRes.collected;
-      if (!isSelf.value) {
-        getFollowStatus(detail.userId)
-          .then((res) => {
-            isFollowed.value = !!res.followed;
-          })
-          .catch(() => {});
-      }
+      if (!isSelf.value) loadFollowStatus(detail.userId);
     }
   } catch (e) {
     // request 拦截器已处理错误
@@ -137,182 +111,33 @@ const loadDetail = async () => {
 
 onMounted(loadDetail);
 
-// 点赞 toggle（乐观更新 + 同步 store）
 const handleToggleLike = async () => {
-  if (!userStore.isLoggedIn) {
-    showToast('请先登录', 'error');
-    return;
-  }
-  const wasLiked = isLiked.value;
-  const newLiked = !wasLiked;
-  const newCount = post.value.likeCount + (wasLiked ? -1 : 1);
-  isLiked.value = newLiked;
-  post.value.likeCount = newCount;
-  // 同步到 store，让首页卡片即时刷新
-  postStore.updateLike(props.postId, newLiked, newCount);
-  try {
-    await toggleLikePost(props.postId);
-  } catch (e) {
-    isLiked.value = wasLiked;
-    post.value.likeCount += wasLiked ? 1 : -1;
-    postStore.updateLike(props.postId, wasLiked, post.value.likeCount);
-  }
+  await toggleLike({
+    postId: props.postId,
+    liked: () => isLiked.value,
+    likeCount: () => post.value.likeCount,
+    setLocalState: ({ liked, likeCount }) => {
+      isLiked.value = liked;
+      post.value.likeCount = likeCount;
+    },
+  });
 };
 
-// 收藏 toggle（乐观更新 + 同步 store）
 const handleToggleCollect = async () => {
-  if (!userStore.isLoggedIn) {
-    showToast('请先登录', 'error');
-    return;
-  }
-  const wasCollected = isCollected.value;
-  const newCollected = !wasCollected;
-  const newCount = post.value.collectCount + (wasCollected ? -1 : 1);
-  isCollected.value = newCollected;
-  post.value.collectCount = newCount;
-  // 同步到 store，让首页卡片即时刷新
-  postStore.updateCollect(props.postId, newCollected, newCount);
-  try {
-    await toggleCollectPost(props.postId);
-  } catch (e) {
-    isCollected.value = wasCollected;
-    post.value.collectCount += wasCollected ? 1 : -1;
-    postStore.updateCollect(
-      props.postId,
-      wasCollected,
-      post.value.collectCount,
-    );
-  }
+  await toggleCollect({
+    postId: props.postId,
+    collected: () => isCollected.value,
+    collectCount: () => post.value.collectCount,
+    setLocalState: ({ collected, collectCount }) => {
+      isCollected.value = collected;
+      post.value.collectCount = collectCount;
+    },
+  });
 };
 
-// 关注 toggle
 const handleToggleFollow = async () => {
-  if (!userStore.isLoggedIn) {
-    showToast('请先登录', 'error');
-    return;
-  }
   if (isSelf.value || !post.value) return;
-  const wasFollowed = isFollowed.value;
-  isFollowed.value = !wasFollowed;
-  try {
-    await toggleFollow(post.value.userId);
-    showToast(wasFollowed ? '已取消关注' : '关注成功', 'success');
-  } catch (e) {
-    isFollowed.value = wasFollowed;
-  }
-};
-
-// 发评论
-const handleComment = async () => {
-  if (!userStore.isLoggedIn) {
-    showToast('请先登录', 'error');
-    return;
-  }
-  const text = commentText.value.trim();
-  if (!text) return;
-  submitting.value = true;
-  try {
-    const newComment = await createComment({
-      postId: props.postId,
-      content: text,
-      parentId: 0,
-    });
-    comments.value.unshift(newComment);
-    post.value.commentCount += 1;
-    commentText.value = '';
-    showToast('评论成功', 'success');
-  } catch (e) {
-    // request 拦截器已处理错误
-  } finally {
-    submitting.value = false;
-  }
-};
-
-// 点击"回复"按钮
-function handleReplyClick(comment, rootComment = comment) {
-  if (replyingTo.value?.commentId === comment.id) {
-    cancelReply();
-  } else {
-    replyingTo.value = {
-      commentId: comment.id,
-      rootCommentId: rootComment.id,
-      userId: comment.userId,
-      nickname: comment.userNickname,
-    };
-    replyText.value = '';
-  }
-}
-
-function cancelReply() {
-  replyingTo.value = null;
-  replyText.value = '';
-}
-
-// 提交回复
-async function handleReplySubmit() {
-  if (!userStore.isLoggedIn) {
-    showToast('请先登录', 'error');
-    return;
-  }
-  if (!replyingTo.value) return;
-  const text = replyText.value.trim();
-  if (!text) return;
-  submittingReply.value = true;
-  try {
-    const rootComment = comments.value.find(
-      (item) => item.id === replyingTo.value.rootCommentId,
-    );
-    const newReply = await createComment({
-      postId: props.postId,
-      content: text,
-      parentId: replyingTo.value.commentId,
-      replyUserId: replyingTo.value.userId,
-    });
-    // 写入本地 repliesMap
-    if (!repliesMap[replyingTo.value.rootCommentId]) {
-      repliesMap[replyingTo.value.rootCommentId] = [];
-    }
-    repliesMap[replyingTo.value.rootCommentId].push(newReply);
-    // 自动展开回复列表
-    showRepliesMap[replyingTo.value.rootCommentId] = true;
-    // 更新计数
-    if (rootComment) {
-      rootComment.replyCount = (rootComment.replyCount || 0) + 1;
-    }
-    post.value.commentCount += 1;
-    replyText.value = '';
-    cancelReply();
-    showToast('回复成功', 'success');
-  } catch (e) {
-    // request 拦截器已处理错误
-  } finally {
-    submittingReply.value = false;
-  }
-}
-
-// 加载/切换回复
-const handleToggleReplies = async (comment) => {
-  if (showRepliesMap[comment.id]) {
-    showRepliesMap[comment.id] = false;
-    return;
-  }
-  if (!repliesMap[comment.id]) {
-    try {
-      const page = await getReplies(comment.id, { pageSize: 50 });
-      repliesMap[comment.id] = page?.records || [];
-    } catch (e) {
-      return;
-    }
-  }
-  showRepliesMap[comment.id] = true;
-};
-
-const prevImage = () => {
-  if (currentMediaIndex.value > 0) currentMediaIndex.value--;
-};
-const nextImage = () => {
-  if (currentMediaIndex.value < mediaItems.value.length - 1)
-    currentMediaIndex.value++;
+  await toggleFollow(post.value.userId);
 };
 
 const goAuthorProfile = () => {
@@ -352,18 +177,15 @@ const handleClose = () => emit('close');
           : 'w-full max-w-295 h-full bg-white flex items-center justify-center'
       "
     >
-      <span
-        class="inline-block size-8 border-2 border-gray-300 border-t-primary rounded-full animate-spin mr-3"
-      ></span>
-      加载中...
+      <LoadingState size="lg" />
     </div>
 
     <div
       v-else-if="!post"
       :class="
         isModal
-          ? 'w-250 max-w-full h-full bg-white rounded-2xl flex items-center justify-center text-gray-400'
-          : 'w-full max-w-295 h-full bg-white flex items-center justify-center text-gray-400'
+          ? 'w-250 max-w-full h-full bg-white rounded-2xl flex items-center justify-center text-text-muted'
+          : 'w-full max-w-295 h-full bg-white flex items-center justify-center text-text-muted'
       "
     >
       笔记加载失败
@@ -377,88 +199,21 @@ const handleClose = () => emit('close');
           : 'w-full max-w-295 h-full bg-white flex overflow-hidden border border-gray-200 rounded-2xl'
       "
     >
-      <!-- 左侧图片轮播 -->
-      <div
-        class="flex-[1.2] bg-black flex items-center justify-center relative select-none"
-      >
-        <template v-if="mediaItems.length">
-          <!-- 视频 -->
-          <video
-            v-if="mediaItems[currentMediaIndex].type === 'video'"
-            :src="mediaItems[currentMediaIndex].url"
-            class="max-w-full max-h-full object-contain"
-            controls
-            autoplay
-            loop
-          ></video>
-          <!-- 图片 -->
-          <img
-            v-else
-            :src="mediaItems[currentMediaIndex].url"
-            alt="Detail Image"
-            class="w-full h-full object-contain"
-          />
-          <!-- 左右箭头 -->
-          <button
-            v-if="mediaItems.length > 1"
-            class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 text-2xl"
-            @click="prevImage"
-          >
-            ‹
-          </button>
-          <button
-            v-if="mediaItems.length > 1"
-            class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 text-2xl"
-            @click="nextImage"
-          >
-            ›
-          </button>
-          <!-- 底部小圆点 -->
-          <div
-            v-if="mediaItems.length > 1"
-            class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2"
-          >
-            <span
-              v-for="(item, idx) in mediaItems"
-              :key="idx"
-              class="w-2 h-2 rounded-full cursor-pointer"
-              :class="idx === currentMediaIndex ? 'bg-white' : 'bg-white/40'"
-              @click="currentMediaIndex = idx"
-            ></span>
-          </div>
-        </template>
-        <div v-else class="text-white">暂无图片</div>
-      </div>
+      <!-- 左侧媒体 -->
+      <PostMediaViewer
+        v-model:current-index="currentMediaIndex"
+        :media-items="mediaItems"
+      />
 
       <!-- 右侧内容 -->
       <div class="flex-1 flex flex-col p-6 min-w-0">
-        <!-- 作者信息 -->
-        <div class="flex justify-between items-center mb-5">
-          <div
-            class="flex items-center gap-2.5 cursor-pointer"
-            @click="goAuthorProfile"
-          >
-            <img
-              :src="post.authorAvatar || post.author?.avatar"
-              class="size-9 rounded-full object-cover"
-            />
-            <span class="text-sm font-medium truncate">{{
-              post.authorNickname || post.author?.nickname
-            }}</span>
-          </div>
-          <button
-            v-if="!isSelf"
-            class="border px-6 py-2 rounded-[20px] text-sm font-bold cursor-pointer transition-all"
-            :class="
-              isFollowed
-                ? 'bg-white text-primary border-primary'
-                : 'bg-primary text-white border-primary'
-            "
-            @click="handleToggleFollow"
-          >
-            {{ isFollowed ? '已关注' : '关注' }}
-          </button>
-        </div>
+        <PostAuthorBar
+          :post="post"
+          :is-self="isSelf"
+          :is-followed="isFollowed"
+          @open-profile="goAuthorProfile"
+          @toggle-follow="handleToggleFollow"
+        />
 
         <!-- 内容区域 -->
         <div class="flex-1 overflow-y-auto min-h-0">
@@ -468,204 +223,34 @@ const handleClose = () => emit('close');
           >
             {{ post.content }}
           </div>
-          <div class="text-xs text-gray-400 mb-5">
-            编辑于 {{ formatTime(post.createTime) }}
+          <div class="field-hint mb-5">
+            编辑于 {{ formatRelativeTime(post.createTime) }}
           </div>
 
-          <div class="text-xs text-gray-400 mb-2.5">
-            共 {{ post.commentCount }} 条评论
-          </div>
+          <div class="field-hint mb-2.5">共 {{ post.commentCount }} 条评论</div>
 
-          <!-- 评论列表 -->
-          <div class="border-t border-gray-200 pt-5">
-            <div
-              v-if="comments.length === 0"
-              class="text-sm text-gray-400 py-4 text-center"
-            >
-              暂无评论，来说点什么吧～
-            </div>
-            <div v-for="comment in comments" :key="comment.id" class="mb-5">
-              <div class="flex items-start gap-2 mb-1.5">
-                <img
-                  :src="comment.userAvatar"
-                  class="size-6 rounded-full object-cover shrink-0"
-                />
-                <div class="flex-1 min-w-0">
-                  <span class="text-xs text-gray-500">
-                    {{ comment.userNickname }}
-                    <span
-                      v-if="comment.userId === post.userId"
-                      class="bg-[#fee] text-red-500 px-1 py-0.5 rounded text-[10px] ml-1"
-                      >作者</span
-                    >
-                  </span>
-                  <div class="text-sm text-gray-800 mt-0.5">
-                    {{ comment.content }}
-                  </div>
-                  <div class="flex items-center gap-3 mt-1">
-                    <span class="text-xs text-gray-400">{{
-                      formatTime(comment.createTime)
-                    }}</span>
-                    <!-- 回复按钮 -->
-                    <span
-                      class="text-xs text-gray-400 cursor-pointer hover:text-primary"
-                      :class="{
-                        'text-primary font-medium':
-                          replyingTo?.commentId === comment.id,
-                      }"
-                      @click="handleReplyClick(comment)"
-                      >{{
-                        replyingTo?.commentId === comment.id
-                          ? '取消回复'
-                          : '回复'
-                      }}</span
-                    >
-                  </div>
-
-                  <!-- 查看回复 -->
-                  <div v-if="(comment.replyCount || 0) > 0" class="mt-2">
-                    <button
-                      class="text-xs text-primary font-medium"
-                      @click="handleToggleReplies(comment)"
-                    >
-                      {{
-                        showRepliesMap[comment.id]
-                          ? '收起'
-                          : `展开 ${comment.replyCount} 条回复`
-                      }}
-                    </button>
-                    <!-- 回复列表 -->
-                    <div
-                      v-if="showRepliesMap[comment.id]"
-                      class="mt-2 space-y-2 pl-3 border-l-2 border-gray-100"
-                    >
-                      <div
-                        v-for="reply in repliesMap[comment.id]"
-                        :key="reply.id"
-                        class="text-sm"
-                      >
-                        <span class="text-gray-500">
-                          <span class="font-medium">{{
-                            reply.userNickname
-                          }}</span>
-                          <span
-                            v-if="
-                              reply.parentId !== comment.id &&
-                              reply.replyUserNickname
-                            "
-                          >
-                            回复
-                            <span class="font-medium">{{
-                              reply.replyUserNickname
-                            }}</span></span
-                          >
-                          <span class="text-gray-800"
-                            >：{{ reply.content }}</span
-                          >
-                        </span>
-                        <div class="flex items-center gap-3 text-xs mt-0.5">
-                          <span class="text-gray-400">
-                            {{ formatTime(reply.createTime) }}
-                          </span>
-                          <span
-                            class="text-gray-400 cursor-pointer hover:text-primary"
-                            :class="{
-                              'text-primary font-medium':
-                                replyingTo?.commentId === reply.id,
-                            }"
-                            @click="handleReplyClick(reply, comment)"
-                            >{{
-                              replyingTo?.commentId === reply.id
-                                ? '取消回复'
-                                : '回复'
-                            }}</span
-                          >
-                        </div>
-                        <div
-                          v-if="replyingTo?.commentId === reply.id"
-                          class="mt-2 flex items-center gap-2"
-                        >
-                          <span class="text-xs text-gray-400 shrink-0"
-                            >回复 @{{ replyingTo.nickname }}：</span
-                          >
-                          <input
-                            v-model="replyText"
-                            type="text"
-                            class="flex-1 bg-gray-100 border-none rounded-full px-3 py-1.5 text-xs outline-none"
-                            :placeholder="`回复 ${replyingTo.nickname}...`"
-                            @keyup.enter="handleReplySubmit"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 内联回复输入框 -->
-                  <div
-                    v-if="replyingTo?.commentId === comment.id"
-                    class="mt-2 flex items-center gap-2"
-                  >
-                    <span class="text-xs text-gray-400 shrink-0"
-                      >回复 @{{ replyingTo.nickname }}：</span
-                    >
-                    <input
-                      v-model="replyText"
-                      type="text"
-                      class="flex-1 bg-gray-100 border-none rounded-full px-3 py-1.5 text-xs outline-none"
-                      :placeholder="`回复 ${replyingTo.nickname}...`"
-                      @keyup.enter="handleReplySubmit"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 底部操作栏 -->
-        <div
-          class="border-t border-gray-200 pt-4 flex items-center gap-4 shrink-0"
-        >
-          <input
-            v-model="commentText"
-            type="text"
-            class="flex-1 bg-gray-100 border-none rounded-[20px] px-4 py-2.5 text-sm outline-none"
-            placeholder="说点什么..."
-            @keyup.enter="handleComment"
+          <CommentList
+            :post="post"
+            :comments="comments"
+            :replies-map="repliesMap"
+            :show-replies-map="showRepliesMap"
+            :replying-to="replyingTo"
+            v-model:reply-text="replyText"
+            @reply-click="handleReplyClick"
+            @toggle-replies="toggleReplies"
+            @submit-reply="submitReply"
           />
-          <div class="flex gap-4 text-gray-500 items-center">
-            <div
-              class="flex items-center gap-1 text-sm cursor-pointer"
-              @click="handleToggleLike"
-            >
-              <span
-                class="size-5 [&>svg]:size-5 transition-colors"
-                :class="isLiked ? 'text-red-500' : 'text-gray-500'"
-                v-html="currentHeartIcon"
-              ></span>
-              <span :class="isLiked ? 'text-red-500' : 'text-gray-500'">{{
-                post.likeCount
-              }}</span>
-            </div>
-            <div
-              class="flex items-center gap-1 text-sm cursor-pointer"
-              @click="handleToggleCollect"
-            >
-              <span
-                class="size-5 [&>svg]:size-5 transition-colors"
-                :class="isCollected ? 'text-amber-400' : 'text-gray-500'"
-                v-html="currentStarIcon"
-              ></span>
-              <span :class="isCollected ? 'text-amber-400' : 'text-gray-500'">{{
-                post.collectCount
-              }}</span>
-            </div>
-            <div class="flex items-center gap-1 text-sm">
-              <span class="size-5 [&>svg]:size-5" v-html="commentIcon"></span>
-              {{ post.commentCount }}
-            </div>
-          </div>
         </div>
+
+        <PostActionBar
+          :post="post"
+          :liked="isLiked"
+          :collected="isCollected"
+          v-model:comment-text="commentText"
+          @submit-comment="submitComment"
+          @toggle-like="handleToggleLike"
+          @toggle-collect="handleToggleCollect"
+        />
       </div>
     </div>
   </div>

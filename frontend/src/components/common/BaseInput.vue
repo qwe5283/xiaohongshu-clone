@@ -26,19 +26,15 @@ const attrs = useAttrs();
     v-if="multiline"
     v-bind="attrs"
     :value="modelValue"
-    class="w-full px-4 py-3 border-none bg-[#F7F7F7] rounded-xl text-sm outline-none resize-none transition-colors placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
+    class="control-field control-field-block resize-none"
     @input="emit('update:modelValue', $event.target.value)"
   />
   <input
     v-else
     v-bind="attrs"
     :value="modelValue"
-    class="w-full px-4 border-none bg-[#F7F7F7] outline-none transition-colors duration-300 placeholder:text-[#BBBBBB] focus:bg-[#EEEEEE]"
-    :class="
-      variant === 'field'
-        ? 'py-3 rounded-xl text-sm'
-        : 'py-[14px] rounded-full text-base'
-    "
+    class="control-field"
+    :class="variant === 'field' ? 'control-field-block' : 'control-field-pill'"
     @input="emit('update:modelValue', $event.target.value)"
   />
 </template>

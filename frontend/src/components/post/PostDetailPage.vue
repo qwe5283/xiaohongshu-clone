@@ -2,8 +2,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import PostDetailModal from './PostDetailModal.vue';
-import SearchBar from "@/components/layout/SearchBar.vue";
-import SearchBarLegacy from "@/components/layout/SearchBarLegacy.vue";
+import SearchBar from '@/components/layout/SearchBar.vue';
 
 const route = useRoute();
 const postId = computed(() => route.params.id);
@@ -13,7 +12,7 @@ const postId = computed(() => route.params.id);
   <div class="h-screen flex flex-col overflow-hidden">
     <!-- 顶部搜索栏 -->
     <header class="shrink-0 bg-white py-7 z-[5]">
-      <SearchBarLegacy />
+      <SearchBar variant="compact" />
     </header>
 
     <div class="flex-1 min-h-0">

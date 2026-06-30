@@ -5,19 +5,21 @@ import { getUserById } from '@/api/auth';
 import { getUserPosts } from '@/api/post';
 import { getCollectedPosts } from '@/api/collect';
 import { getLikedPosts } from '@/api/like';
-import { getFollowCount, getFollowStatus, toggleFollow } from '@/api/follow';
+import { getFollowCount } from '@/api/follow';
 import { useUserStore } from '@/stores/user';
 import { usePostStore } from '@/stores/post';
-import { showToast } from '@/utils/toast';
-import { adaptPost } from '@/api/post';
 import SearchBar from '@/components/layout/SearchBar.vue';
 import PageShell from '@/components/layout/PageShell.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
+import LoadingState from '@/components/common/LoadingState.vue';
+import ErrorState from '@/components/common/ErrorState.vue';
 import WaterfallPostGrid from '@/components/post/WaterfallPostGrid.vue';
 import EditProfileModal from '@/components/user/EditProfileModal.vue';
 import maleIcon from '../../assets/icons/male.svg?raw';
 import femaleIcon from '../../assets/icons/female.svg?raw';
-import SearchBarLegacy from "@/components/layout/SearchBarLegacy.vue";
+import { defaultAvatar, formatCompactCount } from '@/utils/format';
+import { usePaginatedPosts } from '@/composables/usePaginatedPosts';
+import { useFollowToggle } from '@/composables/useFollowToggle';
 
 const route = useRoute();
 const router = useRouter();
@@ -34,29 +36,49 @@ const isMe = computed(() => userStore.userInfo?.id === userId.value);
 const loading = ref(false);
 const user = ref(null);
 const activeTab = ref('notes');
-const notes = ref([]);
-const collects = ref([]);
-const notesPageNum = ref(1);
-const collectsPageNum = ref(1);
-const notesHasMore = ref(true);
-const collectsHasMore = ref(true);
-const notesLoadingMore = ref(false);
-const collectsLoadingMore = ref(false);
-const notesError = ref('');
-const collectsError = ref('');
-const likes = ref([]);
-const likesPageNum = ref(1);
-const likesHasMore = ref(true);
-const likesLoadingMore = ref(false);
-const likesError = ref('');
 const followStats = ref({ followingCount: 0, followersCount: 0 });
-const isFollowed = ref(false);
 const showEditModal = ref(false);
+const { isFollowed, loadFollowStatus, toggleFollow } = useFollowToggle(
+  userStore,
+  {
+    onOptimisticChange: (nextFollowed) => {
+      followStats.value.followersCount += nextFollowed ? 1 : -1;
+    },
+    onRollback: (wasFollowed) => {
+      followStats.value.followersCount += wasFollowed ? 1 : -1;
+    },
+  },
+);
 
 const PAGE_SIZE = 20;
 
-const defaultAvatar =
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" fill="%23eee"/><text x="50%" y="55%" text-anchor="middle" font-size="18" fill="%23bbb">U</text></svg>';
+const notesList = usePaginatedPosts(
+  (params) => getUserPosts(userId.value, params),
+  {
+    pageSize: PAGE_SIZE,
+    onItemsLoaded: (items) => postStore.initPosts(items),
+  },
+);
+const collectsList = usePaginatedPosts(
+  (params) => getCollectedPosts(userId.value, params),
+  {
+    pageSize: PAGE_SIZE,
+    onItemsLoaded: (items) => postStore.initPosts(items),
+  },
+);
+const likesList = usePaginatedPosts(
+  (params) => getLikedPosts(userId.value, params),
+  {
+    pageSize: PAGE_SIZE,
+    onItemsLoaded: (items) => postStore.initPosts(items),
+  },
+);
+
+const listByTab = {
+  notes: notesList,
+  collect: collectsList,
+  likes: likesList,
+};
 
 const loadProfile = async () => {
   if (!userId.value) return;
@@ -69,131 +91,13 @@ const loadProfile = async () => {
     user.value = profile;
     followStats.value = stats;
     // 关注状态
-    if (userStore.isLoggedIn && !isMe.value) {
-      getFollowStatus(userId.value)
-        .then((res) => {
-          isFollowed.value = !!res.followed;
-        })
-        .catch(() => {});
-    }
+    if (!isMe.value) loadFollowStatus(userId.value);
     // 默认加载笔记
-    await loadNotes(true);
+    await notesList.load(true);
   } catch (e) {
     // request 拦截器已处理错误
   } finally {
     loading.value = false;
-  }
-};
-
-const loadNotes = async (reset = false) => {
-  if (!userId.value) return;
-  if (notesLoadingMore.value || (!reset && !notesHasMore.value)) {
-    return;
-  }
-
-  if (reset) {
-    notesPageNum.value = 1;
-    notesHasMore.value = true;
-    notes.value = [];
-  } else {
-    notesLoadingMore.value = true;
-  }
-  notesError.value = '';
-
-  try {
-    const page = await getUserPosts(userId.value, {
-      pageNum: notesPageNum.value,
-      pageSize: PAGE_SIZE,
-    });
-    const adapted = (page?.records || []).map(adaptPost);
-    notes.value = reset ? adapted : [...notes.value, ...adapted];
-    postStore.initPosts(adapted);
-
-    const current = Number(page?.current ?? notesPageNum.value);
-    const pages = Number(page?.pages ?? 0);
-    notesHasMore.value =
-      pages > 0 ? current < pages : adapted.length === PAGE_SIZE;
-    notesPageNum.value = current + 1;
-  } catch (e) {
-    notesError.value = e.message || '加载失败';
-  } finally {
-    notesLoadingMore.value = false;
-  }
-};
-
-const loadCollects = async (reset = false) => {
-  if (!userId.value) return;
-  if (collectsLoadingMore.value || (!reset && !collectsHasMore.value)) {
-    return;
-  }
-
-  if (reset) {
-    collectsPageNum.value = 1;
-    collectsHasMore.value = true;
-    collects.value = [];
-  } else {
-    collectsLoadingMore.value = true;
-  }
-  collectsError.value = '';
-
-  try {
-    const res = await getCollectedPosts(userId.value, {
-      pageNum: collectsPageNum.value,
-      pageSize: PAGE_SIZE,
-    });
-    const adapted = (res?.records || []).map(adaptPost);
-    collects.value = reset ? adapted : [...collects.value, ...adapted];
-    postStore.initPosts(adapted);
-
-    const current = Number(
-      res?.current ?? res?.pageNum ?? collectsPageNum.value,
-    );
-    const pages = Number(res?.pages ?? 0);
-    collectsHasMore.value =
-      pages > 0 ? current < pages : adapted.length === PAGE_SIZE;
-    collectsPageNum.value = current + 1;
-  } catch (e) {
-    collectsError.value = e.message || '加载失败';
-  } finally {
-    collectsLoadingMore.value = false;
-  }
-};
-
-const loadLikes = async (reset = false) => {
-  if (!userId.value) return;
-  if (likesLoadingMore.value || (!reset && !likesHasMore.value)) {
-    return;
-  }
-
-  if (reset) {
-    likesPageNum.value = 1;
-    likesHasMore.value = true;
-    likes.value = [];
-  } else {
-    likesLoadingMore.value = true;
-  }
-  likesError.value = '';
-
-  try {
-    const res = await getLikedPosts(userId.value, {
-      pageNum: likesPageNum.value,
-      pageSize: PAGE_SIZE,
-    });
-    const adapted = (res?.records || []).map(adaptPost);
-    likes.value = reset ? adapted : [...likes.value, ...adapted];
-    postStore.initPosts(adapted);
-
-    const current = Number(
-      res?.current ?? res?.pageNum ?? likesPageNum.value,
-    );
-    const pages = Number(res?.pages ?? 0);
-    likesHasMore.value =
-      pages > 0 ? current < pages : adapted.length === PAGE_SIZE;
-    likesPageNum.value = current + 1;
-  } catch (e) {
-    likesError.value = e.message || '加载失败';
-  } finally {
-    likesLoadingMore.value = false;
   }
 };
 
@@ -204,18 +108,7 @@ watch(
   () => pageRoute.value.params.id,
   () => {
     activeTab.value = 'notes';
-    notes.value = [];
-    collects.value = [];
-    likes.value = [];
-    notesPageNum.value = 1;
-    collectsPageNum.value = 1;
-    likesPageNum.value = 1;
-    notesHasMore.value = true;
-    collectsHasMore.value = true;
-    likesHasMore.value = true;
-    notesError.value = '';
-    collectsError.value = '';
-    likesError.value = '';
+    Object.values(listByTab).forEach((list) => list.resetState());
     user.value = null;
     isFollowed.value = false;
     loadProfile();
@@ -224,48 +117,19 @@ watch(
 
 const handleTabChange = async (tab) => {
   activeTab.value = tab;
-  if (tab === 'notes' && notes.value.length === 0) {
-    await loadNotes(true);
-  }
-  if (tab === 'collect' && collects.value.length === 0) {
-    await loadCollects(true);
-  }
-  if (tab === 'likes' && likes.value.length === 0) {
-    await loadLikes(true);
+  const list = listByTab[tab];
+  if (list && list.items.value.length === 0) {
+    await list.load(true);
   }
 };
 
 const handleLoadMore = () => {
-  if (activeTab.value === 'notes') {
-    loadNotes(false);
-  } else if (activeTab.value === 'collect') {
-    loadCollects(false);
-  } else if (activeTab.value === 'likes') {
-    loadLikes(false);
-  }
+  listByTab[activeTab.value]?.load(false);
 };
 
 const handleToggleFollow = async () => {
   if (isMe.value || !user.value) return;
-  if (!userStore.isLoggedIn) {
-    showToast('请先登录', 'error');
-    return;
-  }
-  const wasFollowed = isFollowed.value;
-  isFollowed.value = !wasFollowed;
-  // 乐观更新粉丝数
-  if (isFollowed.value) {
-    followStats.value.followersCount += 1;
-  } else {
-    followStats.value.followersCount -= 1;
-  }
-  try {
-    await toggleFollow(userId.value);
-    showToast(wasFollowed ? '已取消关注' : '关注成功', 'success');
-  } catch (e) {
-    isFollowed.value = wasFollowed;
-    followStats.value.followersCount += wasFollowed ? 1 : -1;
-  }
+  await toggleFollow(userId.value);
 };
 
 const handleEditSuccess = () => {
@@ -284,26 +148,19 @@ const handleOpenProfile = (targetUserId) => {
   router.push({ name: 'user-profile', params: { id: targetUserId } });
 };
 
-const formatCount = (num) => {
-  if (num == null) return '0';
-  if (num >= 10000) return (num / 10000).toFixed(1) + '万';
-  return num.toString();
-};
+const retryActiveList = () => listByTab[activeTab.value]?.load(true);
 </script>
 
 <template>
   <PageShell>
     <!-- 顶部搜索栏 -->
     <header class="sticky top-0 bg-white py-4 z-[5]">
-      <SearchBarLegacy />
+      <SearchBar variant="compact" />
     </header>
 
     <!-- 加载中 -->
-    <div v-if="loading" class="flex flex-col items-center py-20 text-gray-400">
-      <span
-        class="inline-block size-8 border-2 border-gray-300 border-t-primary rounded-full animate-spin mb-3"
-      ></span>
-      加载中...
+    <div v-if="loading" class="py-20">
+      <LoadingState size="lg" />
     </div>
 
     <template v-else-if="user">
@@ -342,9 +199,7 @@ const formatCount = (num) => {
                 </BaseButton>
               </div>
               <!-- ID -->
-              <div class="text-xs text-gray-400 mb-2.5">
-                小红书号：{{ user.id }}
-              </div>
+              <div class="field-hint mb-2.5">小红书号：{{ user.id }}</div>
               <!-- 简介 -->
               <div
                 class="text-sm text-gray-500 mb-2.5 leading-[1.6] whitespace-pre-line"
@@ -354,7 +209,7 @@ const formatCount = (num) => {
               <!-- 性别 -->
               <div
                 v-if="user.gender && user.gender !== 0"
-                class="size-5 rounded-full bg-[#F2F2F2] mb-2.5 flex items-center justify-center shrink-0"
+                class="size-5 rounded-full bg-surface-hover mb-2.5 flex items-center justify-center shrink-0"
               >
                 <span
                   class="size-4 [&>svg]:size-4"
@@ -365,19 +220,19 @@ const formatCount = (num) => {
               <div class="flex gap-5 text-sm text-gray-500 mb-5">
                 <div>
                   <span class="font-bold text-gray-800 mr-1">{{
-                    formatCount(user.followingCount)
+                    formatCompactCount(user.followingCount)
                   }}</span
                   >关注
                 </div>
                 <div>
                   <span class="font-bold text-gray-800 mr-1">{{
-                    formatCount(user.followersCount)
+                    formatCompactCount(user.followersCount)
                   }}</span
                   >粉丝
                 </div>
                 <div>
                   <span class="font-bold text-gray-800 mr-1">{{
-                    formatCount(user.likeAndCollectCount)
+                    formatCompactCount(user.likeAndCollectCount)
                   }}</span
                   >获赞与收藏
                 </div>
@@ -389,22 +244,16 @@ const formatCount = (num) => {
         <!-- 标签栏 -->
         <div class="flex justify-center gap-2 mb-[30px]">
           <div
-            class="text-base cursor-pointer px-4 py-2 rounded-3xl transition-all duration-200"
-            :class="
-              activeTab === 'notes'
-                ? 'bg-[#F2F2F2] text-gray-800 font-bold'
-                : 'text-gray-500'
-            "
+            class="tab-pill"
+            :class="activeTab === 'notes' ? 'tab-pill-active' : 'text-gray-500'"
             @click="handleTabChange('notes')"
           >
             笔记
           </div>
           <div
-            class="text-base cursor-pointer px-4 py-2 rounded-3xl transition-all duration-200"
+            class="tab-pill"
             :class="
-              activeTab === 'collect'
-                ? 'bg-[#F2F2F2] text-gray-800 font-bold'
-                : 'text-gray-500'
+              activeTab === 'collect' ? 'tab-pill-active' : 'text-gray-500'
             "
             @click="handleTabChange('collect')"
           >
@@ -412,36 +261,25 @@ const formatCount = (num) => {
           </div>
           <div
             v-if="isMe"
-            class="text-base cursor-pointer px-4 py-2 rounded-3xl transition-all duration-200"
-            :class="
-              activeTab === 'likes'
-                ? 'bg-[#F2F2F2] text-gray-800 font-bold'
-                : 'text-gray-500'
-            "
+            class="tab-pill"
+            :class="activeTab === 'likes' ? 'tab-pill-active' : 'text-gray-500'"
             @click="handleTabChange('likes')"
           >
             点赞
           </div>
         </div>
 
-        <div
-          v-if="activeTab === 'notes' && notesError"
-          class="flex flex-col items-center py-10 text-gray-400"
-        >
-          <div class="mb-3">{{ notesError }}</div>
-          <button
-            class="bg-primary text-white px-5 py-2 rounded-full text-sm cursor-pointer"
-            @click="loadNotes(true)"
-          >
-            重试
-          </button>
-        </div>
+        <ErrorState
+          v-if="activeTab === 'notes' && notesList.error.value"
+          :message="notesList.error.value"
+          @retry="retryActiveList"
+        />
 
         <WaterfallPostGrid
-          v-if="activeTab === 'notes' && !notesError"
-          :posts="notes"
-          :loading-more="notesLoadingMore"
-          :has-more="notesHasMore"
+          v-if="activeTab === 'notes' && !notesList.error.value"
+          :posts="notesList.items.value"
+          :loading-more="notesList.loadingMore.value"
+          :has-more="notesList.hasMore.value"
           enable-load-more
           empty-text="暂无笔记"
           @open="goPostDetail"
@@ -449,24 +287,17 @@ const formatCount = (num) => {
           @load-more="handleLoadMore"
         />
 
-        <div
-          v-if="activeTab === 'collect' && collectsError"
-          class="flex flex-col items-center py-10 text-gray-400"
-        >
-          <div class="mb-3">{{ collectsError }}</div>
-          <button
-            class="bg-primary text-white px-5 py-2 rounded-full text-sm cursor-pointer"
-            @click="loadCollects(true)"
-          >
-            重试
-          </button>
-        </div>
+        <ErrorState
+          v-if="activeTab === 'collect' && collectsList.error.value"
+          :message="collectsList.error.value"
+          @retry="retryActiveList"
+        />
 
         <WaterfallPostGrid
-          v-if="activeTab === 'collect' && !collectsError"
-          :posts="collects"
-          :loading-more="collectsLoadingMore"
-          :has-more="collectsHasMore"
+          v-if="activeTab === 'collect' && !collectsList.error.value"
+          :posts="collectsList.items.value"
+          :loading-more="collectsList.loadingMore.value"
+          :has-more="collectsList.hasMore.value"
           enable-load-more
           empty-text="暂无收藏"
           @open="goPostDetail"
@@ -474,24 +305,17 @@ const formatCount = (num) => {
           @load-more="handleLoadMore"
         />
 
-        <div
-          v-if="activeTab === 'likes' && likesError"
-          class="flex flex-col items-center py-10 text-gray-400"
-        >
-          <div class="mb-3">{{ likesError }}</div>
-          <button
-            class="bg-primary text-white px-5 py-2 rounded-full text-sm cursor-pointer"
-            @click="loadLikes(true)"
-          >
-            重试
-          </button>
-        </div>
+        <ErrorState
+          v-if="activeTab === 'likes' && likesList.error.value"
+          :message="likesList.error.value"
+          @retry="retryActiveList"
+        />
 
         <WaterfallPostGrid
-          v-if="activeTab === 'likes' && !likesError"
-          :posts="likes"
-          :loading-more="likesLoadingMore"
-          :has-more="likesHasMore"
+          v-if="activeTab === 'likes' && !likesList.error.value"
+          :posts="likesList.items.value"
+          :loading-more="likesList.loadingMore.value"
+          :has-more="likesList.hasMore.value"
           enable-load-more
           empty-text="暂无点赞"
           @open="goPostDetail"
@@ -501,9 +325,7 @@ const formatCount = (num) => {
       </section>
     </template>
 
-    <div v-else class="flex flex-col items-center py-20 text-gray-400">
-      用户加载失败
-    </div>
+    <div v-else class="state-panel-column">用户加载失败</div>
 
     <!-- 编辑资料弹窗 -->
     <EditProfileModal
