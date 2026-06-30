@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import logo from '../../assets/logo.png';
 import homeIcon from '../../assets/icons/home.svg?raw';
 import exploreIcon from '../../assets/icons/explore.svg?raw';
@@ -9,6 +9,7 @@ import moreIcon from '../../assets/icons/more.svg?raw';
 import aboutIcon from '../../assets/icons/about.svg?raw';
 import { useUserStore } from '@/stores/user';
 import { showToast } from '@/utils/toast';
+import { getUnreadNotificationCount } from '@/api/notification';
 
 const props = defineProps({
   currentPage: {
@@ -30,6 +31,8 @@ const userStore = useUserStore();
 // 登录态从 store 派生，刷新后由 App.vue 调 /me 恢复
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 const userInfo = computed(() => userStore.userInfo);
+const unreadNotificationCount = ref(0);
+let notificationTimer = null;
 
 // 默认头像：后端用户若无头像，用内置 SVG 兜底
 const defaultAvatar =
@@ -65,8 +68,40 @@ const setActiveMenu = (key) => {
   }
 };
 
+const fetchUnreadNotificationCount = async () => {
+  if (!isLoggedIn.value) {
+    unreadNotificationCount.value = 0;
+    return;
+  }
+  try {
+    const data = await getUnreadNotificationCount();
+    unreadNotificationCount.value = data?.unreadCount ?? 0;
+  } catch (e) {
+    unreadNotificationCount.value = 0;
+  }
+};
+
+const startNotificationPolling = () => {
+  if (notificationTimer || !isLoggedIn.value) return;
+  fetchUnreadNotificationCount();
+  notificationTimer = window.setInterval(fetchUnreadNotificationCount, 15000);
+};
+
+const stopNotificationPolling = () => {
+  if (notificationTimer) {
+    window.clearInterval(notificationTimer);
+    notificationTimer = null;
+  }
+  unreadNotificationCount.value = 0;
+};
+
+const handleNotificationsReadAll = () => {
+  unreadNotificationCount.value = 0;
+};
+
 const handleLogout = () => {
   userStore.logout();
+  stopNotificationPolling();
   showToast('已退出登录', 'info');
   // 退出后统一回首页，避免停留在需要登录态的页面
   emit('navigate-home');
@@ -94,10 +129,22 @@ const handleClickOutside = (event) => {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
+  window.addEventListener('notifications-read-all', handleNotificationsReadAll);
+  startNotificationPolling();
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
+  window.removeEventListener('notifications-read-all', handleNotificationsReadAll);
+  stopNotificationPolling();
+});
+
+watch(isLoggedIn, (loggedIn) => {
+  if (loggedIn) {
+    startNotificationPolling();
+  } else {
+    stopNotificationPolling();
+  }
 });
 
 const handleUserAgreement = () => {
@@ -127,6 +174,7 @@ const handleCommunityGuidelines = () => {
         :key="item.key"
         :class="[
           menuItemClass,
+          'relative',
           { 'bg-[#F2F2F2] font-bold': activeMenu === item.key },
         ]"
         @click="setActiveMenu(item.key)"
@@ -136,6 +184,12 @@ const handleCommunityGuidelines = () => {
           v-html="item.icon"
         ></span>
         {{ item.label }}
+        <span
+          v-if="item.key === 'notify' && unreadNotificationCount > 0"
+          class="absolute right-4 top-2 min-w-4 h-4 px-1 rounded-full bg-[#FF2442] text-white text-[10px] leading-4 text-center font-semibold"
+        >
+          {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
+        </span>
       </li>
 
       <!-- 登录后显示用户头像 -->

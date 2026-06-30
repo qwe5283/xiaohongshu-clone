@@ -17,6 +17,8 @@ const buttonConfig = {
 
 <template>
   <div class="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
+    <span v-if="!data.read" class="size-2 rounded-full bg-[#FF2442] flex-shrink-0"></span>
+
     <!-- 头像 -->
     <img :src="data.avatar" class="w-10 h-10 rounded-full object-cover flex-shrink-0" />
 
@@ -32,9 +34,9 @@ const buttonConfig = {
 
     <!-- 右侧按钮 -->
     <button
-        :class="['px-6 py-1.5 rounded-full text-sm font-medium transition-opacity active:opacity-80', buttonConfig[data.status].class]"
+        :class="['px-6 py-1.5 rounded-full text-sm font-medium transition-opacity active:opacity-80', (buttonConfig[data.status] || buttonConfig.back).class]"
     >
-      {{ buttonConfig[data.status].text }}
+      {{ (buttonConfig[data.status] || buttonConfig.back).text }}
     </button>
   </div>
 </template>

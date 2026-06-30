@@ -1,6 +1,4 @@
 <script setup>
-import { ref } from 'vue';
-import heartIcon from '@/assets/icons/heart.svg?raw';
 import commentIcon from '@/assets/icons/comment.svg?raw';
 
 defineProps({
@@ -14,6 +12,8 @@ defineProps({
 
 <template>
   <div class="flex gap-3 p-4 hover:bg-gray-50 transition-colors">
+    <span v-if="!data.read" class="mt-4 size-2 rounded-full bg-[#FF2442] flex-shrink-0"></span>
+
     <!-- 头像 -->
     <img :src="data.avatar" class="w-10 h-10 rounded-full object-cover flex-shrink-0" />
 
