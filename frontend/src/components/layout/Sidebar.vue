@@ -23,6 +23,7 @@ const emit = defineEmits([
   'navigate-home',
   'navigate-profile',
   'navigate-messages',
+  'navigate-assistant',
   'publish',
 ]);
 
@@ -55,6 +56,7 @@ const activeMenu = computed(() => {
   if (props.currentPage === 'user-profile') return 'profile';
   if (props.currentPage === 'home') return 'home';
   if (props.currentPage === 'messages') return 'notify';
+  if (props.currentPage === 'assistant') return 'assistant';
   return props.currentPage || 'home';
 });
 
@@ -63,6 +65,8 @@ const setActiveMenu = (key) => {
     emit('navigate-home');
   } else if (key === 'notify') {
     emit('navigate-messages');
+  } else if (key === 'assistant') {
+    emit('navigate-assistant');
   } else if (key === 'publish') {
     emit('publish');
   }

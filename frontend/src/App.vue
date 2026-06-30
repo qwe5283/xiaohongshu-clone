@@ -147,6 +147,7 @@ onUnmounted(stopAuthExpired);
 const navigateHome = () => router.push({ name: 'home' });
 const navigateProfile = () => router.push('/user/me');
 const navigateMessages = () => router.push({ name: 'messages' });
+const navigateAssistant = () => router.push({ name: 'assistant' });
 
 // 启动恢复登录态：有 token 则校验 /me，失败会清 token
 onMounted(async () => {
@@ -163,9 +164,10 @@ onMounted(async () => {
     @login="openLoginModal"
     @navigate-home="navigateHome"
     @navigate-profile="navigateProfile"
-    @navigate-messages="navigateMessages"
-    @publish="openPublishModal"
-  />
+	    @navigate-messages="navigateMessages"
+	    @navigate-assistant="navigateAssistant"
+	    @publish="openPublishModal"
+	  />
   <!-- 主页面：modal route 时继续把来源路由传给 router-view -->
   <router-view v-slot="{ Component }" :route="displayRoute">
     <component :is="Component" :key="displayRoute.fullPath" />

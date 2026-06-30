@@ -32,6 +32,12 @@ const routes = [
     name: 'messages',
     component: () => import('@/components/message/MessagePage.vue'),
   },
+  // AI 助手页
+  {
+    path: '/assistant',
+    name: 'assistant',
+    component: () => import('@/components/chat/ChatPage.vue'),
+  },
   // 兜底：未匹配路径回首页
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ];
