@@ -2,7 +2,7 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import logo from '../../assets/logo.png';
 import homeIcon from '../../assets/icons/home.svg?raw';
-import exploreIcon from '../../assets/icons/explore.svg?raw';
+import assistantIcon from '../../assets/icons/assistant.svg?raw';
 import publishIcon from '../../assets/icons/publish.svg?raw';
 import notifyIcon from '../../assets/icons/notify.svg?raw';
 import moreIcon from '../../assets/icons/more.svg?raw';
@@ -42,7 +42,7 @@ const nickname = computed(() => userInfo.value?.nickname || '我');
 
 const menuItems = [
   { key: 'home', label: '首页', icon: homeIcon },
-  { key: 'explore', label: '点点', icon: exploreIcon },
+  { key: 'assistant', label: '点点', icon: assistantIcon },
   { key: 'publish', label: '发布', icon: publishIcon },
   { key: 'notify', label: '通知', icon: notifyIcon },
 ];
@@ -189,6 +189,12 @@ const handleCommunityGuidelines = () => {
           class="absolute right-4 top-2 min-w-4 h-4 px-1 rounded-full bg-[#FF2442] text-white text-[10px] leading-4 text-center font-semibold"
         >
           {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
+        </span>
+        <span
+          v-if="item.key === 'assistant'"
+          class="ml-1 min-w-4 h-4 px-1 rounded-md bg-[#D9EDEA] text-[#157d6b] text-[10px] leading-4 text-center font-normal"
+        >
+          ai
         </span>
       </li>
 
