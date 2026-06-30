@@ -37,4 +37,6 @@ public interface NotificationService extends IService<Notification> {
     IPage<NotificationVO> getNotificationPage(Long receiverId, PageRequest queryDTO, Integer type);
 
     void markAllAsRead(Long receiverId);
+
+    void markAsRead(Long notificationId, Long receiverId);
 }

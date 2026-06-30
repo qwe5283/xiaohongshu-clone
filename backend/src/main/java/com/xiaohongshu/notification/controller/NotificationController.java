@@ -15,6 +15,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -70,5 +71,17 @@ public class NotificationController {
         Long userId = jwtUtil.getUserIdFromToken(token);
         notificationService.markAllAsRead(userId);
         return Result.success("已全部标记为已读", null);
+    }
+
+    @Operation(summary = "阅读单条消息", description = "将指定消息通知标记为已读")
+    @PutMapping("/read/{id}")
+    public Result<Void> markAsRead(
+            @Parameter(description = "JWT认证令牌（Bearer Token）", required = true)
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @Parameter(description = "通知ID", required = true)
+            @PathVariable Long id) {
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        notificationService.markAsRead(id, userId);
+        return Result.success("已标记为已读", null);
     }
 }

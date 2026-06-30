@@ -48,7 +48,11 @@ public enum ResultCode {
 
     // 行为相关 7xxx
     ACTION_ALREADY_EXISTS(7001, "已操作过"),
-    ACTION_NOT_FOUND(7002, "未操作过");
+    ACTION_NOT_FOUND(7002, "未操作过"),
+
+    // 通知相关 8xxx
+    NOTIFICATION_NOT_FOUND(8001, "通知不存在"),
+    NOTIFICATION_NO_PERMISSION(8002, "无权操作此通知");
 
     private final Integer code;
     private final String message;

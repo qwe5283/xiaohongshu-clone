@@ -30,3 +30,11 @@ export function getNotifications(params = {}) {
 export function markAllNotificationsAsRead() {
   return request.put('/notification/read-all');
 }
+
+/**
+ * 阅读单条消息通知
+ * @param {number} id - 通知ID
+ */
+export function markNotificationAsRead(id) {
+  return request.put(`/notification/read/${id}`);
+}

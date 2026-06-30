@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xiaohongshu.common.exception.BusinessException;
 import com.xiaohongshu.common.result.PageRequest;
+import com.xiaohongshu.common.result.ResultCode;
 import com.xiaohongshu.interact.entity.Comment;
 import com.xiaohongshu.notification.entity.Notification;
 import com.xiaohongshu.notification.mapper.NotificationMapper;
@@ -104,6 +106,24 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         update(new LambdaUpdateWrapper<Notification>()
                 .eq(Notification::getReceiverId, receiverId)
                 .eq(Notification::getIsRead, 0)
+                .set(Notification::getIsRead, 1)
+                .set(Notification::getReadTime, LocalDateTime.now()));
+    }
+
+    @Override
+    public void markAsRead(Long notificationId, Long receiverId) {
+        Notification notification = getById(notificationId);
+        if (notification == null) {
+            throw new BusinessException(ResultCode.NOTIFICATION_NOT_FOUND);
+        }
+        if (!notification.getReceiverId().equals(receiverId)) {
+            throw new BusinessException(ResultCode.NOTIFICATION_NO_PERMISSION);
+        }
+        if (notification.getIsRead() == 1) {
+            return;
+        }
+        update(new LambdaUpdateWrapper<Notification>()
+                .eq(Notification::getId, notificationId)
                 .set(Notification::getIsRead, 1)
                 .set(Notification::getReadTime, LocalDateTime.now()));
     }
