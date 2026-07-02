@@ -84,7 +84,7 @@ class CommentServiceImplTest {
 
         verify(commentService).save(commentCaptor.capture());
         Comment savedComment = commentCaptor.getValue();
-        assertThat(savedComment.getParentId()).isEqualTo(10L);
+        assertThat(savedComment.getParentId()).isEqualTo(9L);
         assertThat(savedComment.getReplyUserId()).isEqualTo(200L);
         assertThat(savedComment.getContent()).isEqualTo("nested reply");
         assertThat(vo).isNotNull();

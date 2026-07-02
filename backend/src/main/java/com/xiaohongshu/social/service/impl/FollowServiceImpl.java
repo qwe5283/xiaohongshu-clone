@@ -22,6 +22,14 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * 用户关注服务实现类
  */
@@ -112,8 +120,9 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
                 .orderByDesc(UserFollow::getCreateTime);
 
         IPage<UserFollow> followPage = page(page, wrapper);
-
-        return followPage.convert(follow -> convertToFollowUserVO(follow, true, currentUserId));
+        Page<FollowUserVO> voPage = new Page<>(followPage.getCurrent(), followPage.getSize(), followPage.getTotal());
+        voPage.setRecords(convertToFollowUserVOs(followPage.getRecords(), true, currentUserId));
+        return voPage;
     }
 
     @Override
@@ -125,8 +134,9 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
                 .orderByDesc(UserFollow::getCreateTime);
 
         IPage<UserFollow> followPage = page(page, wrapper);
-
-        return followPage.convert(follow -> convertToFollowUserVO(follow, false, currentUserId));
+        Page<FollowUserVO> voPage = new Page<>(followPage.getCurrent(), followPage.getSize(), followPage.getTotal());
+        voPage.setRecords(convertToFollowUserVOs(followPage.getRecords(), false, currentUserId));
+        return voPage;
     }
 
     @Override
@@ -154,31 +164,58 @@ public class FollowServiceImpl extends ServiceImpl<UserFollowMapper, UserFollow>
      * @param currentUserId 当前登录用户ID（可为 null，用于填充 followed 字段）
      */
     private FollowUserVO convertToFollowUserVO(UserFollow follow, boolean isFollowing, Long currentUserId) {
-        FollowUserVO vo = new FollowUserVO();
+        List<FollowUserVO> users = convertToFollowUserVOs(Collections.singletonList(follow), isFollowing, currentUserId);
+        return users.isEmpty() ? new FollowUserVO() : users.get(0);
+    }
 
-        // 获取目标用户ID
-        Long targetUserId = isFollowing ? follow.getFollowUserId() : follow.getUserId();
+    private List<FollowUserVO> convertToFollowUserVOs(List<UserFollow> follows, boolean isFollowing, Long currentUserId) {
+        if (follows == null || follows.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        try {
-            User user = userService.getById(targetUserId);
+        List<Long> targetUserIds = follows.stream()
+                .map(follow -> isFollowing ? follow.getFollowUserId() : follow.getUserId())
+                .collect(Collectors.toList());
+
+        Map<Long, User> userMap = userService.listByIds(new HashSet<>(targetUserIds)).stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
+        Set<Long> followedUserIds = Collections.emptySet();
+        if (currentUserId != null && !targetUserIds.isEmpty()) {
+            followedUserIds = list(new LambdaQueryWrapper<UserFollow>()
+                    .eq(UserFollow::getUserId, currentUserId)
+                    .in(UserFollow::getFollowUserId, targetUserIds))
+                    .stream()
+                    .map(UserFollow::getFollowUserId)
+                    .collect(Collectors.toSet());
+        }
+
+        List<FollowUserVO> result = new ArrayList<>(follows.size());
+        for (UserFollow follow : follows) {
+            FollowUserVO vo = new FollowUserVO();
+
+            // 获取目标用户ID
+            Long targetUserId = isFollowing ? follow.getFollowUserId() : follow.getUserId();
+
+            User user = userMap.get(targetUserId);
             if (user != null) {
                 vo.setId(user.getId());
                 vo.setNickname(user.getNickname());
                 vo.setAvatar(user.getAvatar());
                 vo.setBio(user.getBio());
+            } else {
+                vo.setId(targetUserId);
             }
-        } catch (Exception e) {
-            log.warn("获取用户信息失败：{}", e.getMessage());
-            vo.setId(targetUserId);
+
+            vo.setFollowTime(follow.getCreateTime());
+
+            // 填充 followed 字段：当前登录用户是否关注了该用户
+            if (currentUserId != null) {
+                vo.setFollowed(followedUserIds.contains(targetUserId));
+            }
+            result.add(vo);
         }
 
-        vo.setFollowTime(follow.getCreateTime());
-
-        // 填充 followed 字段：当前登录用户是否关注了该用户
-        if (currentUserId != null) {
-            vo.setFollowed(isFollowing(currentUserId, targetUserId));
-        }
-
-        return vo;
+        return result;
     }
 }

@@ -32,6 +32,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -296,7 +297,8 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         IPage<Post> postPage = page(page, wrapper);
 
         // 转换为VO
-        IPage<PostVO> voPage = postPage.convert(this::convertToPostVO);
+        Page<PostVO> voPage = new Page<>(postPage.getCurrent(), postPage.getSize(), postPage.getTotal());
+        voPage.setRecords(convertToPostVOs(postPage.getRecords()));
 
         // 批量填充当前用户的点赞状态
         if (userId != null && !voPage.getRecords().isEmpty()) {
@@ -334,12 +336,12 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // 按传入的ID顺序排列（保持收藏时间顺序）
         Map<Long, Post> postMap = posts.stream()
                 .collect(Collectors.toMap(Post::getId, p -> p));
-        List<PostVO> result = postIds.stream()
+        List<Post> orderedPosts = postIds.stream()
                 .filter(postMap::containsKey)
-                .map(id -> convertToPostVO(postMap.get(id)))
+                .map(postMap::get)
                 .collect(Collectors.toList());
 
-        return result;
+        return convertToPostVOs(orderedPosts);
     }
 
     /**
@@ -368,40 +370,57 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
      * 将Post实体转换为PostVO
      */
     private PostVO convertToPostVO(Post post) {
-        PostVO postVO = new PostVO();
-        BeanUtil.copyProperties(post, postVO);
+        List<PostVO> posts = convertToPostVOs(Collections.singletonList(post));
+        return posts.isEmpty() ? null : posts.get(0);
+    }
 
-        // 获取作者信息
-        try {
-            User author = userService.getById(post.getUserId());
+    private List<PostVO> convertToPostVOs(List<Post> posts) {
+        if (posts == null || posts.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> postIds = posts.stream()
+                .map(Post::getId)
+                .collect(Collectors.toList());
+
+        List<Long> userIds = posts.stream()
+                .map(Post::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, User> userMap = userIds.isEmpty()
+                ? Collections.emptyMap()
+                : userService.listByIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
+        Map<Long, List<PostImage>> imageEntityMap = postImageService.list(new LambdaQueryWrapper<PostImage>()
+                        .in(PostImage::getPostId, postIds)
+                        .orderByAsc(PostImage::getPostId)
+                        .orderByAsc(PostImage::getSortOrder))
+                .stream()
+                .collect(Collectors.groupingBy(PostImage::getPostId));
+
+        List<PostVO> result = new ArrayList<>(posts.size());
+        for (Post post : posts) {
+            PostVO postVO = new PostVO();
+            BeanUtil.copyProperties(post, postVO);
+            postVO.setLiked(false);
+
+            User author = userMap.get(post.getUserId());
             if (author != null) {
                 postVO.setAuthorNickname(author.getNickname());
                 postVO.setAuthorAvatar(author.getAvatar());
             }
-        } catch (Exception e) {
-            log.warn("获取作者信息失败：{}", e.getMessage());
-        }
 
-        // 获取图片列表
-        try {
-            List<PostImage> images = postImageService.list(new LambdaQueryWrapper<PostImage>()
-                    .eq(PostImage::getPostId, post.getId())
-                    .orderByAsc(PostImage::getSortOrder));
-
-            List<PostImageVO> imageVOs = images.stream()
+            List<PostImageVO> imageVOs = imageEntityMap.getOrDefault(post.getId(), Collections.emptyList()).stream()
                     .map(img -> {
                         PostImageVO imgVO = new PostImageVO();
                         BeanUtil.copyProperties(img, imgVO);
                         return imgVO;
                     })
                     .collect(Collectors.toList());
-
             postVO.setImages(imageVOs);
-        } catch (Exception e) {
-            log.warn("获取笔记图片失败：{}", e.getMessage());
-            postVO.setImages(new ArrayList<>());
+            result.add(postVO);
         }
-
-        return postVO;
+        return result;
     }
 }

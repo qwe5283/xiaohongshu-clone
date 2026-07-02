@@ -210,7 +210,11 @@ function openProfile(userId) {
 
             <div class="mt-0.5 text-sm leading-5 text-gray-800 break-words">
               <template
-                v-if="reply.parentId !== comment.id && reply.replyUserNickname"
+                v-if="
+                  reply.replyUserId &&
+                  reply.replyUserId !== comment.userId &&
+                  reply.replyUserNickname
+                "
               >
                 回复
                 <span class="font-medium text-gray-600">

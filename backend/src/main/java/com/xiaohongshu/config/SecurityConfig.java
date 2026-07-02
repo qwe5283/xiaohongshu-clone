@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -50,9 +51,9 @@ public class SecurityConfig {
                         // 公开接口 - 登录注册
                         .requestMatchers("/user/login", "/user/register").permitAll()
                         // 公开接口 - 只读查询（GET）
-                        .requestMatchers(HttpMethod.GET, "/user/*").permitAll()
+                        .requestMatchers(new RegexRequestMatcher("^/user/\\d+(\\?.*)?$", HttpMethod.GET.name())).permitAll()
                         .requestMatchers(HttpMethod.GET, "/post/list").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/post/*").permitAll()
+                        .requestMatchers(new RegexRequestMatcher("^/post/\\d+(\\?.*)?$", HttpMethod.GET.name())).permitAll()
                         .requestMatchers(HttpMethod.GET, "/post/user/*").permitAll()
                         // 评论查询（公开）
                         .requestMatchers(HttpMethod.GET, "/comment/post/*").permitAll()

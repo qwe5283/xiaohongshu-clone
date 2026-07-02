@@ -2,6 +2,7 @@ package com.xiaohongshu.interact.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -27,9 +28,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +46,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
 
     private final PostService postService;
     private final UserService userService;
+    private final CommentMapper commentMapper;
     private final UserActionMapper userActionMapper;
     private final NotificationService notificationService;
 
@@ -58,6 +62,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             throw new BusinessException(ResultCode.POST_NOT_FOUND);
         }
 
+        Long parentId = createDTO.getParentId() != null ? createDTO.getParentId() : 0L;
+        Long replyUserId = createDTO.getReplyUserId() != null ? createDTO.getReplyUserId() : 0L;
+
         // 如果是回复，验证父评论是否存在且属于同一篇笔记
         if (createDTO.getParentId() != null && createDTO.getParentId() > 0) {
             Comment parentComment = getById(createDTO.getParentId());
@@ -67,8 +74,11 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             if (!parentComment.getPostId().equals(createDTO.getPostId())) {
                 throw new BusinessException(ResultCode.PARAM_ERROR, "父评论不属于当前笔记");
             }
-            if (createDTO.getReplyUserId() == null || createDTO.getReplyUserId() <= 0) {
-                createDTO.setReplyUserId(parentComment.getUserId());
+            parentId = parentComment.getParentId() != null && parentComment.getParentId() > 0
+                    ? parentComment.getParentId()
+                    : parentComment.getId();
+            if (replyUserId <= 0) {
+                replyUserId = parentComment.getUserId();
             }
         }
 
@@ -77,8 +87,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         comment.setPostId(createDTO.getPostId());
         comment.setUserId(userId);
         comment.setContent(createDTO.getContent());
-        comment.setParentId(createDTO.getParentId() != null ? createDTO.getParentId() : 0L);
-        comment.setReplyUserId(createDTO.getReplyUserId() != null ? createDTO.getReplyUserId() : 0L);
+        comment.setParentId(parentId);
+        comment.setReplyUserId(replyUserId);
         comment.setLikeCount(0);
         comment.setStatus(1);
         comment.setDeleted(0);
@@ -145,7 +155,8 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .orderByDesc(Comment::getCreateTime);
 
         IPage<Comment> commentPage = page(page, wrapper);
-        IPage<CommentVO> voPage = commentPage.convert(this::convertToCommentVO);
+        Page<CommentVO> voPage = new Page<>(commentPage.getCurrent(), commentPage.getSize(), commentPage.getTotal());
+        voPage.setRecords(convertToCommentVOs(commentPage.getRecords(), true));
         fillLikedStatus(voPage.getRecords(), currentUserId);
         return voPage;
     }
@@ -157,22 +168,17 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
             throw new BusinessException(ResultCode.COMMENT_NOT_FOUND);
         }
 
-        List<Comment> replies = getDescendantComments(commentId);
-        replies.sort(Comparator.comparing(Comment::getCreateTime, Comparator.nullsLast(Comparator.naturalOrder()))
-                .thenComparing(Comment::getId));
+        Page<Comment> page = new Page<>(queryDTO.getPageNumSafe(), queryDTO.getPageSizeSafe());
+        IPage<Comment> replyPage = page(page, new LambdaQueryWrapper<Comment>()
+                .eq(Comment::getParentId, commentId)
+                .eq(Comment::getStatus, 1)
+                .orderByAsc(Comment::getCreateTime)
+                .orderByAsc(Comment::getId));
 
-        long pageNum = queryDTO.getPageNumSafe();
-        long pageSize = queryDTO.getPageSizeSafe();
-        int fromIndex = (int) Math.min((pageNum - 1) * pageSize, replies.size());
-        int toIndex = (int) Math.min(fromIndex + pageSize, replies.size());
-
-        Page<CommentVO> page = new Page<>(pageNum, pageSize);
-        page.setTotal(replies.size());
-        page.setRecords(replies.subList(fromIndex, toIndex).stream()
-                .map(this::convertToCommentVO)
-                .collect(Collectors.toList()));
-        fillLikedStatus(page.getRecords(), currentUserId);
-        return page;
+        Page<CommentVO> voPage = new Page<>(replyPage.getCurrent(), replyPage.getSize(), replyPage.getTotal());
+        voPage.setRecords(convertToCommentVOs(replyPage.getRecords(), false));
+        fillLikedStatus(voPage.getRecords(), currentUserId);
+        return voPage;
     }
 
     private List<Comment> getCommentSubtree(Comment rootComment) {
@@ -251,38 +257,80 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
      * 将Comment实体转换为CommentVO
      */
     private CommentVO convertToCommentVO(Comment comment) {
-        CommentVO vo = new CommentVO();
-        BeanUtil.copyProperties(comment, vo);
-        vo.setLiked(false);
+        List<CommentVO> comments = convertToCommentVOs(Collections.singletonList(comment), true);
+        return comments.isEmpty() ? null : comments.get(0);
+    }
 
-        // 获取评论用户信息
-        try {
-            User user = userService.getById(comment.getUserId());
+    private List<CommentVO> convertToCommentVOs(List<Comment> comments, boolean includeReplyCount) {
+        if (comments == null || comments.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Set<Long> userIds = new HashSet<>();
+        Set<Long> replyUserIds = new HashSet<>();
+        List<Long> commentIds = new ArrayList<>();
+        for (Comment comment : comments) {
+            commentIds.add(comment.getId());
+            if (comment.getUserId() != null) {
+                userIds.add(comment.getUserId());
+            }
+            if (comment.getReplyUserId() != null && comment.getReplyUserId() > 0) {
+                userIds.add(comment.getReplyUserId());
+                replyUserIds.add(comment.getReplyUserId());
+            }
+        }
+
+        Map<Long, User> userMap = userIds.isEmpty()
+                ? Collections.emptyMap()
+                : userService.listByIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+        Map<Long, Integer> replyCountMap = includeReplyCount ? getDirectReplyCounts(commentIds) : Collections.emptyMap();
+
+        List<CommentVO> result = new ArrayList<>(comments.size());
+        for (Comment comment : comments) {
+            CommentVO vo = new CommentVO();
+            BeanUtil.copyProperties(comment, vo);
+            vo.setLiked(false);
+
+            User user = userMap.get(comment.getUserId());
             if (user != null) {
                 vo.setUserNickname(user.getNickname());
                 vo.setUserAvatar(user.getAvatar());
             }
-        } catch (Exception e) {
-            log.warn("获取评论用户信息失败：{}", e.getMessage());
-        }
 
-        // 获取回复用户信息
-        if (comment.getReplyUserId() != null && comment.getReplyUserId() > 0) {
-            try {
-                User replyUser = userService.getById(comment.getReplyUserId());
+            if (replyUserIds.contains(comment.getReplyUserId())) {
+                User replyUser = userMap.get(comment.getReplyUserId());
                 if (replyUser != null) {
                     vo.setReplyUserNickname(replyUser.getNickname());
                 }
-            } catch (Exception e) {
-                log.warn("获取回复用户信息失败：{}", e.getMessage());
+            }
+
+            if (includeReplyCount && comment.getParentId() != null && comment.getParentId() == 0) {
+                vo.setReplyCount(replyCountMap.getOrDefault(comment.getId(), 0));
+            }
+            result.add(vo);
+        }
+        return result;
+    }
+
+    private Map<Long, Integer> getDirectReplyCounts(List<Long> commentIds) {
+        if (commentIds == null || commentIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<Map<String, Object>> rows = commentMapper.selectMaps(new QueryWrapper<Comment>()
+                .select("parent_id", "COUNT(*) AS reply_count")
+                .in("parent_id", commentIds)
+                .eq("status", 1)
+                .groupBy("parent_id"));
+
+        Map<Long, Integer> counts = new HashMap<>();
+        for (Map<String, Object> row : rows) {
+            Number parentId = (Number) row.get("parent_id");
+            Number replyCount = (Number) row.get("reply_count");
+            if (parentId != null && replyCount != null) {
+                counts.put(parentId.longValue(), replyCount.intValue());
             }
         }
-
-        // 如果是一级评论，查询回复数量
-        if (comment.getParentId() != null && comment.getParentId() == 0) {
-            vo.setReplyCount(getDescendantComments(comment.getId()).size());
-        }
-
-        return vo;
+        return counts;
     }
 }
