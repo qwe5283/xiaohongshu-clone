@@ -264,9 +264,11 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post> implements Po
         // 构建查询条件
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
 
-        // 关键词搜索
+        // 关键词搜索（标题 + 正文模糊匹配）
         if (StringUtils.hasText(queryDTO.getKeyword())) {
-            wrapper.like(Post::getTitle, queryDTO.getKeyword());
+            wrapper.and(w -> w.like(Post::getTitle, queryDTO.getKeyword())
+                             .or()
+                             .like(Post::getContent, queryDTO.getKeyword()));
         }
 
         // 作者筛选

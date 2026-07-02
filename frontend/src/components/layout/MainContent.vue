@@ -17,6 +17,7 @@ const postStore = usePostStore();
 const uiStore = useUiStore();
 const openPostDetail = inject('openPostDetail');
 
+const searchKeyword = ref('');
 const activeCategory = ref('推荐');
 
 const categories = [
@@ -34,6 +35,12 @@ const categories = [
   '视频',
 ];
 
+const fetchPosts = (params) =>
+  getPosts({
+    ...params,
+    ...(searchKeyword.value ? { keyword: searchKeyword.value } : {}),
+  });
+
 const {
   items: posts,
   loading,
@@ -41,7 +48,7 @@ const {
   hasMore,
   error,
   load: loadPosts,
-} = usePaginatedPosts(getPosts, {
+} = usePaginatedPosts(fetchPosts, {
   onItemsLoaded: (items) => postStore.initPosts(items),
 });
 
@@ -54,6 +61,16 @@ watch(
     loadPosts(true);
   },
 );
+
+const handleSearch = (keyword) => {
+  searchKeyword.value = keyword;
+  loadPosts(true);
+};
+
+const clearSearch = () => {
+  searchKeyword.value = '';
+  loadPosts(true);
+};
 
 const handleCategoryChange = (category) => {
   activeCategory.value = category;
@@ -76,7 +93,7 @@ const handleOpenProfile = (userId) => {
   <PageShell>
     <!-- 顶部搜索栏 -->
     <header class="sticky top-0 bg-white py-7 z-[5]">
-      <SearchBar />
+      <SearchBar @search="handleSearch" />
     </header>
 
     <!-- 分类标签 -->
@@ -85,6 +102,22 @@ const handleOpenProfile = (userId) => {
       :active="activeCategory"
       @change="handleCategoryChange"
     />
+
+    <!-- 搜索结果提示 -->
+    <div
+      v-if="searchKeyword"
+      class="flex items-center justify-between py-3 px-1"
+    >
+      <span class="text-sm text-text-muted">
+        搜索"<span class="text-text-primary font-medium">{{ searchKeyword }}</span>"的结果
+      </span>
+      <button
+        class="text-sm text-brand-red cursor-pointer hover:underline"
+        @click="clearSearch"
+      >
+        清除
+      </button>
+    </div>
 
     <!-- 瀑布流笔记列表 -->
     <section class="mb-16">

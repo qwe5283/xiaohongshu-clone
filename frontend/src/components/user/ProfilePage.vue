@@ -154,7 +154,7 @@ const retryActiveList = () => listByTab[activeTab.value]?.load(true);
 <template>
   <PageShell>
     <!-- 顶部搜索栏 -->
-    <header class="sticky top-0 bg-white py-4 z-[5]">
+    <header class="sticky top-0 bg-white py-4 z-5">
       <SearchBar variant="compact" />
     </header>
 

@@ -129,7 +129,7 @@ onMounted(async () => {
     <div class="flex flex-col h-full bg-white">
       <!-- 顶部搜索栏 -->
       <header
-        class="sticky top-0 bg-white py-3 px-4 z-10 border-b border-gray-50"
+        class="sticky top-0 bg-white py-4 z-5"
       >
         <SearchBar variant="compact" placeholder="巴西日本1点淘汰赛" />
       </header>
