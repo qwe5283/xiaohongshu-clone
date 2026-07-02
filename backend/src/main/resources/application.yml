@@ -52,6 +52,15 @@ minio:
   secret-key: ${MINIO_SECRET_KEY:minioadmin}
   bucket-name: ${MINIO_BUCKET:xiaohongshu}
 
+# 大语言模型配置（OpenAI-compatible /chat/completions）
+llm:
+  base-url: ${LLM_BASE_URL:https://api.deepseek.com}
+  api-key: ${LLM_API_KEY:}
+  model: ${LLM_MODEL:deepseek-v4-flash}
+  timeout-seconds: ${LLM_TIMEOUT_SECONDS:60}
+  max-tokens: ${LLM_MAX_TOKENS:1024}
+  temperature: ${LLM_TEMPERATURE:0.7}
+
 # SpringDoc / Knife4j API文档配置
 springdoc:
   swagger-ui:

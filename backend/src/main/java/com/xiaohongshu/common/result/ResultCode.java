@@ -52,7 +52,11 @@ public enum ResultCode {
 
     // 通知相关 8xxx
     NOTIFICATION_NOT_FOUND(8001, "通知不存在"),
-    NOTIFICATION_NO_PERMISSION(8002, "无权操作此通知");
+    NOTIFICATION_NO_PERMISSION(8002, "无权操作此通知"),
+
+    // AI相关 9xxx
+    AI_CONFIG_ERROR(9001, "AI服务配置错误"),
+    AI_SERVICE_ERROR(9002, "AI服务暂时不可用");
 
     private final Integer code;
     private final String message;
