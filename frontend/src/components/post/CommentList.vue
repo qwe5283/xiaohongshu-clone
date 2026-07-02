@@ -36,6 +36,7 @@ const emit = defineEmits([
   'reply-click',
   'toggle-replies',
   'toggle-comment-like',
+  'open-profile',
   'update:replyText',
   'submit-reply',
 ]);
@@ -68,6 +69,11 @@ const replyInputLabel = computed(() =>
 function handleReply(comment, rootComment) {
   emit('reply-click', comment, rootComment);
 }
+
+function openProfile(userId) {
+  if (!userId) return;
+  emit('open-profile', userId);
+}
 </script>
 
 <template>
@@ -81,17 +87,27 @@ function handleReply(comment, rootComment) {
   <div v-else class="space-y-5">
     <div v-for="comment in comments" :key="comment.id">
       <div class="flex items-start gap-3">
-        <img
-          :src="comment.userAvatar"
-          class="size-8 rounded-full object-cover shrink-0 bg-gray-100"
-          alt=""
-        />
+        <button
+          type="button"
+          class="shrink-0"
+          @click="openProfile(comment.userId)"
+        >
+          <img
+            :src="comment.userAvatar"
+            class="size-8 rounded-full object-cover bg-gray-100 hover:cursor-pointer"
+            alt=""
+          />
+        </button>
 
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5 min-h-5">
-            <span class="truncate text-xs font-medium text-gray-500">
+            <button
+              type="button"
+              class="truncate text-left text-xs font-medium text-gray-500 transition-colors hover:cursor-pointer"
+              @click="openProfile(comment.userId)"
+            >
               {{ comment.userNickname }}
-            </span>
+            </button>
             <span
               v-if="comment.userId === post.userId"
               class="shrink-0 rounded bg-red-50 px-1 py-0.5 text-[10px] leading-none text-red-500"
@@ -163,17 +179,27 @@ function handleReply(comment, rootComment) {
           :key="reply.id"
           class="flex items-start gap-3"
         >
-          <img
-            :src="reply.userAvatar"
-            class="size-6 rounded-full object-cover shrink-0 bg-gray-100"
-            alt=""
-          />
+          <button
+            type="button"
+            class="shrink-0"
+            @click="openProfile(reply.userId)"
+          >
+            <img
+              :src="reply.userAvatar"
+              class="size-6 rounded-full object-cover bg-gray-100 hover:cursor-pointer"
+              alt=""
+            />
+          </button>
 
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-1.5 min-h-5">
-              <span class="truncate text-xs font-medium text-gray-500">
+              <button
+                type="button"
+                class="truncate text-left text-xs font-medium text-gray-500 transition-colors hover:cursor-pointer"
+                @click="openProfile(reply.userId)"
+              >
                 {{ reply.userNickname }}
-              </span>
+              </button>
               <span
                 v-if="reply.userId === post.userId"
                 class="shrink-0 rounded bg-red-50 px-1 py-0.5 text-[10px] leading-none text-red-500"

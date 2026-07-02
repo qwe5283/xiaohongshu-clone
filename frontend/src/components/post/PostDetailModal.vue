@@ -240,6 +240,12 @@ const goAuthorProfile = () => {
   router.push({ name: 'user-profile', params: { id: post.value.userId } });
 };
 
+const goUserProfile = (userId) => {
+  if (!userId) return;
+  closePostDetailSilent?.();
+  router.push({ name: 'user-profile', params: { id: userId } });
+};
+
 const handleClose = () => emit('close');
 </script>
 
@@ -335,6 +341,7 @@ const handleClose = () => emit('close');
             @reply-click="handleReplyClick"
             @toggle-replies="toggleReplies"
             @toggle-comment-like="toggleCommentLike"
+            @open-profile="goUserProfile"
             @submit-reply="submitReply"
           />
         </div>
