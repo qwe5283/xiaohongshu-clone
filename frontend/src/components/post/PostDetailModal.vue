@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, inject } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import closeIcon from '../../assets/icons/close.svg?raw';
 import { getPostDetail } from '@/api/post';
@@ -39,6 +39,9 @@ const loading = ref(true);
 const isLiked = ref(false);
 const isCollected = ref(false);
 const currentMediaIndex = ref(0);
+const detailShellRef = ref(null);
+const availableDetailSize = ref({ width: 0, height: 0 });
+const coverAspectRatio = ref(null);
 const postId = computed(() => props.postId);
 const { isFollowed, loadFollowStatus, toggleFollow } =
   useFollowToggle(userStore);
@@ -55,6 +58,11 @@ const {
   submitReply,
   toggleReplies,
 } = usePostComments(userStore, post, postId);
+
+const CONTENT_PANEL_WIDTH = 424;
+const DETAIL_PANEL_MIN_WIDTH = 900;
+const DETAIL_PANEL_MAX_WIDTH = 1200;
+const DEFAULT_COVER_ASPECT_RATIO = 3 / 4;
 
 // 统一媒体列表：视频在前，图片在后
 const mediaItems = computed(() => {
@@ -73,6 +81,35 @@ const mediaItems = computed(() => {
   return items;
 });
 
+const coverImageUrl = computed(() => {
+  if (!post.value) return '';
+  return post.value.coverImage || '';
+});
+
+const normalizedCoverAspectRatio = computed(() => {
+  const ratio = coverAspectRatio.value;
+  return Number.isFinite(ratio) && ratio > 0
+    ? ratio
+    : DEFAULT_COVER_ASPECT_RATIO;
+});
+
+const detailPanelWidth = computed(() => {
+  const panelHeight = availableDetailSize.value.height || 720;
+  const availableWidth = availableDetailSize.value.width || 1000;
+  const desiredWidth = panelHeight * normalizedCoverAspectRatio.value;
+  const targetWidth = CONTENT_PANEL_WIDTH + desiredWidth;
+  const upperBound = Math.min(DETAIL_PANEL_MAX_WIDTH, availableWidth);
+  const lowerBound = Math.min(DETAIL_PANEL_MIN_WIDTH, upperBound);
+  const width = Math.min(upperBound, Math.max(lowerBound, targetWidth));
+
+  return Math.round(width);
+});
+
+const detailPanelStyle = computed(() => ({
+  '--detail-panel-width': `${detailPanelWidth.value}px`,
+  '--detail-content-width': `${CONTENT_PANEL_WIDTH}px`,
+}));
+
 const isSelf = computed(() => {
   return !!(
     post.value &&
@@ -82,6 +119,57 @@ const isSelf = computed(() => {
 });
 
 const isModal = computed(() => props.displayMode === 'modal');
+
+let detailPanelResizeObserver = null;
+let coverImageLoadToken = 0;
+
+const updateAvailableDetailSize = (entry) => {
+  const rect =
+    entry?.contentRect || detailShellRef.value?.getBoundingClientRect();
+  if (!rect) return;
+
+  availableDetailSize.value = {
+    width: rect.width,
+    height: rect.height,
+  };
+};
+
+const observeDetailPanel = (element) => {
+  detailPanelResizeObserver?.disconnect();
+  detailPanelResizeObserver = null;
+
+  if (!element) return;
+
+  updateAvailableDetailSize();
+
+  if (typeof ResizeObserver === 'undefined') return;
+
+  detailPanelResizeObserver = new ResizeObserver(([entry]) => {
+    updateAvailableDetailSize(entry);
+  });
+  detailPanelResizeObserver.observe(element);
+};
+
+const loadCoverAspectRatio = (url) => {
+  const token = ++coverImageLoadToken;
+  coverAspectRatio.value = null;
+
+  if (!url || typeof Image === 'undefined') return;
+
+  const image = new Image();
+  image.onload = () => {
+    if (token !== coverImageLoadToken) return;
+    if (!image.naturalWidth || !image.naturalHeight) return;
+
+    coverAspectRatio.value = image.naturalWidth / image.naturalHeight;
+  };
+  image.onerror = () => {
+    if (token === coverImageLoadToken) {
+      coverAspectRatio.value = null;
+    }
+  };
+  image.src = url;
+};
 
 const loadDetail = async () => {
   loading.value = true;
@@ -110,6 +198,10 @@ const loadDetail = async () => {
 };
 
 onMounted(loadDetail);
+onUnmounted(() => detailPanelResizeObserver?.disconnect());
+
+watch(detailShellRef, observeDetailPanel, { flush: 'post' });
+watch(coverImageUrl, loadCoverAspectRatio, { immediate: true });
 
 const handleToggleLike = async () => {
   await toggleLike({
@@ -152,6 +244,7 @@ const handleClose = () => emit('close');
 
 <template>
   <div
+    ref="detailShellRef"
     :class="
       isModal
         ? 'fixed inset-0 bg-black/30 z-[100] p-10 flex justify-center'
@@ -193,20 +286,22 @@ const handleClose = () => emit('close');
 
     <div
       v-else
+      :style="detailPanelStyle"
       :class="
         isModal
-          ? 'w-250 max-w-full h-full bg-white rounded-2xl flex overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)]'
-          : 'w-full max-w-295 h-full bg-white flex overflow-hidden border border-gray-200 rounded-2xl'
+          ? 'post-detail-panel h-full bg-white rounded-2xl flex overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.2)]'
+          : 'post-detail-panel h-full bg-white flex overflow-hidden border border-gray-200 rounded-2xl'
       "
     >
       <!-- 左侧媒体 -->
       <PostMediaViewer
         v-model:current-index="currentMediaIndex"
         :media-items="mediaItems"
+        class="post-detail-media"
       />
 
       <!-- 右侧内容 -->
-      <div class="flex-1 flex flex-col p-6 min-w-0">
+      <div class="post-detail-content flex flex-col p-6">
         <PostAuthorBar
           :post="post"
           :is-self="isSelf"
@@ -255,3 +350,22 @@ const handleClose = () => emit('close');
     </div>
   </div>
 </template>
+
+<style scoped>
+.post-detail-panel {
+  width: var(--detail-panel-width);
+  max-width: 100%;
+  transition: width 0.18s ease;
+}
+
+.post-detail-media {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.post-detail-content {
+  flex: 0 0 var(--detail-content-width);
+  width: var(--detail-content-width);
+  min-width: var(--detail-content-width);
+}
+</style>
