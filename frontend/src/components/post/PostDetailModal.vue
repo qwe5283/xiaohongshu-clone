@@ -322,7 +322,7 @@ const handleClose = () => emit('close');
             编辑于 {{ formatRelativeTime(post.createTime) }}
           </div>
 
-          <div class="field-hint mb-2.5">共 {{ post.commentCount }} 条评论</div>
+          <div class="field-hint mb-2.5 border-t border-gray-200 pt-4">共 {{ post.commentCount }} 条评论</div>
 
           <CommentList
             :post="post"
