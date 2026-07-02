@@ -139,14 +139,14 @@ onMounted(async () => {
         <div
           class="flex items-center justify-between py-3 text-sm font-medium text-gray-500 bg-white sticky top-[60px] z-10"
         >
-          <div class="flex items-center justify-start gap-8">
+          <div class="flex items-center justify-start gap-4">
             <button
               @click="switchTab('comments')"
               :class="[
-                'transition-colors',
+                'px-4 py-1.5 rounded-full transition-colors',
                 activeTab === 'comments'
-                  ? 'text-black font-bold bg-gray-100 px-4 py-1.5 rounded-full'
-                  : '',
+                  ? 'text-black font-bold bg-gray-100'
+                  : 'text-gray-500 font-medium',
               ]"
             >
               评论和@
@@ -154,10 +154,10 @@ onMounted(async () => {
             <button
               @click="switchTab('likes')"
               :class="[
-                'transition-colors',
+                'px-4 py-1.5 rounded-full transition-colors',
                 activeTab === 'likes'
-                  ? 'text-black font-bold bg-gray-100 px-4 py-1.5 rounded-full'
-                  : '',
+                  ? 'text-black font-bold bg-gray-100'
+                  : 'text-gray-500 font-medium',
               ]"
             >
               赞和收藏
@@ -165,10 +165,10 @@ onMounted(async () => {
             <button
               @click="switchTab('follows')"
               :class="[
-                'transition-colors',
+                'px-4 py-1.5 rounded-full transition-colors',
                 activeTab === 'follows'
-                  ? 'text-black font-bold bg-gray-100 px-4 py-1.5 rounded-full'
-                  : '',
+                  ? 'text-black font-bold bg-gray-100'
+                  : 'text-gray-500 font-medium',
               ]"
             >
               新增关注

@@ -1,5 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import chevronLeftIcon from '../../assets/icons/chevron-left.svg?raw';
+import chevronRightIcon from '../../assets/icons/chevron-right.svg?raw';
 
 const props = defineProps({
   mediaItems: {
@@ -14,6 +16,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:currentIndex']);
 const slideDirection = ref('next');
+const hovering = ref(false);
 
 const currentMediaItem = computed(() => props.mediaItems[props.currentIndex]);
 const mediaTransitionName = computed(() =>
@@ -49,6 +52,8 @@ function next() {
 <template>
   <div
     class="flex-[1.2] bg-black flex items-center justify-center relative select-none overflow-hidden"
+    @mouseenter="hovering = true"
+    @mouseleave="hovering = false"
   >
     <template v-if="mediaItems.length && currentMediaItem">
       <Transition :name="mediaTransitionName">
@@ -73,19 +78,29 @@ function next() {
         </div>
       </Transition>
 
+      <div
+        v-if="mediaItems.length > 1"
+        class="absolute top-3 right-3 z-10 px-2.5 py-1 bg-black/40 text-white text-xs rounded-full select-none transition-opacity duration-200"
+        :class="hovering ? 'opacity-100' : 'opacity-0'"
+      >
+        {{ currentIndex + 1 }}/{{ mediaItems.length }}
+      </div>
+
       <button
         v-if="mediaItems.length > 1"
-        class="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 text-2xl"
+        class="absolute left-3 top-1/2 z-10 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 transition-opacity duration-200"
+        :class="hovering ? 'opacity-100' : 'opacity-0'"
         @click="prev"
       >
-        ‹
+        <span class="w-4 h-4 [&>svg]:w-4 [&>svg]:h-4" v-html="chevronLeftIcon"></span>
       </button>
       <button
         v-if="mediaItems.length > 1"
-        class="absolute right-3 top-1/2 z-10 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 text-2xl"
+        class="absolute right-3 top-1/2 z-10 -translate-y-1/2 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-black/60 transition-opacity duration-200"
+        :class="hovering ? 'opacity-100' : 'opacity-0'"
         @click="next"
       >
-        ›
+        <span class="w-4 h-4 [&>svg]:w-4 [&>svg]:h-4" v-html="chevronRightIcon"></span>
       </button>
 
       <div

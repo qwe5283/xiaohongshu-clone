@@ -41,7 +41,7 @@ const buttonConfig = {
     <!-- 右侧按钮 -->
     <button
       :class="[
-        'px-6 py-1.5 rounded-full text-sm font-medium transition-opacity active:opacity-80',
+        'px-6 py-1.5 rounded-full text-sm font-bold transition-opacity active:opacity-80',
         (buttonConfig[data.status] || buttonConfig.back).class,
       ]"
     >
