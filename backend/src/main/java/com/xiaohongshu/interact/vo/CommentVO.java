@@ -47,6 +47,9 @@ public class CommentVO implements Serializable {
     @Schema(description = "点赞数", example = "5")
     private Integer likeCount;
 
+    @Schema(description = "当前登录用户是否已点赞", example = "false")
+    private Boolean liked;
+
     @Schema(description = "回复数量（仅一级评论有值）", example = "3")
     private Integer replyCount;
 

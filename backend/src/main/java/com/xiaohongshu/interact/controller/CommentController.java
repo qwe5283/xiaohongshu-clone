@@ -61,10 +61,13 @@ public class CommentController {
     @Operation(summary = "获取笔记评论列表", description = "分页查询指定笔记的一级评论")
     @GetMapping("/post/{postId}")
     public Result<IPage<CommentVO>> getCommentsByPostId(
+            @Parameter(description = "JWT认证令牌（Bearer Token），可选")
+            @RequestHeader(value = "Authorization", required = false) String token,
             @Parameter(description = "笔记ID", required = true, example = "1")
             @PathVariable Long postId,
             @Valid CommentQueryDTO queryDTO) {
-        IPage<CommentVO> page = commentService.getCommentsByPostId(postId, queryDTO);
+        Long currentUserId = getOptionalUserId(token);
+        IPage<CommentVO> page = commentService.getCommentsByPostId(currentUserId, postId, queryDTO);
         return Result.success(page);
     }
 
@@ -74,10 +77,20 @@ public class CommentController {
     @Operation(summary = "获取评论回复列表", description = "分页查询指定评论的所有回复（二级评论）")
     @GetMapping("/replies/{commentId}")
     public Result<IPage<CommentVO>> getRepliesByCommentId(
+            @Parameter(description = "JWT认证令牌（Bearer Token），可选")
+            @RequestHeader(value = "Authorization", required = false) String token,
             @Parameter(description = "父评论ID", required = true, example = "1")
             @PathVariable Long commentId,
             @Valid CommentQueryDTO queryDTO) {
-        IPage<CommentVO> page = commentService.getRepliesByCommentId(commentId, queryDTO);
+        Long currentUserId = getOptionalUserId(token);
+        IPage<CommentVO> page = commentService.getRepliesByCommentId(currentUserId, commentId, queryDTO);
         return Result.success(page);
+    }
+
+    private Long getOptionalUserId(String token) {
+        if (token == null || token.isBlank()) {
+            return null;
+        }
+        return jwtUtil.validateToken(token) ? jwtUtil.getUserIdFromToken(token) : null;
     }
 }

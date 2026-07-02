@@ -57,6 +57,7 @@ const {
   handleReplyClick,
   submitReply,
   toggleReplies,
+  toggleCommentLike,
 } = usePostComments(userStore, post, postId);
 
 const CONTENT_PANEL_WIDTH = 424;
@@ -333,6 +334,7 @@ const handleClose = () => emit('close');
             v-model:reply-text="replyText"
             @reply-click="handleReplyClick"
             @toggle-replies="toggleReplies"
+            @toggle-comment-like="toggleCommentLike"
             @submit-reply="submitReply"
           />
         </div>

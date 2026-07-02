@@ -11,6 +11,7 @@ import com.xiaohongshu.common.result.ResultCode;
 import com.xiaohongshu.interact.dto.CommentCreateDTO;
 import com.xiaohongshu.interact.dto.CommentQueryDTO;
 import com.xiaohongshu.interact.entity.Comment;
+import com.xiaohongshu.interact.entity.UserAction;
 import com.xiaohongshu.interact.mapper.CommentMapper;
 import com.xiaohongshu.interact.mapper.UserActionMapper;
 import com.xiaohongshu.interact.service.CommentService;
@@ -44,6 +45,9 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private final UserService userService;
     private final UserActionMapper userActionMapper;
     private final NotificationService notificationService;
+
+    private static final int TARGET_TYPE_COMMENT = 2;
+    private static final int ACTION_TYPE_LIKE = 1;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -131,7 +135,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     }
 
     @Override
-    public IPage<CommentVO> getCommentsByPostId(Long postId, CommentQueryDTO queryDTO) {
+    public IPage<CommentVO> getCommentsByPostId(Long currentUserId, Long postId, CommentQueryDTO queryDTO) {
         Page<Comment> page = new Page<>(queryDTO.getPageNumSafe(), queryDTO.getPageSizeSafe());
 
         LambdaQueryWrapper<Comment> wrapper = new LambdaQueryWrapper<Comment>()
@@ -141,11 +145,13 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
                 .orderByDesc(Comment::getCreateTime);
 
         IPage<Comment> commentPage = page(page, wrapper);
-        return commentPage.convert(this::convertToCommentVO);
+        IPage<CommentVO> voPage = commentPage.convert(this::convertToCommentVO);
+        fillLikedStatus(voPage.getRecords(), currentUserId);
+        return voPage;
     }
 
     @Override
-    public IPage<CommentVO> getRepliesByCommentId(Long commentId, CommentQueryDTO queryDTO) {
+    public IPage<CommentVO> getRepliesByCommentId(Long currentUserId, Long commentId, CommentQueryDTO queryDTO) {
         Comment rootComment = getById(commentId);
         if (rootComment == null) {
             throw new BusinessException(ResultCode.COMMENT_NOT_FOUND);
@@ -165,6 +171,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         page.setRecords(replies.subList(fromIndex, toIndex).stream()
                 .map(this::convertToCommentVO)
                 .collect(Collectors.toList()));
+        fillLikedStatus(page.getRecords(), currentUserId);
         return page;
     }
 
@@ -211,9 +218,33 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
         if (commentIds.isEmpty()) {
             return;
         }
-        userActionMapper.delete(new LambdaQueryWrapper<com.xiaohongshu.interact.entity.UserAction>()
-                .eq(com.xiaohongshu.interact.entity.UserAction::getTargetType, 2)
-                .in(com.xiaohongshu.interact.entity.UserAction::getTargetId, commentIds));
+        userActionMapper.delete(new LambdaQueryWrapper<UserAction>()
+                .eq(UserAction::getTargetType, TARGET_TYPE_COMMENT)
+                .in(UserAction::getTargetId, commentIds));
+    }
+
+    private void fillLikedStatus(List<CommentVO> comments, Long currentUserId) {
+        if (comments == null || comments.isEmpty() || currentUserId == null) {
+            if (comments != null) {
+                comments.forEach(comment -> comment.setLiked(false));
+            }
+            return;
+        }
+
+        List<Long> commentIds = comments.stream()
+                .map(CommentVO::getId)
+                .collect(Collectors.toList());
+
+        Set<Long> likedCommentIds = userActionMapper.selectList(new LambdaQueryWrapper<UserAction>()
+                        .eq(UserAction::getUserId, currentUserId)
+                        .eq(UserAction::getTargetType, TARGET_TYPE_COMMENT)
+                        .eq(UserAction::getActionType, ACTION_TYPE_LIKE)
+                        .in(UserAction::getTargetId, commentIds))
+                .stream()
+                .map(UserAction::getTargetId)
+                .collect(Collectors.toSet());
+
+        comments.forEach(comment -> comment.setLiked(likedCommentIds.contains(comment.getId())));
     }
 
     /**
@@ -222,6 +253,7 @@ public class CommentServiceImpl extends ServiceImpl<CommentMapper, Comment> impl
     private CommentVO convertToCommentVO(Comment comment) {
         CommentVO vo = new CommentVO();
         BeanUtil.copyProperties(comment, vo);
+        vo.setLiked(false);
 
         // 获取评论用户信息
         try {

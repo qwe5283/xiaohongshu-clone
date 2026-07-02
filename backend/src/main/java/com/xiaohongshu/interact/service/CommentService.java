@@ -32,18 +32,20 @@ public interface CommentService extends IService<Comment> {
     /**
      * 获取笔记的一级评论列表（分页）
      *
+     * @param currentUserId 当前登录用户ID，未登录为null
      * @param postId    笔记ID
      * @param queryDTO  分页参数
      * @return 评论列表
      */
-    IPage<CommentVO> getCommentsByPostId(Long postId, CommentQueryDTO queryDTO);
+    IPage<CommentVO> getCommentsByPostId(Long currentUserId, Long postId, CommentQueryDTO queryDTO);
 
     /**
      * 获取评论的回复列表（分页）
      *
+     * @param currentUserId 当前登录用户ID，未登录为null
      * @param commentId 父评论ID
      * @param queryDTO  分页参数
      * @return 回复列表
      */
-    IPage<CommentVO> getRepliesByCommentId(Long commentId, CommentQueryDTO queryDTO);
+    IPage<CommentVO> getRepliesByCommentId(Long currentUserId, Long commentId, CommentQueryDTO queryDTO);
 }

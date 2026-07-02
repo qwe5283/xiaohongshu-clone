@@ -1,11 +1,13 @@
 import { reactive, ref } from 'vue';
 import { createComment, getReplies } from '@/api/comment';
+import { toggleLikeComment } from '@/api/like';
 import { showToast } from '@/utils/toast';
 import { requireLogin } from '@/composables/useRequireLogin';
 
 export function usePostComments(userStore, postRef, postIdRef) {
   const comments = ref([]);
   const repliesMap = reactive({});
+  const repliesLoadedMap = reactive({});
   const showRepliesMap = reactive({});
   const commentText = ref('');
   const replyingTo = ref(null);
@@ -15,6 +17,39 @@ export function usePostComments(userStore, postRef, postIdRef) {
 
   function setComments(nextComments) {
     comments.value = nextComments || [];
+    comments.value
+      .filter((comment) => (comment.replyCount || 0) > 0)
+      .forEach((comment) => loadReplyPreview(comment));
+  }
+
+  function applyCommentLike(comment) {
+    const liked = !comment.liked;
+    const currentCount = comment.likeCount || 0;
+    comment.liked = liked;
+    comment.likeCount = Math.max(currentCount + (liked ? 1 : -1), 0);
+  }
+
+  async function toggleCommentLike(comment) {
+    if (!requireLogin(userStore)) return;
+    if (!comment) return;
+
+    const previousLiked = !!comment.liked;
+    const previousLikeCount = comment.likeCount || 0;
+    applyCommentLike(comment);
+
+    try {
+      const result = await toggleLikeComment(comment.id);
+      const nextLiked = !!result?.liked;
+      comment.liked = nextLiked;
+      comment.likeCount = Math.max(
+        previousLikeCount +
+          (nextLiked === previousLiked ? 0 : nextLiked ? 1 : -1),
+        0,
+      );
+    } catch (e) {
+      comment.liked = previousLiked;
+      comment.likeCount = previousLikeCount;
+    }
   }
 
   async function submitComment() {
@@ -29,6 +64,7 @@ export function usePostComments(userStore, postRef, postIdRef) {
         content: text,
         parentId: 0,
       });
+      newComment.liked = false;
       comments.value.unshift(newComment);
       postRef.value.commentCount += 1;
       commentText.value = '';
@@ -78,6 +114,7 @@ export function usePostComments(userStore, postRef, postIdRef) {
         parentId: replyingTo.value.commentId,
         replyUserId: replyingTo.value.userId,
       });
+      newReply.liked = false;
 
       if (!repliesMap[replyingTo.value.rootCommentId]) {
         repliesMap[replyingTo.value.rootCommentId] = [];
@@ -105,10 +142,15 @@ export function usePostComments(userStore, postRef, postIdRef) {
       return;
     }
 
-    if (!repliesMap[comment.id]) {
+    if (
+      !repliesMap[comment.id] ||
+      !repliesLoadedMap[comment.id] ||
+      repliesMap[comment.id].length < (comment.replyCount || 0)
+    ) {
       try {
         const page = await getReplies(comment.id, { pageSize: 50 });
         repliesMap[comment.id] = page?.records || [];
+        repliesLoadedMap[comment.id] = true;
       } catch (e) {
         return;
       }
@@ -116,9 +158,22 @@ export function usePostComments(userStore, postRef, postIdRef) {
     showRepliesMap[comment.id] = true;
   }
 
+  async function loadReplyPreview(comment) {
+    if (repliesMap[comment.id]) return;
+
+    try {
+      const page = await getReplies(comment.id, { pageSize: 1 });
+      repliesMap[comment.id] = page?.records || [];
+      repliesLoadedMap[comment.id] = (comment.replyCount || 0) <= 1;
+    } catch (e) {
+      // 评论主体仍可正常展示
+    }
+  }
+
   return {
     comments,
     repliesMap,
+    repliesLoadedMap,
     showRepliesMap,
     commentText,
     replyingTo,
@@ -130,5 +185,6 @@ export function usePostComments(userStore, postRef, postIdRef) {
     handleReplyClick,
     submitReply,
     toggleReplies,
+    toggleCommentLike,
   };
 }
