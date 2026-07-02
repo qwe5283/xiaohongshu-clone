@@ -1,11 +1,15 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, inject, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import PageShell from '@/components/layout/PageShell.vue';
 import SearchBar from '@/components/layout/SearchBar.vue';
 import CommentNotificationItem from './CommentNotificationItem.vue';
 import LikeNotificationItem from './LikeNotificationItem.vue';
 import FollowNotificationItem from './FollowNotificationItem.vue';
-import { getNotifications } from '@/api/notification';
+import { getNotifications, markNotificationAsRead } from '@/api/notification';
+import { createComment } from '@/api/comment';
+import { getFollowStatus, toggleFollow } from '@/api/follow';
+import { getLikeStatusComment, toggleLikeComment } from '@/api/like';
 import { useUserStore } from '@/stores/user';
 import { useNotificationStore } from '@/stores/notification';
 import { showToast } from '@/utils/toast';
@@ -24,6 +28,8 @@ const messages = ref({
 });
 const userStore = useUserStore();
 const notificationStore = useNotificationStore();
+const router = useRouter();
+const openPostDetail = inject('openPostDetail', null);
 
 const tabTypes = {
   comments: [3, 4],
@@ -40,6 +46,9 @@ const adaptNotification = (item) => {
     id: item.id,
     raw: item,
     read: item.read,
+    senderId: item.senderId,
+    postId: item.postId,
+    commentId: item.commentId,
     avatar: item.senderAvatar || defaultAvatar,
     username: item.senderNickname || '小红薯用户',
     action: item.typeText || '给你发来一条通知',
@@ -52,6 +61,7 @@ const adaptNotification = (item) => {
       ...common,
       content: item.content,
       hasReply: true,
+      commentLiked: false,
     };
   }
 
@@ -92,9 +102,109 @@ const fetchMessages = async (tab = activeTab.value) => {
           new Date(b.createTime).getTime() - new Date(a.createTime).getTime(),
       )
       .map(adaptNotification);
+    await hydrateMessages(tab, records);
     messages.value[tab] = records;
   } finally {
     loading.value = false;
+  }
+};
+
+const hydrateMessages = async (tab, records) => {
+  if (tab === 'follows') {
+    await Promise.all(
+      records.map(async (item) => {
+        if (!item.senderId) return;
+        try {
+          const res = await getFollowStatus(item.senderId);
+          item.status = res?.followed ? 'following' : 'back';
+        } catch (e) {
+          item.status = 'back';
+        }
+      }),
+    );
+  }
+
+  if (tab === 'comments') {
+    await Promise.all(
+      records
+        .filter((item) => item.commentId)
+        .map(async (item) => {
+          try {
+            const res = await getLikeStatusComment(item.commentId);
+            item.commentLiked = !!res?.liked;
+          } catch (e) {
+            item.commentLiked = false;
+          }
+        }),
+    );
+  }
+};
+
+const markMessageRead = async (message) => {
+  if (!message || message.read) return;
+  message.read = true;
+  try {
+    await markNotificationAsRead(message.id);
+  } catch (e) {
+    // 已读失败不阻断当前操作，稍后刷新会校正未读数
+  } finally {
+    await notificationStore.fetchUnreadCount();
+  }
+};
+
+const openPostFromMessage = async (message) => {
+  if (!message?.postId) return;
+  await markMessageRead(message);
+  if (openPostDetail) {
+    openPostDetail(message.postId);
+  } else {
+    router.push({ name: 'post-page', params: { id: message.postId } });
+  }
+};
+
+const openProfileFromMessage = async (message) => {
+  if (!message?.senderId) return;
+  await markMessageRead(message);
+  router.push({ name: 'user-profile', params: { id: message.senderId } });
+};
+
+const toggleFollowFromMessage = async (message) => {
+  if (!message?.senderId) return;
+  await markMessageRead(message);
+  try {
+    const res = await toggleFollow(message.senderId);
+    message.status = res?.followed ? 'following' : 'back';
+  } catch (e) {
+    // request 拦截器已提示
+  }
+};
+
+const replyFromMessage = async (message, text) => {
+  if (!message?.postId || !message?.commentId || !message?.senderId) return;
+  try {
+    await createComment({
+      postId: message.postId,
+      content: text,
+      parentId: message.commentId,
+      replyUserId: message.senderId,
+    });
+    await markMessageRead(message);
+    showToast('回复成功', 'success');
+  } catch (e) {
+    // request 拦截器已提示
+  }
+};
+
+const toggleCommentLikeFromMessage = async (message) => {
+  if (!message?.commentId) return;
+  const previousLiked = !!message.commentLiked;
+  message.commentLiked = !previousLiked;
+  try {
+    const res = await toggleLikeComment(message.commentId);
+    message.commentLiked = !!res?.liked;
+    await markMessageRead(message);
+  } catch (e) {
+    message.commentLiked = previousLiked;
   }
 };
 
@@ -212,6 +322,9 @@ onMounted(async () => {
               v-for="msg in currentMessages"
               :key="msg.id"
               :data="msg"
+              @open-post="openPostFromMessage"
+              @submit-reply="replyFromMessage"
+              @toggle-comment-like="toggleCommentLikeFromMessage"
             />
           </div>
 
@@ -224,6 +337,7 @@ onMounted(async () => {
               v-for="msg in currentMessages"
               :key="msg.id"
               :data="msg"
+              @open-post="openPostFromMessage"
             />
           </div>
 
@@ -236,6 +350,8 @@ onMounted(async () => {
               v-for="msg in currentMessages"
               :key="msg.id"
               :data="msg"
+              @open-profile="openProfileFromMessage"
+              @toggle-follow="toggleFollowFromMessage"
             />
           </div>
         </div>

@@ -6,10 +6,15 @@ defineProps({
     default: () => ({}),
   },
 });
+
+const emit = defineEmits(['open-post']);
 </script>
 
 <template>
-  <div class="flex gap-3 p-4 hover:bg-gray-50 transition-colors">
+  <div
+    class="flex gap-3 p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+    @click="emit('open-post', data)"
+  >
     <span
       v-if="!data.read"
       class="mt-4 size-2 rounded-full bg-primary flex-shrink-0"
@@ -19,6 +24,7 @@ defineProps({
     <img
       :src="data.avatar"
       class="w-10 h-10 rounded-full object-cover flex-shrink-0"
+      alt=""
     />
 
     <!-- 中间内容 -->
@@ -44,6 +50,7 @@ defineProps({
       v-if="data.thumbnail"
       :src="data.thumbnail"
       class="w-12 h-12 rounded object-cover flex-shrink-0 bg-gray-100"
+      alt=""
     />
   </div>
 </template>
