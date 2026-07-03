@@ -14,7 +14,6 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
       - ./backend/sql/schema-ddl.sql:/docker-entrypoint-initdb.d/01-schema-ddl.sql
-      - ./backend/sql/schema-dml.sql:/docker-entrypoint-initdb.d/02-schema-dml.sql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     networks:
       - xiaohongshu-net
@@ -103,7 +102,7 @@ services:
     networks:
       - xiaohongshu-net
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/user/1 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- 'http://localhost:8080/api/post/list?pageNum=1&pageSize=1' || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 5

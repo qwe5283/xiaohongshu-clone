@@ -40,5 +40,10 @@ mvnw.cmd
 # Docker
 .docker/
 
+# Crawler runtime state
+crawler/output/
+crawler/media/
+crawler/**/*.log
+
 # Misc
 nul
