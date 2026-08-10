@@ -115,12 +115,9 @@ public class MinioFileServiceImpl implements FileService {
                 );
             }
 
-            // 返回文件访问URL（使用对外访问地址，而非 MinIO 内部端点；若未配置则回退到 endpoint）
-            String publicEndpoint = minioConfig.getPublicEndpoint();
-            if (!StringUtils.hasText(publicEndpoint)) {
-                publicEndpoint = minioConfig.getEndpoint();
-            }
-            String fileUrl = publicEndpoint + "/" + minioConfig.getBucketName() + "/" + objectName;
+            // 返回相对路径（/{bucket}/{objectName}），由前端 nginx 反代到 MinIO，
+            // 避免把机器绑定的绝对地址（如 localhost:9000）写死入库，导致其他环境无法访问
+            String fileUrl = "/" + minioConfig.getBucketName() + "/" + objectName;
             log.info("文件上传成功：{}", fileUrl);
 
             return fileUrl;
