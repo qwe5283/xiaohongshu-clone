@@ -18,22 +18,8 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    outputs:
-      backend_changed: ${{ steps.filter.outputs.backend }}
-      frontend_changed: ${{ steps.filter.outputs.frontend }}
-    
     steps:
       - uses: actions/checkout@v4
-
-      # 检测哪些目录有变更，避免无效构建
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            backend:
-              - 'backend/**'
-            frontend:
-              - 'frontend/**'
 
       - name: Login to ACR
         uses: docker/login-action@v3
@@ -42,9 +28,7 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      # 构建后端（仅在 backend 目录有变更时）
       - name: Build & Push Backend
-        if: steps.filter.outputs.backend == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./backend
@@ -55,9 +39,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 构建前端（仅在 frontend 目录有变更时）
       - name: Build & Push Frontend
-        if: steps.filter.outputs.frontend == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
