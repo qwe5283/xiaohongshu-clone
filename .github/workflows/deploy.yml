@@ -37,6 +37,9 @@ jobs:
         with:
           context: ./backend
           push: true
+          # ACR 不支持 OCI attestation manifest，必须关闭 provenance/sbom
+          provenance: false
+          sbom: false
           tags: |
             ${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
             ${{ env.BACKEND_IMAGE }}:latest
@@ -48,6 +51,9 @@ jobs:
         with:
           context: ./frontend
           push: true
+          # ACR 不支持 OCI attestation manifest，必须关闭 provenance/sbom
+          provenance: false
+          sbom: false
           tags: |
             ${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
             ${{ env.FRONTEND_IMAGE }}:latest
