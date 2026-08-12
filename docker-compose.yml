@@ -65,6 +65,7 @@ services:
 
   # ==================== 后端服务 ====================
   backend:
+    image: ${ALIYUN_REGISTRY}/qwe5283/xiaohongshu-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -116,6 +117,7 @@ services:
 
   # ==================== 前端服务 ====================
   frontend:
+    image: ${ALIYUN_REGISTRY}/qwe5283/xiaohongshu-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
