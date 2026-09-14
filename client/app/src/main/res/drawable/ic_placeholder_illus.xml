@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared stand-in for empty-state illustrations (wide frame variant of ic_placeholder).
+     Monochrome so it can be tinted; deliberately obvious and provisional. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="48"
+    android:viewportHeight="32">
+    <!-- frame: wide rounded rectangle, 3,3 -> 45,29 with 5-unit corner radius, stroked -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2"
+        android:pathData="M8 3 h32 a5 5 0 0 1 5 5 v14 a5 5 0 0 1 -5 5 h-32 a5 5 0 0 1 -5 -5 v-14 a5 5 0 0 1 5 -5 Z"
+        />
+    <!-- slash: distinct diagonal bar across the wide frame, filled quad, 2.6 units thick -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M9.36 22.87 L37.36 6.87 L38.64 9.13 L10.64 25.13 Z"
+        />
+</vector>

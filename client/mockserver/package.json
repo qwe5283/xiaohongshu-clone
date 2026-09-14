@@ -1,0 +1,15 @@
+{
+  "name": "xhs-mock-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Zero-dependency Node.js mock server for the Xiaohongshu (小红书) Android clone. Implements client/docs/API契约-v2.md.",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "seed": "node server.mjs --seed-only"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

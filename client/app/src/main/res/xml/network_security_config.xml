@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  复刻 Demo 的后端与 mock server 均以 HTTP 提供，故允许明文流量。
+  接入真实 HTTPS 服务时把 cleartextTrafficPermitted 改为 false 并删除 domain-config。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

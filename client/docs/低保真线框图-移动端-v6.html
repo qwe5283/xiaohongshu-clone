@@ -1,0 +1,2522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>小红书复刻 · 移动端 APP 低保真线框图 v6（开发编码参考 · 含真机实测Token）</title>
+<style>
+:root{--bd:#2b2b2b;--mid:#8a8a8a;--lt:#d9d9d9}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;background:#e9e9e9;color:#1a1a1a;font-size:13px;line-height:1.5;padding:20px}
+.page{max-width:1560px;margin:0 auto}
+a{color:#1a1a1a}
+/* ---------- 头部 ---------- */
+.hdr{border:2px solid var(--bd);background:#fff;padding:16px 20px;margin-bottom:20px}
+.hdr h1{font-size:20px}
+.hdr .sub{color:#555;margin-top:4px;font-size:12px}
+.legend{margin-top:8px;font-size:12px;background:#f6f6f6;border:1px solid #bbb;padding:6px 10px}
+.journey{margin-top:8px;border:1px dashed var(--bd);padding:6px 10px;font-size:12px;background:#f6f6f6}
+table.map{border-collapse:collapse;margin-top:8px;font-size:12px;width:100%}
+table.map th,table.map td{border:1px solid #999;padding:3px 8px;text-align:left;vertical-align:top}
+table.map th{background:#f0f0f0}
+.toc{margin-top:8px;font-size:12px}
+.toc a{margin-right:12px}
+/* ---------- 分组 ---------- */
+.group{border:2px solid var(--bd);background:#fff;padding:14px 16px 18px;margin-bottom:22px}
+.group>h2{font-size:15px;margin-bottom:2px}
+.gnote{font-size:12px;color:#555;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(348px,1fr));gap:14px;align-items:start}
+/* ---------- 屏幕卡片 ---------- */
+.card{border:1.5px solid var(--bd);background:#fff}
+.shot{position:relative;padding:12px 8px;overflow:hidden;background:#dcdcdc;display:flex;justify-content:center}
+.an{padding:5px 10px 0;font-size:11px;color:#666;background:#fff}
+.an b{color:#333}
+.meta{border-top:1px solid var(--bd);margin-top:5px;padding:6px 10px 9px;font-size:12px;background:#fff}
+.meta .t{font-weight:700;font-size:13px}
+.meta .pos{color:#555;margin:2px 0 4px;font-size:11.5px}
+.meta ul{margin-left:17px}
+.meta li{margin:1px 0}
+.hint{font-size:10.5px;color:#666;margin-top:6px}
+/* ---------- 手机框：统一 9:20（288×640），禁止改高 ---------- */
+.phone{width:288px;background:#fff;border:2.5px solid var(--bd);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;position:relative;height:640px;box-shadow:4px 4px 0 rgba(0,0,0,.15)}
+.phone.dark{background:#1c1c1c;color:#eee}
+.sbar{height:16px;border-bottom:1px solid #ddd;font-size:8px;color:#888;display:flex;justify-content:space-between;align-items:center;padding:0 8px;background:#fafafa;flex-shrink:0}
+.phone.dark .sbar{background:#1c1c1c;border-color:#333;color:#999}
+.content{flex:1;min-height:0;display:flex;flex-direction:column;gap:5px;padding:6px;overflow:hidden;position:relative}
+.content.nopad{padding:0}
+/* ---------- 底部 Tab ---------- */
+.tabbar{height:36px;border-top:1.5px solid var(--bd);display:flex;font-size:9px;background:#fff;flex-shrink:0}
+.tb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;position:relative}
+.tb.on{font-weight:700}
+.ic{display:block;width:11px;height:11px;border:1.5px solid currentColor;border-radius:3px}
+.tb.on .ic{background:currentColor}
+.plus{width:42px;height:31px;background:#bbb;border:1.5px solid var(--bd);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-top:2px}
+.plus.hot{background:var(--bd);border-color:var(--bd);color:#fff}
+.bdg2{position:absolute;top:1px;right:14px;background:var(--bd);color:#fff;font-size:8px;border-radius:7px;padding:0 3px}
+/* ---------- 通用元件 ---------- */
+.navtop{height:28px;border-bottom:1px solid #ddd;display:flex;align-items:center;padding:0 7px;gap:6px;font-size:11px;flex-shrink:0}
+.phone.dark .navtop{border-color:#333}
+.backbtn{width:17px;height:17px;border:1.5px solid var(--bd);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.phone.dark .backbtn{border-color:#ddd}
+.bubble{width:14px;height:13px;border:1.5px solid var(--bd);border-radius:6px 6px 6px 2px;flex-shrink:0}
+.burger{width:16px;height:13px;border-top:1.5px solid var(--bd);border-bottom:1.5px solid var(--bd);flex-shrink:0;position:relative}
+.burger:after{content:'';position:absolute;left:0;right:0;top:4px;border-top:1.5px solid var(--bd)}
+.row{display:flex;gap:5px}
+.col{display:flex;flex-direction:column;gap:5px}
+.grow{flex:1;min-width:0}
+.center{align-items:center;justify-content:center}
+.grow.center{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+/* 矢量图插画占位（空态用） */
+.illus{width:76px;height:50px;border:1.5px dashed #999;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:8.5px;color:#aaa;flex-shrink:0}
+.ph{background:repeating-linear-gradient(45deg,#e6e6e6 0 7px,#f4f4f4 7px 14px);border:1px solid #9a9a9a;display:flex;align-items:center;justify-content:center;color:#6f6f6f;font-size:10px;position:relative}
+.phone.dark .ph{background:repeating-linear-gradient(45deg,#2a2a2a 0 7px,#333 7px 14px);border-color:#555;color:#888}
+.btn{display:inline-block;border:1px solid var(--bd);background:#fff;padding:0 7px;font-size:10px;line-height:1.7;white-space:nowrap}
+.btn.pri{background:var(--bd);color:#fff}
+.btn.blk{display:block;text-align:center;width:100%}
+.btn.dis{opacity:.45}
+.btn.rd{background:var(--bd);color:#fff;border-color:var(--bd);border-radius:13px}
+.btn.ol{border:1px solid var(--bd);border-radius:13px;background:#fff;color:var(--bd)}
+.btn.gy{background:#e4e4e4;border-color:#e4e4e4;color:#555}
+.inp{border:1px solid #9a9a9a;background:#fff;padding:1px 6px;font-size:10px;color:#777;min-height:19px}
+.inp.ta{min-height:40px}
+.phone.dark .inp{background:#2a2a2a;border-color:#555;color:#999}
+.lbl{font-size:10px;color:#444}
+.cnt{font-size:8.5px;color:#999;text-align:right}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.toast{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bd);color:#fff;font-size:10px;padding:1px 10px;border-radius:8px;white-space:nowrap;z-index:6}
+.toast.in{position:static;transform:none;display:inline-block}
+.chip{display:inline-block;background:var(--bd);color:#fff;font-size:8.5px;padding:0 4px;border-radius:2px;vertical-align:1px}
+.state{border:1.5px dashed var(--bd);padding:7px;position:relative;background:#fcfcfc}
+.state .stt{position:absolute;top:-8px;left:7px;background:#fff;padding:0 4px;font-size:9.5px;color:#444}
+.spin{width:18px;height:18px;border:3px solid #ccc;border-top-color:#333;border-radius:50%}
+.errbar{background:#f1f1f1;border:1px solid var(--bd);font-size:9.5px;text-align:center;padding:2px 5px}
+/* ---------- 瀑布流卡片 ---------- */
+.wf{display:flex;gap:5px;align-items:flex-start}
+.wcol{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.pcard{border:1px solid var(--bd);background:#fff}
+.pcard .ttl{padding:1px 3px;font-size:9.5px;border-bottom:1px solid #e2e2e2}
+.pcard .ft{display:flex;justify-content:space-between;padding:0 3px;font-size:8.5px;color:#666;align-items:center}
+.av{width:11px;height:11px;border-radius:50%;background:#d2d2d2;border:1px solid #9a9a9a;display:inline-block;vertical-align:-2px}
+.av.big{width:40px;height:40px}
+.av.mid{width:22px;height:22px}
+.vbadge{position:absolute;top:2px;right:2px;background:#fff;border:1px solid #666;color:#333;font-size:8px;padding:0 3px}
+.tabs{display:flex;gap:10px;font-size:10.5px;padding:2px 0;white-space:nowrap;align-items:center}
+.tabs .on{font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px}
+.tabs .off{color:#999}
+.pill{border:1px solid #bbb;border-radius:8px;font-size:9.5px;padding:0 8px;background:#fff}
+.pill.on{background:var(--bd);color:#fff;border-color:var(--bd)}
+/* ---------- 评论 ---------- */
+.cm{display:flex;gap:4px;font-size:9.5px}
+.cm .bd2{flex:1;min-width:0}
+.cm .nm{color:#555}
+.bauthor{border:1px solid var(--bd);font-size:8px;padding:0 2px;background:#f1f1f1;border-radius:2px}
+.mrow{color:#777;font-size:8.5px}
+.hr{border-top:1px solid #ddd}
+/* ---------- 底部弹层 / 抽屉 / 悬浮条 ---------- */
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:2px solid var(--bd);border-radius:12px 12px 0 0;z-index:5}
+.sheet .srow{border-bottom:1px solid #eee;text-align:center;font-size:11px;padding:9px 0}
+.drawer{position:absolute;left:0;top:0;bottom:0;width:66%;background:#fff;border-right:2px solid var(--bd);z-index:5;padding:8px 6px;font-size:10.5px}
+.floatbar{position:absolute;left:8px;right:8px;bottom:44px;background:var(--bd);color:#fff;border-radius:14px;display:flex;align-items:center;gap:6px;padding:5px 8px;font-size:9.5px;z-index:4}
+.floatbar .go{margin-left:auto;border:1px solid #fff;border-radius:9px;padding:0 8px;font-size:9px}
+.step{border:1px solid var(--bd);background:#fff;font-size:9.5px;padding:3px 5px;text-align:center}
+.arrow{align-self:center;font-size:12px}
+.footer{font-size:12px;color:#555;padding:6px 2px 30px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ================= 头部 ================= -->
+<header class="hdr">
+  <h1>小红书复刻 · 移动端 APP 低保真线框图（v6 · 开发编码参考）</h1>
+  <p class="sub">自包含开发规范：页面结构 / 页面状态 / 交互规则 / 数据约束以本文为准 · 黑白灰低保真 · 讨论时直接引用屏幕编号（如 C2-1）· v6 新增章节 <a href="#g-t">T 真机实测 Design Token 与控件尺寸</a></p>
+  <div class="legend">
+    <b>图例</b>：手机屏统一 <b>9:20（288×640）</b>，深色框＝视频详情深色主题　|　虚线框＝该页的一种状态，<b>每屏均为完整页面</b>　|　斜纹块＝图片/视频占位　|　虚线小框＝<b>矢量图插画占位</b>（空态配图）　|　■ 黑底＝主操作　|　黑色圆角条＝Toast（2.5s，显示在屏幕中心）　|
+    <b>手机内部不放置任何标注</b>；开发说明（规则 / 约束 / 占位说明）一律写在每屏下方灰字（an 行）与说明区　|　<b>换算</b>：真机视口 411.4×914.3dp（1440×3200px @560dpi），线框 288×640 ≈ <b>0.70×dp</b>，即 <b>1px 线框 ≈ 1.43dp</b>；实测数据见 <a href="#g-t">T 章节</a>
+  </div>
+  <div class="journey">
+    <b>流程总览</b>：A 首次访问(游客)→登录 → B 浏览首页(瀑布流/搜索) → C 笔记详情 → D 互动(赞/藏/评/关注) → E 发布笔记 → F 个人主页(编辑资料/设置) → G 消息通知 → H AI助手点点 → I 全局与会话
+  </div>
+  <table class="map">
+    <tr><th>全局规范</th><th>说明</th></tr>
+    <tr><td>登录态</td><td>游客可浏览首页瀑布流/搜索/笔记详情及评论/他人主页；任何写操作（点赞/收藏/评论/关注）与「＋」「点点」「消息」「我」入口 → 推入登录页（A2），登录成功后弹回原位置</td></tr>
+    <tr><td>账号</td><td>用户名 3-20 字符（必填）；密码 6-20 字符（必填）；注册昵称 ≤20（选填）；手机号选填（1[3-9] 开头 11 位）；注册成功不自动登录，回登录页并预填用户名</td></tr>
+    <tr><td>笔记</td><td>标题必填 ≤200 字；正文选填 ≤10000 字；图片 ≤9 张或视频 ≤1 个（≤200MB），至少其一；「写文字」路径在 E3「下一步」调用后端文字配图接口生成 1 张图片加入媒体列表（发布表单无配图入口）；视频封面由后端生成</td></tr>
+    <tr><td>评论</td><td>必填 ≤500 字（后端校验，前端无计数）；一级评论每页 20 条；「展开回复」单次拉取 ≤50 条</td></tr>
+    <tr><td>列表</td><td>每页 20 条；滚动距底约 600px 预加载下一页；到底显示「没有更多了」；列表失败态带「重试」</td></tr>
+    <tr><td>通知</td><td>6 类通知文案；未读角标每 15 秒轮询，&gt;99 显示 99+；自己操作自己不产生通知；点条目先标已读再跳转</td></tr>
+    <tr><td>反馈</td><td>Toast 屏幕中心显示 2.5s；请求统一超时 15s；点赞/收藏/关注/评论点赞乐观更新、失败回滚；Token 失效（401/业务码 1005）→ 清登录态推入登录页</td></tr>
+    <tr><td>AI</td><td>单轮问答（每次只发当前问题，不携带上下文）；输入 ≤4000 字符；对话仅内存保存，「新建对话」即清空</td></tr>
+    <tr><td>系统权限</td><td>仅相机一项（「拍摄」入口首次触发）；相册选择走系统照片选择器，无需权限</td></tr>
+  </table>
+  <nav class="toc">
+    <a href="#g-t">T 实测Token</a><a href="#g-a">A 游客与登录</a><a href="#g-b">B 首页浏览</a><a href="#g-c1">C1 图文详情</a><a href="#g-c2">C2 视频详情</a><a href="#g-c3">C3 视频评论面板</a><a href="#g-d">D 互动</a><a href="#g-e">E 发布</a><a href="#g-f">F 个人主页</a><a href="#g-g">G 消息</a><a href="#g-h">H AI点点</a><a href="#g-i">I 全局与会话</a>
+  </nav>
+</header>
+
+<!-- ================= T 实测 Token 与尺寸 ================= -->
+<section class="group" id="g-t">
+  <h2>章节 T · 真机实测 Design Token、控件尺寸与开发甜点值（v6 新增）</h2>
+  <p class="gnote">数据来源：原版小红书 APP 真机探测——<b>adb shell dumpsys window</b>（系统栏高度）+ <b>adb shell uiautomator dump</b>（控件 bounds，÷3.5 换算 dp）+ reference-shots 截图取色。设备：1440×3200px @560dpi（倍率 3.5），视口 <b>411.4×914.3dp</b>。原始 dump 与解析脚本存于 client/adb-dumps/。线框图仍为黑白灰；<b>颜色 Token 仅供开发实现取值</b>，不改线框视觉。</p>
+
+  <h3 style="font-size:13px;margin:10px 0 4px">T-1 颜色 Token（截图采样）</h3>
+  <table class="map">
+    <tr><th>Token</th><th>取值</th><th>实测出处</th></tr>
+    <tr><td>品牌主红 --xhs-red</td><td><b>#EA3F4A</b>（RGB 234,63,74）</td><td>底 Tab「＋」红块、消息未读徽标——两处采样一致；关注按钮/点赞激活态同源</td></tr>
+    <tr><td>文字主色 --text-1</td><td>#333333</td><td>标题/正文/选中 Tab；底 Tab 选中「首页」为黑色加粗</td></tr>
+    <tr><td>文字次级 --text-2</td><td>#8C8C8C</td><td>未选底 Tab、未选频道字、列表时间戳（采样 138–140 灰）</td></tr>
+    <tr><td>弱文字/占位 --text-3</td><td>#B2B2B2 级</td><td>输入框占位「说点什么...」等</td></tr>
+    <tr><td>页面背景 --bg</td><td>#FFFFFF</td><td>首页/搜索/消息/登录/弹层均纯白</td></tr>
+    <tr><td>浅灰胶囊/分隔底 --bg-gray</td><td>#F5F5F5</td><td>详情底栏「说点什么...」输入胶囊（全圆角）、详情页元信息底</td></tr>
+    <tr><td>分隔线 --divider</td><td>#EEEEEE ≈ 0.6dp 细线</td><td>列表分隔、弹层行间、顶栏底部（实测均 0.6dp hairline）</td></tr>
+    <tr><td>深色沉浸页 --dark-bg</td><td>#000000（采样 #010001）；底栏区 #1A1A1A</td><td>视频详情页背景；底部信息层黑底 + 上淡下深渐变遮罩</td></tr>
+    <tr><td>遮罩 scrim</td><td>rgba(0,0,0,.6)</td><td>发布弹层/遮罩输入下方（白底上采样 #666666）</td></tr>
+    <tr><td>徽标红</td><td>同 --xhs-red</td><td>消息 Tab 数字徽标：红底白字圆形；无数字时 8×8dp 红点</td></tr>
+  </table>
+
+  <h3 style="font-size:13px;margin:10px 0 4px">T-2 字号 Token（uiautomator 文本框高 ≈1.2×sp 反推）</h3>
+  <table class="map">
+    <tr><th>sp</th><th>实测文本框高(dp)</th><th>用例</th></tr>
+    <tr><td>11</td><td>12.9–13.7</td><td>卡片赞数、「直播中」徽标、写长文副文案</td></tr>
+    <tr><td>12</td><td>14.3</td><td>卡片脚栏昵称/日期、IP 属地、搜索结果日期、消息入口标签(13近似)</td></tr>
+    <tr><td>13</td><td>16</td><td>详情底栏计数、消息三入口标签</td></tr>
+    <tr><td>14</td><td>17.1</td><td>正文、评论内容、话题标签、顶栏昵称</td></tr>
+    <tr><td>15</td><td>18.3</td><td>底 Tab/频道未选字、会话标题、设置行、列表标题、页签「全部」</td></tr>
+    <tr><td>16</td><td>19.4</td><td>详情标题、搜索区块标题</td></tr>
+    <tr><td>17</td><td>20.3</td><td>评论用户名、底 Tab 选中字、频道选中字、消息页大标题、占位文案</td></tr>
+    <tr><td>18</td><td>22</td><td>搜索历史/猜你想搜条目、聊天时间</td></tr>
+    <tr><td>20</td><td>24–24.6</td><td>顶栏页签「关注/发现」、发布弹层行文字、编辑资料 label、详情页码「1/4」</td></tr>
+    <tr><td>24</td><td>28.3</td><td>个人主页昵称</td></tr>
+  </table>
+
+  <h3 style="font-size:13px;margin:10px 0 4px">T-3 控件尺寸清单（按模块，单位 dp）</h3>
+  <table class="map">
+    <tr><th>模块</th><th>控件</th><th>实测值（宽×高 @位置）</th></tr>
+    <tr><td rowspan="4">系统与全局</td><td>状态栏</td><td>39.4（本机含挖孔 138px；常规设备取 24–32）</td></tr>
+    <tr><td>页面顶栏</td><td>44 高，图标 24×24，触区 36–44；标题居中</td></tr>
+    <tr><td>底部 Tab 栏</td><td>45.1 高 ×5 等分 82.3；＋按钮 60×45.1 满高圆角红块（白＋）；未选字 15sp #8C8C8C / 选中 17sp 粗 #333；徽标 12×16 内 8×8 红点（或红底白数字）</td></tr>
+    <tr><td>分隔线</td><td>0.6 hairline</td></tr>
+    <tr><td rowspan="2">B 首页</td><td>顶栏页签</td><td>每 Tab 68×32（关注/发现/北京），中置；右搜索钮 40×40；左菜单 36×36</td></tr>
+    <tr><td>频道栏 + 瀑布流</td><td>频道栏高 40，右渐隐 60 + 箭头 16；卡 <b>198.6 宽</b>，列距 4.5、页边距 4.9；图区高 150.6(4:3) 或 264.6(3:4)；视频角标 20×20 右上 inset 10；标题区 178.3 宽两行 38 高；脚栏 39.1：头像 26、赞 icon 30；直播卡 60 高 + 「直播中」52×20（icon 12）</td></tr>
+    <tr><td rowspan="3">C1 图文详情</td><td>顶栏</td><td>56 高：返回 10×18、作者头像 60 圆、昵称 14sp、「…」26×26、关注钮 62.9×28</td></tr>
+    <tr><td>图区</td><td>全宽 411.4×548.6（3:4 满宽）；页码「1/4」右上 inset 13（20sp）；圆点指示 4.9/间距 7.7，距图底 5.4</td></tr>
+    <tr><td>内容 + 底栏</td><td>标题 16sp、左右边距 15.1；meta 行 25.4 + 「不喜欢」62×22.3；底栏 56：输入胶囊 40 高全圆角（15sp 占位）、♥/★/💬 触区 60/68/64、icon 30、计数 13sp</td></tr>
+    <tr><td rowspan="2">C2 视频详情</td><td>播放器</td><td>全屏 411.4×830.9（状态栏下）；顶栏浮层：返回 26、搜索 26、分享 28；进度条 389.1×5.4 贴底(触区含)</td></tr>
+    <tr><td>信息层 + 底栏</td><td>作者行 48：头像 46、昵称 20sp、关注钮 49.7×26、音乐碟 22；标题行 46（宽 379.4）；底栏 44：胶囊 179.1×34、赞 66.3×44 / 藏 74.9×44 / 评 58.9×44（icon 30，数字 17sp）</td></tr>
+    <tr><td rowspan="1">C3 评论面板</td><td>面板行</td><td>Tab 行 44（评论 n/赞和收藏 n）；输入行 52：头像 36、发送 68×40、表情/@ 24；评论项 80.6：头像 36 @15、正文列 @61（距头像 10）、用户名 17sp 灰、内容 17sp、meta 20（赞 icon 26×20）；二级回复缩进 @90、头像 24；「展开 N 条回复」32.6 高；「你的好友」徽章 40×14</td></tr>
+    <tr><td rowspan="2">E 发布</td><td>入口弹层</td><td>总高 274.3：三行各 70（从相册选择 / 相机·拍摄与直播双行 / 写文字）+ 分隔 0.6 + 间隔 7.1 + 取消 56；行文字 20sp 居中</td></tr>
+    <tr><td>写文字编辑器</td><td>顶栏 44：返回 30×30、「下一步」63.4×32 右置；画布 379.4×506 @16；底部「写长文」卡 379.4×98（icon 46、副文案 11sp、箭头 24）</td></tr>
+    <tr><td rowspan="4">F 个人主页</td><td>头部</td><td>头图 282 高；浮层顶栏 44：菜单 29、「编辑主页」pill 93.4×26（icon 18、17sp）、扫一扫/分享 24（间距 12）；头像 108×108 @(2,78)；昵称 24sp；小红书号/IP 12sp + 复制 icon 10；统计行 24；简介行 26；性别 chip 30×20（icon 12）</td></tr>
+    <tr><td>小组件行</td><td>卡 131.4×64（内 123.4×48）：icon 16、label 15sp、副文 12sp</td></tr>
+    <tr><td>segment + 筛选</td><td>页签行 44：条目 64/86（icon 18）、右搜索 44×44；筛选 chip 高 26.3（公开 8/私密 0/合集 0）；「去发布」banner 401.7×64：icon 40、CTA 46×23.7、关闭 32×64</td></tr>
+    <tr><td>F3 编辑资料 / F5 设置 / F4 抽屉</td><td>F3：行距 48、行高 24（背景图行 40）、label 89.1 @32、值 226.3 @137.1、顶栏 44（预览/保存右置）；F5：行距 52、label 15sp @68（icon 24 @28）、右值灰（如 2.25 GB）、底部「切换账号」居中；F4：抽屉宽 308、项 284×52–54 @12（icon 24 @28、字 @64）、分组隔 8、底部三宫格 94.6×72</td></tr>
+    <tr><td rowspan="2">G 消息</td><td>三入口区</td><td>区高 112：卡 126.3×102 @16（icon 48、label 13sp）；顶栏 44 标题居中、右创建 24×24</td></tr>
+    <tr><td>会话列表</td><td>项高 72：头像 48 @16、标题 15sp @76、预览 13sp、时间/日期右侧 @364–371；未读 8×8 红点 / 置顶 icon 12；AI「点点」行带 ai 徽标</td></tr>
+    <tr><td rowspan="1">H 点点</td><td>会话页</td><td>顶栏 56：返回 24、标题（icon+17sp）、右 24；AI 气泡 379.4 宽 @16、操作行 复制/分享/不喜欢 32×32 间距 8；笔记卡 164×236（图 158.9×159.4、标题 17sp、作者行 18 icon）；「聊聊新话题」行 50 + 提示气泡 332×90.9；建议 chips 高 44（宽 200–220）间距 12；底部输入条 48 胶囊 387.4 @12（语音/表情/+ 各 24）+「内容由AI生成」21.4</td></tr>
+    <tr><td rowspan="2">B2/B3 搜索</td><td>搜索首页</td><td>顶行 52：返回 22、输入框 44（拍照 20、竖分隔、「搜索」56.3×44）；历史：头 48（标题 18sp、清除 15）、chip 高 32 全圆角（横距 10 行距 10）；猜你想搜两列行 22 行距 38；AI 入口「按住提问」pill 132.6×32 + 圆钮 88×44（icon 28）</td></tr>
+    <tr><td>结果页</td><td>筛选头 96＝输入行 52 + Tab 行 44（全部▾16/用户/商品/图片/视频/地点，15sp）+「问点点」78×44（icon 20）；卡同首页：标题两行 44.6、脚栏 32.6（头像 24、名 12sp+日期 12sp 双行、赞 icon 30）</td></tr>
+  </table>
+  <p class="gnote" style="margin-top:8px">注：原版底 Tab 为「首页/市集/＋/消息/我」，本复刻以「点点」替换「市集」（产品决策，见章节 H）；其余结构一致。评论面板（全屏嵌入版）实测于自己笔记的评论管理态，与 C3 底部弹层版条目尺寸相同。</p>
+
+  <h3 style="font-size:13px;margin:10px 0 4px">T-4 复刻开发甜点值（Sweet Values · 编码以此为准）</h3>
+  <p class="gnote">由 T-1~T-3 实测毛值归一化而成。<b>取整规则</b>：①间距/尺寸向 4dp 网格就近取整（±1dp 直接归并，2~3dp 向视觉密度就近）；②文字色归入标准灰阶，品牌红与深色主题色保留实测精确值；③可交互元素触控热区 ≥44dp（小图标 24dp 视觉 + 透明扩边）；④字号收敛为 8 档、头像收敛为 5 档；⑤随屏宽变化的尺寸一律写公式不写死。<b>编码以本表为准</b>，与 T-3 实测值冲突时取甜点值（偏差均在 ±4% 内）。</p>
+
+  <h3 style="font-size:12.5px;margin:8px 0 3px">T-4a 色板（开发直接取用）</h3>
+  <table class="map">
+    <tr><th>Token</th><th>甜点值</th><th>由实测归并</th><th>用途</th></tr>
+    <tr><td>--xhs-red</td><td><b>#EA3F4A</b></td><td>原样保留（234,63,74）</td><td>＋按钮、关注/发布主操作、点赞收藏激活、徽标红点与数字角标</td></tr>
+    <tr><td>--text-1</td><td>#333333</td><td>#333333</td><td>标题/正文/选中态文字</td></tr>
+    <tr><td>--text-2</td><td><b>#999999</b></td><td>#8C8C8C 归入标准灰阶</td><td>未选 Tab/频道、时间戳、辅助说明</td></tr>
+    <tr><td>--text-3</td><td>#CCCCCC</td><td>浅灰推定</td><td>占位文案、禁用、空态插画线</td></tr>
+    <tr><td>--divider</td><td>#EEEEEE</td><td>0.6dp hairline</td><td>所有分隔线（1px/0.5dp）</td></tr>
+    <tr><td>--bg / --bg-gray</td><td>#FFFFFF / #F5F5F5</td><td>原样保留</td><td>页面底 / 输入胶囊·灰底块</td></tr>
+    <tr><td>--dark / --black</td><td>#1A1A1A / #000000</td><td>原样保留</td><td>视频沉浸底栏区 / 视频沉浸页背景</td></tr>
+    <tr><td>--scrim</td><td>rgba(0,0,0,.6)</td><td>原样保留</td><td>弹层/遮罩输入/弹窗遮罩</td></tr>
+  </table>
+  <p class="gnote">字重两档：常规 400、强调 600（选中 Tab、计数、按钮文字、页面大标题）；扁平风格<b>不用投影</b>，分层只靠 hairline 与 #F5F5F5。</p>
+
+  <h3 style="font-size:12.5px;margin:8px 0 3px">T-4b 字号阶梯（sp，共 8 档）与头像/图标档位</h3>
+  <table class="map">
+    <tr><th>sp</th><th>归并自实测</th><th>用例</th></tr>
+    <tr><td>11</td><td>11~12</td><td>卡片赞数、「直播中」徽标、写长文副文案</td></tr>
+    <tr><td>12</td><td>12~13</td><td>卡片脚栏昵称/日期、IP、消息入口标签、详情底栏计数、点点 AI 声明</td></tr>
+    <tr><td>14</td><td>14</td><td>正文、评论内容、话题标签、顶栏昵称</td></tr>
+    <tr><td>15</td><td>15</td><td>未选 Tab/底 Tab、列表标题、会话标题、设置行、segment、搜索条目</td></tr>
+    <tr><td>16</td><td>16</td><td>详情标题、搜索区块标题</td></tr>
+    <tr><td>17</td><td>17</td><td>选中 Tab/频道、评论用户名、页面大标题（消息）、输入占位</td></tr>
+    <tr><td>20</td><td>20</td><td>顶栏页签「关注/发现」、发布弹层行、编辑资料 label、详情页码</td></tr>
+    <tr><td>24</td><td>24</td><td>个人主页昵称</td></tr>
+  </table>
+  <table class="map">
+    <tr><th>档位</th><th>甜点值</th><th>归并自实测</th></tr>
+    <tr><td>头像 5 档</td><td><b>24 / 36 / 48 / 60 / 108</b></td><td>卡片脚栏 26→24；评论 36；消息会话 48（视频作者 46→48）；详情作者 60；个人页 108（已合 4 网格）</td></tr>
+    <tr><td>图标 4 档</td><td><b>12 / 16 / 20 / 24</b></td><td>复制 10→12；播放量·箭头 15.1→16；搜索·音乐碟·问点点 20~22→20；顶栏功能图标 24~30→24</td></tr>
+    <tr><td>互动图标</td><td><b>30</b></td><td>详情/视频底栏 ♥★💬 30 原样保留</td></tr>
+  </table>
+
+  <h3 style="font-size:12.5px;margin:8px 0 3px">T-4c 间距、圆角与布局常量</h3>
+  <table class="map">
+    <tr><th>类别</th><th>甜点值</th><th>归并说明</th></tr>
+    <tr><td>间距阶梯</td><td><b>4 / 8 / 12 / 16 / 24 / 32</b></td><td>页面左右边距统一 <b>16</b>（实测 14.9~16）；卡片标题区内边距 <b>12</b>（实测 10）；组件间隙 8/12</td></tr>
+    <tr><td>瀑布流</td><td>边距 <b>4</b>、列距 <b>4</b>；卡宽公式 <b>(W−12)/2</b></td><td>实测 4.9/4.5；198.6@411dp 视口＝公式值，禁止写死像素宽</td></tr>
+    <tr><td>封面比例</td><td><b>4:3 或 3:4</b>，详情大图全宽 <b>3:4</b></td><td>实测 150.6/264.6/548.6 原样保留为比例约束</td></tr>
+    <tr><td>圆角</td><td>卡片 <b>8</b>；弹层顶部/弹窗/＋按钮 <b>12</b>；chip·胶囊·按钮·徽标 <b>pill（全圆角）</b></td><td>＋按钮 60×45.1 圆角≈12；输入胶囊实测全圆角</td></tr>
+    <tr><td>三入口卡（G1）</td><td>三等分公式 <b>(W−32)/3</b> × 高 <b>104</b>；<b>点击区＝整卡</b>（48dp 圆角方块仅是视觉图标：方块上留白 16、下方标签间距 12 都在点击区内）</td><td>实测 126.3×102@411dp＝(411−32)/3，间隙 0、仅页边距 16</td></tr>
+    <tr><td>底 Tab 栏</td><td>高 <b>48</b>，5 等分；＋钮 <b>56×48 圆角 12</b> 满高红块</td><td>实测 45.1 / 60×45.1；等分宽随屏宽</td></tr>
+    <tr><td>栏高体系</td><td>页面顶栏 <b>44</b>｜频道栏 <b>40</b>｜segment <b>44</b>｜详情顶栏与底栏 <b>56</b>｜视频底栏 <b>44</b>｜点点输入条 <b>48</b>＋AI 声明行 <b>24</b></td><td>实测 44/40/44/56/44/48/21.4→24</td></tr>
+    <tr><td>输入胶囊高</td><td>详情 <b>40</b>｜视频底 <b>36</b>｜点点 <b>48</b>；搜索输入框 <b>44</b></td><td>实测 40/34→36/48/44</td></tr>
+    <tr><td>按钮与 chip 高</td><td>关注钮高 <b>28</b>（padding 0 12）｜发送钮 <b>64×40</b>｜筛选 chip <b>28</b>｜历史 chip <b>32</b>｜建议问题 chip <b>44</b>｜「展开回复」行 <b>32</b></td><td>实测 62.9×28 与 49.7×26→统一高 28；68×40→64×40；26.3→28；32.6→32</td></tr>
+    <tr><td>发布弹层</td><td>行高 <b>72</b>×3＋间隔 <b>8</b>＋取消 <b>56</b>＝总高 <b>280</b></td><td>实测 70×3＋7.1＋56＝274.3</td></tr>
+    <tr><td>列表行体系</td><td>会话项 <b>72</b>｜设置行 <b>52</b>｜编辑资料行 <b>48</b>｜抽屉项 <b>52</b>（宽=抽屉 308−24）｜评论项最小高 <b>80</b></td><td>实测 72/52/48/52~54/80.6</td></tr>
+    <tr><td>细部</td><td>视频进度条 轨道 <b>2</b>/触区 <b>6</b> 贴底｜轮播圆点 <b>5</b>/点距 <b>8</b>｜未读点 <b>8</b>｜数字徽标高 <b>16</b> 最小宽 <b>16</b>｜视频角标 <b>20×20</b> inset <b>10</b></td><td>实测 5.4/4.9·7.7/8/12×16/20×20·10</td></tr>
+    <tr><td>触控热区</td><td>一律 <b>≥44</b>（图标 24 视觉＋透明扩边；底栏按钮整格可点）</td><td>实测触区 36~64，取下限收敛</td></tr>
+  </table>
+  <p class="gnote" style="margin-top:6px">示例（B1 卡片脚栏按甜点值实现）：高 40（实测 39.1）＝上下 padding 6 + 头像 24（实测 26）＋昵称 12sp #333 左边距 8；右侧 ♥ 30 + 计数 12sp #999。开发时先抄 T-4 常量，遇到 T-4 未覆盖的细节回查 T-3 实测值就近归档。</p>
+</section>
+
+<!-- ================= A 游客与登录 ================= -->
+<section class="group" id="g-a">
+  <h2>阶段 A · 首次访问（游客）/ 登录注册</h2>
+  <p class="gnote">游客可浏览首页瀑布流、搜索、看详情/评论/他人主页。任何写操作与「消息/我/＋」→ 直接推入登录页。登录方式：用户名+密码（后端 JWT）。</p>
+  <div class="grid">
+
+    <!-- A1 -->
+    <div class="card" id="a1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="burger"></span><span class="grow"></span><span class="off" style="color:#999">关注</span><span style="font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px">发现</span><span class="grow"></span><span style="font-size:12px">⌕</span></div>
+            <div class="tabs" style="padding:4px 6px 0"><span class="on">推荐</span><span class="off">穿搭</span><span class="off">美食</span><span class="off">彩妆</span><span class="off">影视</span><span class="off">职场</span><span class="off">情感</span></div>
+            <div class="wf" style="padding:5px 6px;flex:1;min-height:0">
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:64px">图</div><div class="ttl">笔记标题一行截断示例</div><div class="ft"><span><i class="av"></i> 用户A</span><span>♡ 1.2万</span></div></div>
+                <div class="pcard"><div class="ph" style="height:42px">图</div><div class="ttl">标题示例三</div><div class="ft"><span><i class="av"></i> 用户F</span><span>赞</span></div></div>
+                <div class="pcard"><div class="ph" style="height:50px">图</div><div class="ttl">标题示例五</div><div class="ft"><span><i class="av"></i> 用户G</span><span>♡ 9</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:92px">图<span class="vbadge">▶</span></div><div class="ttl">视频笔记标题最多两行超出截断示例</div><div class="ft"><span><i class="av"></i> 用户C</span><span>♡ 508</span></div></div>
+                <div class="pcard"><div class="ph" style="height:56px">图</div><div class="ttl">标题示例二</div><div class="ft"><span><i class="av"></i> 用户E</span><span>♡ 77</span></div></div>
+              </div>
+            </div>
+            <div class="floatbar">🔒 登录后体验更多功能<span class="go">登录</span></div>
+            <div class="tabbar">
+              <div class="tb on"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">游客顶栏左侧为 ☰，点击 → A2 推入登录页（游客无抽屉）；登录后变为点点气泡图标（见 B1）</div>
+      <div class="meta">
+        <div class="t">A1 · 首页 — 游客态</div>
+        <div class="pos">位置：旅程起点，Tab 根页面。点赞数为 0 的卡片显示文字「赞」</div>
+        <ul>
+          <li>点卡片 → C1-1 详情；点作者 → F2 他人主页；点 ⌕ → B2 搜索页；点 ☰ → A2 推入登录页</li>
+          <li>点卡片♡ / ＋ / 消息 / 我 / 点点 → A2 推入登录页</li>
+          <li>点悬浮条「登录」→ A3；滚动近底部自动加载（B4-4）</li>
+          <li>分类 chips 点击仅高亮（#3）；「关注」Tab → B5（#19）</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- A2 -->
+    <div class="card" id="a2">
+      <div class="shot" style="background:#dcdcdc;align-items:center">
+        <div class="col" style="width:300px;margin-top:40px;gap:8px">
+          <div class="row" style="align-items:stretch">
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:3px"><span class="stt">触发（游客）</span><p style="font-size:9.5px">点卡片♡ ／ 评论 ／ 关注<br>点 ＋ ／ 点点 ／ 消息 ／ 我</p></div>
+            <span class="arrow">→</span>
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:3px"><span class="stt">直接推入登录页</span><p style="font-size:9.5px">整页跳转 A3<br>登录成功后弹回原位置</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="an">游客点 ♥ / 我 / 消息 / ＋ 均直接推入登录页，不做 Toast 提示；登录成功后弹回原位置</div>
+      <div class="meta">
+        <div class="t">A2 · 未登录拦截 — 推入登录页</div>
+        <div class="pos">位置：任何页面触发需登录操作时（流程示意，非页面）</div>
+        <ul><li>登录页可 ← 返回来源页（A3 左上返回）</li></ul>
+      </div>
+    </div>
+
+    <!-- A3 -->
+    <div class="card" id="a3">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row" style="justify-content:space-between"><span class="backbtn">←</span><u style="font-size:10px;color:#777">帮助</u></div>
+            <div style="width:72px;height:30px;border:1.5px solid var(--bd);background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin:26px auto 0">小红书LOGO</div>
+            <p style="text-align:center;font-size:11px;color:#555;margin-top:6px">登录后，体验更多功能</p>
+            <div class="col" style="margin-top:26px;gap:9px;padding:0 20px">
+              <div class="inp" style="min-height:24px">请输入用户名</div>
+              <div class="inp" style="min-height:24px">请输入密码</div>
+              <div class="btn rd blk" style="min-height:26px;line-height:2.1">登录</div>
+              <div class="row" style="gap:4px;margin-top:4px"><span style="width:9px;height:9px;border:1.5px solid #999;border-radius:50%;flex-shrink:0"></span><span style="font-size:8.5px;color:#777">我已阅读并同意<u>《用户协议》</u>和<u>《隐私政策》</u></span></div>
+              <p style="font-size:9.5px;text-align:center;color:#666;margin-top:10px">没有账号？<b><u>注册</u></b></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">登录页布局：居中 Logo+标语+表单+大按钮+协议勾选+右上帮助；账号密码登录，无第三方/一键登录</div>
+      <div class="meta">
+        <div class="t">A3 · 登录页（推入式全屏）</div>
+        <div class="pos">位置：游客拦截 / 悬浮条 / 会话过期时推入；← 返回来源页</div>
+        <ul>
+          <li>登录成功 → Toast「登录成功」→ 弹回来源页（A6）；失败/校验 → A5-1/A5-2</li>
+          <li>「注册」→ A4；协议链接为占位（#9）</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- A4 -->
+    <div class="card" id="a4">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row" style="justify-content:space-between"><span class="backbtn">←</span><span class="grow" style="text-align:center;font-weight:700;font-size:12px">注册小红书</span><span style="width:17px"></span></div>
+            <div class="col" style="margin-top:22px;gap:9px;padding:0 20px">
+              <div class="inp" style="min-height:24px">设置用户名（3-20字符）*</div>
+              <div class="inp" style="min-height:24px">设置密码（6-20字符）*</div>
+              <div class="inp" style="min-height:24px">昵称（选填）</div>
+              <div class="inp" style="min-height:24px">手机号（选填）</div>
+              <div class="btn rd blk" style="min-height:26px;line-height:2.1">注册</div>
+              <div class="row" style="gap:4px;margin-top:2px"><span style="width:9px;height:9px;border:1.5px solid #999;border-radius:50%;flex-shrink:0"></span><span style="font-size:8.5px;color:#777">我已阅读并同意<u>《用户协议》</u>和<u>《隐私政策》</u></span></div>
+              <p style="font-size:9.5px;text-align:center;color:#666;margin-top:8px">已有账号？<b><u>前往登录</u></b></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">注册成功 → Toast「注册成功，请登录」→ 弹回 A3 并预填用户名（不自动登录，#14）</div>
+      <div class="meta">
+        <div class="t">A4 · 注册页</div>
+        <div class="pos">位置：A3 点「注册」推入</div>
+        <ul><li>校验失败（长度/手机号格式/用户名已存在）→ A5-1 同款错误条</li></ul>
+      </div>
+    </div>
+
+    <!-- A5-1 -->
+    <div class="card" id="a5-1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row" style="justify-content:space-between"><span class="backbtn">←</span><u style="font-size:10px;color:#777">帮助</u></div>
+            <div style="width:72px;height:30px;border:1.5px solid var(--bd);background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin:20px auto 0">小红书LOGO</div>
+            <p style="text-align:center;font-size:11px;color:#555;margin-top:5px">登录后，体验更多功能</p>
+            <div class="col" style="margin-top:16px;gap:8px;padding:0 20px">
+              <div class="errbar">用户名或密码错误 ／ 用户名长度为3-20个字符 ／ 该用户名已被注册</div>
+              <div class="inp" style="min-height:22px">请输入用户名</div>
+              <div class="inp" style="min-height:22px">••••••</div>
+              <div class="btn rd blk" style="min-height:24px;line-height:2">登录</div>
+              <p style="font-size:9.5px;text-align:center;color:#666;margin-top:6px">没有账号？<b><u>注册</u></b></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">错误条在表单上方；已填内容保留可重试（异常恢复）；网络层错误走全局 Toast（I2）</div>
+      <div class="meta">
+        <div class="t">A5-1 · 登录/注册 — 失败</div>
+        <div class="pos">位置：A3/A4 提交后的失败态（完整页面）</div>
+        <ul><li>修正后重新提交；注册页错误条样式相同</li></ul>
+      </div>
+    </div>
+
+    <!-- A5-2 -->
+    <div class="card" id="a5-2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row" style="justify-content:space-between"><span class="backbtn" style="opacity:.4">←</span><u style="font-size:10px;color:#bbb">帮助</u></div>
+            <div style="width:72px;height:30px;border:1.5px solid var(--bd);background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin:26px auto 0">小红书LOGO</div>
+            <p style="text-align:center;font-size:11px;color:#555;margin-top:6px">登录后，体验更多功能</p>
+            <div class="col" style="margin-top:26px;gap:9px;padding:0 20px">
+              <div class="inp" style="min-height:24px;color:#333">myuser</div>
+              <div class="inp" style="min-height:24px;color:#333">••••••</div>
+              <div class="btn rd blk dis" style="min-height:26px;line-height:2.1">登录中...</div>
+              <p style="font-size:9.5px;text-align:center;color:#666;margin-top:10px">没有账号？<b style="color:#bbb">注册</b></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">按钮禁用防重复提交；此状态 ← 不可返回</div>
+      <div class="meta">
+        <div class="t">A5-2 · 登录/注册 — 提交中</div>
+        <div class="pos">位置：A3/A4 提交后的过渡态（完整页面）</div>
+        <ul><li>完成 → 成功回 A6 / 失败回 A5-1</li></ul>
+      </div>
+    </div>
+
+    <!-- A6 -->
+    <div class="card" id="a6">
+      <div class="shot" style="background:#dcdcdc;align-items:center">
+        <div class="col" style="width:300px;margin-top:34px;gap:8px">
+          <div class="row" style="align-items:stretch">
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:3px"><span class="stt">登录成功</span><span class="toast in">登录成功</span></div>
+            <span class="arrow">→</span>
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:3px"><span class="stt">弹回来源页</span><p style="font-size:9.5px">回到触发登录的页面<br>（详情/搜索/发布…）</p></div>
+          </div>
+          <div class="state" style="padding-top:12px">
+            <span class="stt">全局生效</span>
+            <p style="font-size:9.5px;margin-top:6px">游客悬浮条消失 · 「消息」出现未读角标（15s 轮询）· ＋ 变主色 · 顶栏左上 ☰ 变点点气泡 · ☰ 抽屉出现「退出登录」 · 写操作全部可用</p>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="t">A6 · 登录成功 — 全局变化（流程示意）</div>
+        <div class="pos">位置：登录成功立即生效，作用于所有页面</div>
+        <ul><li>重启 APP：本地有 Token 则静默校验恢复登录态（I1）</li></ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= B 首页浏览 ================= -->
+<section class="group" id="g-b">
+  <h2>阶段 B · 浏览首页（瀑布流 / 搜索）</h2>
+  <p class="gnote">登录态首页与独立搜索页。顶栏：左点点气泡 / 中「关注·发现」/ 右🔍。</p>
+  <div class="grid">
+
+    <!-- B1 -->
+    <div class="card" id="b1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="bubble"></span><span class="grow"></span><span class="off" style="color:#999">关注</span><span style="font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px">发现</span><span class="grow"></span><span style="font-size:12px">⌕</span></div>
+            <div class="tabs" style="padding:4px 6px 0"><span class="on">推荐</span><span class="off">穿搭</span><span class="off">美食</span><span class="off">彩妆</span><span class="off">影视</span><span class="off">职场</span><span class="off">情感</span></div>
+            <div class="wf" style="padding:5px 6px;flex:1;min-height:0">
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:60px">图</div><div class="ttl">笔记标题一行截断示例</div><div class="ft"><span><i class="av"></i> 用户A</span><span>♥ 1.2万</span></div></div>
+                <div class="pcard"><div class="ph" style="height:44px">图</div><div class="ttl">标题示例三</div><div class="ft"><span><i class="av"></i> 用户F</span><span>♥ 6</span></div></div>
+                <div class="pcard"><div class="ph" style="height:52px">图</div><div class="ttl">标题示例五</div><div class="ft"><span><i class="av"></i> 用户G</span><span>♥ 9</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:88px">图<span class="vbadge">▶</span></div><div class="ttl">视频笔记标题最多两行超出截断示例</div><div class="ft"><span><i class="av"></i> 用户C</span><span>♥ 508</span></div></div>
+                <div class="pcard"><div class="ph" style="height:52px">图</div><div class="ttl">标题示例二</div><div class="ft"><span><i class="av"></i> 用户E</span><span>♥ 77</span></div></div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="tb on"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息<span class="bdg2">2</span></div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">左上气泡＝点点入口；与 A1 差异＝无悬浮条、＋主色、消息角标、顶栏左上 ☰ → 点点气泡</div>
+      <div class="meta">
+        <div class="t">B1 · 首页 — 登录态</div>
+        <div class="pos">位置：Tab 根页面</div>
+        <ul>
+          <li>点卡片 → C1-1；点作者 → F2；点 ⌕ → B2；点气泡/点点 Tab → H1；＋ → E1；消息 → G1；我 → F1；☰ 仅在我页（F4）</li>
+          <li>卡片♥ → D1 点赞；「关注」Tab → B5（#19）</li>
+          <li>分类 chips 点击仅高亮（#3），横向滑动查看更多</li>
+          <li><b>实测(dp)</b>：顶栏 44 / 频道栏 40 / 底 Tab 45.1（＋钮 60×45.1 满高圆角块）；卡 198.6 宽、列距 4.5、边距 4.9；图区 150.6(4:3)或 264.6(3:4)；标题区两行 38；脚栏 39.1（头像 26、赞 icon 30）；详见 T-3</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- B2 -->
+    <div class="card" id="b2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center">
+              <span class="backbtn">←</span>
+              <div class="inp grow" style="min-height:23px">搜索你感兴趣的内容</div>
+              <span class="btn pri">搜索</span>
+            </div>
+            <div class="row" style="justify-content:space-between;margin-top:10px"><b style="font-size:10.5px">历史记录</b><span style="font-size:10px">🗑</span></div>
+            <div class="row" style="flex-wrap:wrap;gap:5px;margin-top:2px">
+              <span class="pill">咖啡拉花</span><span class="pill">周末徒步</span><span class="pill">简约穿搭</span><span class="pill">家常菜</span>
+            </div>
+            <div class="grow"></div>
+            <p style="text-align:center;color:#ccc;font-size:9.5px;padding-bottom:14px">输入关键词并搜索，结果将显示在这里</p>
+          </div>
+        </div>
+      </div>
+      <div class="an">历史为空时「历史记录」区块整体隐藏</div>
+      <div class="meta">
+        <div class="t">B2 · 搜索页（独立页）</div>
+        <div class="pos">位置：首页右上 🔍 推入；← 返回首页</div>
+        <ul><li>输入+回车/「搜索」→ B3-1；点历史词 → 直接搜该词；🗑 清空历史</li>
+        <li><b>实测(dp)</b>：搜索行 52（输入框 44 高、返回 22、搜索钮 56.3×44）；历史 chip 高 32 全圆角、间距 10；「猜你想搜」两列、条目行 22、行距 38；原版另有 AI「按住提问」入口（pill 132.6×32 + 钮 88×44），本复刻并入 H</li></ul>
+      </div>
+    </div>
+
+    <!-- B3-1 -->
+    <div class="card" id="b3-1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center">
+              <span class="backbtn">←</span>
+              <div class="inp grow" style="min-height:23px;color:#333">咖啡拉花</div>
+              <span class="btn pri">搜索</span>
+            </div>
+            <div class="wf" style="flex:1;min-height:0;margin-top:4px">
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:56px">图</div><div class="ttl">结果标题一</div><div class="ft"><span><i class="av"></i> 用户A</span><span>♥ 31</span></div></div>
+                <div class="pcard"><div class="ph" style="height:42px">图</div><div class="ttl">结果标题三</div><div class="ft"><span><i class="av"></i> 用户D</span><span>♥ 6</span></div></div>
+                <div class="pcard"><div class="ph" style="height:64px">图<span class="vbadge">▶</span></div><div class="ttl">结果标题五</div><div class="ft"><span><i class="av"></i> 用户H</span><span>♥ 18</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:74px">图</div><div class="ttl">结果标题二</div><div class="ft"><span><i class="av"></i> 用户C</span><span>♥ 12</span></div></div>
+                <div class="pcard"><div class="ph" style="height:46px">图</div><div class="ttl">结果标题四</div><div class="ft"><span><i class="av"></i> 用户E</span><span>♥ 3</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">← 返回 B2（保留关键词与历史）</div>
+      <div class="meta">
+        <div class="t">B3-1 · 搜索结果页</div>
+        <div class="pos">位置：B2 提交后（按标题关键词，后端 LIKE）；推入式页面，无底部 Tab</div>
+        <ul><li>结果瀑布流同首页，无限滚动（B4-4/B4-5）；点卡片 → C1-1</li></ul>
+      </div>
+    </div>
+
+    <!-- B3-2 -->
+    <div class="card" id="b3-2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center">
+              <span class="backbtn">←</span>
+              <div class="inp grow" style="min-height:23px;color:#333">咖啡拉花</div>
+              <span class="btn pri">搜索</span>
+            </div>
+            <div class="grow center">
+              <div class="illus">矢量图插画</div>
+              <p style="margin-top:10px;color:#666;font-size:11px">暂无相关内容，换个关键词试试</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">无结果空态文案为占位设计，编码前需产品确认</div>
+      <div class="meta">
+        <div class="t">B3-2 · 搜索结果 — 无结果</div>
+        <div class="pos">位置：B3-1 的空数据态（完整页面：搜索栏保留关键词）</div>
+        <ul><li>← 返回 B2 修改关键词</li></ul>
+      </div>
+    </div>
+
+    <!-- B4-1 -->
+    <div class="card" id="b4-1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="bubble"></span><span class="grow"></span><span style="font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px">发现</span><span class="grow"></span><span style="font-size:12px">⌕</span></div>
+            <div class="tabs" style="padding:4px 6px 0"><span class="on">推荐</span><span class="off">穿搭</span><span class="off">美食</span><span class="off">彩妆</span></div>
+            <div class="grow center" style="justify-content:center">
+              <div class="spin"></div>
+              <p style="font-size:10px;color:#888;margin-top:8px">加载中...</p>
+            </div>
+            <div class="tabbar">
+              <div class="tb on"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="t">B4-1 · 列表 — 首次加载中</div>
+        <div class="pos">位置：首页/搜索结果/关注流/主页各 Tab 首次加载时（完整页面）</div>
+        <ul><li>完成 → B1 瀑布流；失败 → B4-2</li></ul>
+      </div>
+    </div>
+
+    <!-- B4-2 -->
+    <div class="card" id="b4-2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="bubble"></span><span class="grow"></span><span style="font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px">发现</span><span class="grow"></span><span style="font-size:12px">⌕</span></div>
+            <div class="tabs" style="padding:4px 6px 0"><span class="on">推荐</span><span class="off">穿搭</span><span class="off">美食</span><span class="off">彩妆</span></div>
+            <div class="grow center" style="justify-content:center">
+              <p style="color:#666;font-size:11px">加载失败，请稍后重试</p>
+              <div class="btn pri" style="margin-top:10px">重试</div>
+            </div>
+            <div class="tabbar">
+              <div class="tb on"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">网络层错误另有全局 Toast（I2）</div>
+      <div class="meta">
+        <div class="t">B4-2 · 列表 — 加载失败（异常恢复）</div>
+        <div class="pos">位置：列表请求失败时替换整个内容区（完整页面）</div>
+        <ul><li>点「重试」→ B4-1 → 成功回 B1 / 失败停留</li></ul>
+      </div>
+    </div>
+
+    <!-- B4-3 -->
+    <div class="card" id="b4-3">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="bubble"></span><span class="grow"></span><span style="font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px">发现</span><span class="grow"></span><span style="font-size:12px">⌕</span></div>
+            <div class="tabs" style="padding:4px 6px 0"><span class="on">推荐</span><span class="off">穿搭</span><span class="off">美食</span><span class="off">彩妆</span></div>
+            <div class="grow center">
+              <div class="illus">矢量图插画</div>
+              <p style="margin-top:10px;color:#666;font-size:11px">还没有笔记，快来发布第一条吧～</p>
+            </div>
+            <div class="tabbar">
+              <div class="tb on"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">空库部署/搜索无结果时的初始态；主页三 Tab 空文案为「暂无笔记／暂无收藏／暂无点赞」</div>
+      <div class="meta">
+        <div class="t">B4-3 · 列表 — 空数据（首次使用）</div>
+        <div class="pos">位置：列表无任何数据时（完整页面）</div>
+        <ul><li>发布成功后列表自动刷新（E5-2）</li></ul>
+      </div>
+    </div>
+
+    <!-- B4-4 -->
+    <div class="card" id="b4-4">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="bubble"></span><span class="grow"></span><span style="font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px">发现</span><span class="grow"></span><span style="font-size:12px">⌕</span></div>
+            <div class="tabs" style="padding:4px 6px 0"><span class="on">推荐</span><span class="off">穿搭</span><span class="off">美食</span><span class="off">彩妆</span></div>
+            <div class="wf" style="padding:5px 6px;flex:1;min-height:0">
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:56px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户A</span><span>♥ 31</span></div></div>
+                <div class="pcard"><div class="ph" style="height:44px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户D</span><span>♥ 6</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:72px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户C</span><span>♥ 12</span></div></div>
+                <div class="pcard"><div class="ph" style="height:48px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户E</span><span>♥ 3</span></div></div>
+              </div>
+            </div>
+            <div class="row center" style="justify-content:center;padding:5px 0"><div class="spin" style="width:12px;height:12px;border-width:2px"></div><span style="font-size:9.5px;color:#777">加载更多...</span></div>
+            <div class="tabbar">
+              <div class="tb on"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">滚动距底约 600px 预触发，每页 20 条；追加失败 → 全局 Toast，已加载内容保留</div>
+      <div class="meta">
+        <div class="t">B4-4 · 列表 — 加载更多中</div>
+        <div class="pos">位置：列表底部（完整页面）</div>
+        <ul><li>追加完成列表变长；到底 → B4-5</li></ul>
+      </div>
+    </div>
+
+    <!-- B4-5 -->
+    <div class="card" id="b4-5">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="bubble"></span><span class="grow"></span><span style="font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px">发现</span><span class="grow"></span><span style="font-size:12px">⌕</span></div>
+            <div class="tabs" style="padding:4px 6px 0"><span class="on">推荐</span><span class="off">穿搭</span><span class="off">美食</span><span class="off">彩妆</span></div>
+            <div class="wf" style="padding:5px 6px;flex:1;min-height:0">
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:56px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户A</span><span>♥ 31</span></div></div>
+                <div class="pcard"><div class="ph" style="height:44px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户D</span><span>♥ 6</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:72px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户C</span><span>♥ 12</span></div></div>
+                <div class="pcard"><div class="ph" style="height:48px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户E</span><span>♥ 3</span></div></div>
+              </div>
+            </div>
+            <p style="text-align:center;color:#bbb;font-size:9.5px;padding:6px 0">没有更多了</p>
+            <div class="tabbar">
+              <div class="tb on"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="t">B4-5 · 列表 — 没有更多了</div>
+        <div class="pos">位置：列表到底后（完整页面），不再发起请求</div>
+        <ul><li>该四态（B4-1～B4-5）适用于所有瀑布流列表</li></ul>
+      </div>
+    </div>
+
+    <!-- B5 -->
+    <div class="card" id="b5">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="bubble"></span><span class="grow"></span><span style="font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px">关注</span><span class="off" style="color:#999">发现</span><span class="grow"></span><span style="font-size:12px">⌕</span></div>
+            <div class="grow center">
+              <div class="illus">矢量图插画</div>
+              <p style="margin-top:10px;color:#666;font-size:11px">还没有关注的人，去发现逛逛吧</p>
+            </div>
+            <div class="tabbar">
+              <div class="tb on"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">「关注」Tab 为占位设计：数据流＝关注的人的笔记瀑布流（空态如图）；后端需新增关注流查询接口，确认数据源前不作为实现依据</div>
+      <div class="meta">
+        <div class="t">B5 · 首页「关注」Tab — 占位（空态）</div>
+        <div class="pos">位置：首页顶部「关注」页签</div>
+        <ul><li>有内容时＝B1 同款瀑布流卡片；四态同 B4</li></ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= C1 图文详情 ================= -->
+<section class="group" id="g-c1">
+  <h2>阶段 C1 · 图文笔记详情（浅色主题）</h2>
+  <p class="gnote">从首页/搜索/主页卡片、消息通知推入；← 弹回来源页。过渡态/异常态按浅色主题单独绘制。笔记必有 ≥1 图或 1 视频（写文字路径配图在 E3 生成），「媒体区暂无图片」态不设——无素材笔记已在发布侧禁止。</p>
+  <div class="grid">
+
+    <!-- C1-1 -->
+    <div class="card" id="c1-1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="backbtn">←</span><i class="av mid"></i><b style="font-size:10.5px">作者昵称</b><span class="grow"></span><span class="btn ol">关注</span><span style="font-size:12px">↗</span></div>
+            <div class="ph" style="height:188px;border:none">
+              大图（左右滑动切换）
+              <span style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,.45);color:#fff;font-size:8.5px;padding:0 5px;border-radius:8px">3/6</span>
+            </div>
+            <div class="row" style="justify-content:center;gap:4px;padding-top:4px">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--bd)"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+            </div>
+            <div style="flex:1;min-height:0;overflow:hidden;padding:6px;display:flex;flex-direction:column;gap:4px">
+              <b style="font-size:11.5px">笔记标题在这里</b>
+              <p style="font-size:9.5px;color:#333">正文内容，保留换行……正文内容，保留换行……</p>
+              <p class="mrow">今天 10:16</p>
+              <div class="hr"></div>
+              <b style="font-size:10.5px">共 2 条评论</b>
+              <div class="row center"><i class="av"></i><div class="inp grow" style="min-height:17px">说点什么...</div></div>
+              <div class="cm"><i class="av"></i><div class="bd2">
+                <div><span class="nm">评论者A</span> <span class="bauthor">作者</span></div>
+                <div>评论内容一</div><div class="mrow">3分钟前　回复</div>
+              </div><span style="font-size:9px">♡ 2</span></div>
+              <div class="cm" style="padding-left:20px"><i class="av" style="width:9px;height:9px"></i><div class="bd2">
+                <div><span class="nm">回复者B</span></div>
+                <div>回复 @评论者A：回复内容</div><div class="mrow">2分钟前　回复</div>
+              </div><span style="font-size:9px">♡</span></div>
+            </div>
+            <div style="border-top:1px solid #ddd;padding:5px 6px;display:flex;gap:6px;align-items:center;background:#fff">
+              <div class="inp grow" style="min-height:22px">说点什么...</div>
+              <span style="font-size:10px">♥ 12</span><span style="font-size:10px">☆ 收藏</span><span style="font-size:10px">💬 2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">↗ 分享为视觉占位（能力未定义）；评论流头部＝「共 n 条评论」计数行（n 含回复，与底栏 💬 一致）＋头像行内输入框；页面流嵌入故无排序/关闭（区别于 C3 面板）；一级评论每页 20 条，滚动距底自动加载下一页（加载中＝B4-4 局部指示器；追加失败全局 Toast、已加载评论保留）；回复展开同 C3 规则：「—— 展开 N 条回复」→ 原位「加载中」（C3-4）→ 每批 10 条 →「展开更多回复」（C3-5），全部加载后控件消失、无「收起」</div>
+      <div class="meta">
+        <div class="t">C1-1 · 图文详情 — 正常态</div>
+        <div class="pos">位置：推入式全屏页；← 弹回来源页；自己的笔记不显示关注按钮</div>
+        <ul>
+          <li>大图左右滑动切换；多图时右上角「n/6」页码角标 + 图下居中圆点指示器（当前点高亮）</li>
+          <li>底栏 ♥/★/💬：计数为 0 时显示文字标签「赞」「收藏」「评论」，&gt;0 显示数字；本屏示例——♥ 12、评论 2 条故「💬 2」、收藏 0 故显示「收藏」</li>
+          <li>点作者头像/昵称 → F2；♥★ → D1；评论为页面流嵌入：底部输入框聚焦直接发评论（D3），点「回复」→ C1-5，评论空态见 C1-4</li>
+          <li><b>实测(dp)</b>：顶栏 56（作者头像 60、关注钮 62.9×28、「…」26）；图区全宽 3:4＝411.4×548.6；页码右上 inset 13；圆点 4.9/间距 7.7；标题 16sp 边距 15.1；底栏 56：胶囊 40 高、♥/★/💬 触区 60/68/64（icon 30）；详见 T-3</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- C1-2 -->
+    <div class="card" id="c1-2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="backbtn">←</span><span class="grow"></span></div>
+            <div class="ph" style="height:200px;border:none;border-bottom:1px solid var(--bd);position:relative">
+              <div class="spin" style="position:absolute;left:50%;top:50%;margin:-9px 0 0 -9px"></div>
+            </div>
+            <div style="padding:8px 6px;display:flex;flex-direction:column;gap:6px">
+              <div style="height:12px;width:62%;background:#ececec;border-radius:3px"></div>
+              <div style="height:9px;width:100%;background:#f1f1f1;border-radius:3px"></div>
+              <div style="height:9px;width:88%;background:#f1f1f1;border-radius:3px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">详情与首屏评论并行请求；浅色主题加载态＝媒体区指示器+标题/正文骨架条；作者栏与底部操作栏在数据到达后渲染（加载中仅 ← 可点）</div>
+      <div class="meta">
+        <div class="t">C1-2 · 图文详情 — 加载中</div>
+        <div class="pos">位置：图文笔记打开时的过渡态（完整页面）</div>
+        <ul><li>完成 → C1-1；失败 → C1-3</li></ul>
+      </div>
+    </div>
+
+    <!-- C1-3 -->
+    <div class="card" id="c1-3">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="backbtn">←</span><span class="grow"></span></div>
+            <div class="grow center">
+              <div class="btn pri">重试</div>
+              <p style="color:#888;font-size:11px;margin-top:10px">笔记加载失败</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">浅色主题失败态＝白底灰字；点「重试」重新请求详情，仍失败停留本态；← 返回重进亦可</div>
+      <div class="meta">
+        <div class="t">C1-3 · 图文详情 — 加载失败</div>
+        <div class="pos">位置：图文详情请求失败时（完整页面）</div>
+        <ul><li>点「重试」→ 重新请求（成功 → C1-1）</li><li>← 返回来源页</li></ul>
+      </div>
+    </div>
+
+    <!-- C1-4 -->
+    <div class="card" id="c1-4">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="backbtn">←</span><i class="av mid"></i><b style="font-size:10.5px">作者昵称</b><span class="grow"></span><span class="btn ol">关注</span><span style="font-size:12px">↗</span></div>
+            <div class="ph" style="height:150px;border:none">
+              大图（左右滑动切换）
+              <span style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,.45);color:#fff;font-size:8.5px;padding:0 5px;border-radius:8px">3/6</span>
+            </div>
+            <div class="row" style="justify-content:center;gap:4px;padding-top:4px">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--bd)"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+            </div>
+            <div style="flex:1;min-height:0;overflow:hidden;padding:6px;display:flex;flex-direction:column;gap:4px">
+              <b style="font-size:11.5px">笔记标题在这里</b>
+              <p style="font-size:9.5px;color:#333">正文内容，保留换行……</p>
+              <p class="mrow">今天 10:16</p>
+              <div class="hr"></div>
+              <b style="font-size:10.5px">共 0 条评论</b>
+              <div class="row center"><i class="av"></i><div class="inp grow" style="min-height:17px">说点什么...</div></div>
+              <div class="grow center">
+                <div class="illus">矢量图插画</div>
+                <p style="margin-top:8px;color:#666;font-size:10.5px">还没有评论哦</p>
+              </div>
+            </div>
+            <div style="border-top:1px solid #ddd;padding:5px 6px;display:flex;gap:6px;align-items:center;background:#fff">
+              <div class="inp grow" style="min-height:22px">说点什么...</div>
+              <span style="font-size:10px">♥ 12</span><span style="font-size:10px">☆ 收藏</span><span style="font-size:10px">💬 评论</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">图文评论空态＝页面流内嵌（非弹层面板）；底栏输入仍可用（需登录）</div>
+      <div class="meta">
+        <div class="t">C1-4 · 图文详情 — 评论空态（页面流内）</div>
+        <div class="pos">位置：C1-1 的评论为空时（完整页面）</div>
+        <ul><li>发表首条评论 → 评论区出现该评论、计数 +1（D3）</li></ul>
+      </div>
+    </div>
+
+    <!-- C1-5 -->
+    <div class="card" id="c1-5">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="backbtn">←</span><i class="av mid"></i><b style="font-size:10.5px">作者昵称</b><span class="grow"></span><span class="btn ol">关注</span><span style="font-size:12px">↗</span></div>
+            <div class="ph" style="height:140px;border:none">
+              大图
+              <span style="position:absolute;top:5px;right:5px;background:rgba(0,0,0,.45);color:#fff;font-size:8.5px;padding:0 5px;border-radius:8px">3/6</span>
+            </div>
+            <div class="row" style="justify-content:center;gap:4px;padding-top:4px">
+              <span style="width:5px;height:5px;border-radius:50%;background:var(--bd)"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+              <span style="width:5px;height:5px;border-radius:50%;background:#d9d9d9"></span>
+            </div>
+            <div style="flex:1;min-height:0;overflow:hidden;padding:6px;display:flex;flex-direction:column;gap:4px">
+              <b style="font-size:11.5px">笔记标题在这里</b>
+              <div class="hr"></div>
+              <b style="font-size:10.5px">共 2 条评论</b>
+              <div class="row center"><i class="av"></i><div class="inp grow" style="min-height:17px">说点什么...</div></div>
+              <div class="cm"><i class="av"></i><div class="bd2">
+                <div><span class="nm">小红薯B</span></div>
+                <div>被回复的评论内容</div><div class="mrow">4分钟前　回复</div>
+              </div><span style="font-size:9px">♡ 1</span></div>
+              <div class="cm" style="padding-left:20px"><i class="av" style="width:9px;height:9px"></i><div class="bd2">
+                <div><span class="nm">小红薯D</span></div>
+                <div>回复 @小红薯B：已有回复内容示例</div><div class="mrow">3分钟前　回复</div>
+              </div><span style="font-size:9px">♡</span></div>
+            </div>
+            <div style="border-top:1px solid #ddd;padding:5px 6px;display:flex;gap:6px;align-items:center;background:#fff">
+              <div class="inp grow" style="min-height:22px">回复 @小红薯B：</div>
+              <span style="font-size:10px">♥ 12</span><span style="font-size:10px">☆ 3</span><span style="font-size:10px">💬 2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">图文回复＝页面流内：点某条评论的「回复」后，底部固定输入栏占位变为「回复 @昵称：」，回车发送（为空不可发送）；再次点「回复」取消并恢复「说点什么...」；不弹出遮罩面板（与视频详情区分）</div>
+      <div class="meta">
+        <div class="t">C1-5 · 图文详情 — 回复输入（页面流内）</div>
+        <div class="pos">位置：C1-1 评论区点「回复」后（完整页面）</div>
+        <ul><li>发送成功 → 追加到父评论回复列表并自动展开、回复数+1、总数+1、Toast「回复成功」（D3）</li></ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= C2 视频详情 ================= -->
+<section class="group" id="g-c2">
+  <h2>阶段 C2 · 视频笔记详情（深色沉浸式播放器）</h2>
+  <p class="gnote">视频笔记详情为沉浸式播放：顶栏（返回/搜索/分享）与底部作者栏/标题叠加在视频播放区上；视频区不侵入刘海状态栏与底栏（这两条区域保持黑色）；过渡态/异常态/seek 态单独绘制。</p>
+  <div class="grid">
+
+    <!-- C2-1 -->
+    <div class="card" id="c2-1">
+      <div class="shot">
+        <div class="phone dark">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div style="flex:1;min-height:0;position:relative;display:flex;flex-direction:column">
+              <div class="ph" style="position:absolute;inset:0;border:none">视频全屏播放（自动播放/循环）</div>
+              <div class="row" style="position:relative;z-index:2;padding:6px 8px 0;justify-content:space-between"><span class="backbtn">←</span><span class="row" style="gap:9px;font-size:12px">⌕　↗</span></div>
+              <div style="position:relative;z-index:2;margin-top:auto;padding:0 8px">
+                <div class="row" style="align-items:center"><i class="av mid"></i><b style="font-size:10.5px;color:#eee">作者昵称</b><span class="btn rd" style="margin-left:6px">关注</span></div>
+                <p style="font-size:9.5px;color:#ddd;margin-top:4px">视频标题文案… <u style="color:#999">展开</u></p>
+              </div>
+              <div style="position:relative;z-index:2;height:3px;background:rgba(255,255,255,.35)">
+                <div style="position:absolute;left:0;top:0;bottom:0;width:30%;background:#fff"></div>
+                <div style="position:absolute;left:30%;top:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:#fff"></div>
+              </div>
+            </div>
+            <div style="padding:5px 8px 8px;display:flex;gap:6px;align-items:center">
+              <div class="inp grow" style="min-height:22px">说点什么...</div>
+              <span style="font-size:10px">♥ 403</span><span style="font-size:10px">☆ 11</span><span style="font-size:10px">💬 35</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">沉浸式：顶栏（返回/搜索/分享）与底部作者栏/标题叠加在视频播放区上；视频区不侵入刘海状态栏与底栏，这两条区域保持黑色；进度条＝贴视频区底边界/底栏上缘的细线（左已播放白色 / 右未播放高透明白）+ 白色圆点锚点；手势：手指落在视频底部 30% 区域快速左右滑 → 进入 seek（C2-5）；评论面板打开时视频上移缩小（见 C3-1）</div>
+      <div class="meta">
+        <div class="t">C2-1 · 视频详情 — 正常态</div>
+        <div class="pos">位置：视频笔记详情；← 弹回来源页</div>
+        <ul><li>点「说点什么」→ 直接弹出 C2-4 遮罩评论输入（不经列表面板）；点「💬」→ C3-1 评论列表面板</li>
+          <li>视频底部 30% 区域快速左右滑动 → C2-5 seek</li>
+          <li>其余操作与 C1-1 一致（点赞/收藏/关注作者/进主页）</li>
+          <li><b>实测(dp)</b>：全屏播放器（状态栏下 411.4×830.9）；作者行 48（头像 46、关注钮 49.7×26、音乐碟 22）；标题行 46；底栏 44：胶囊 179×34、赞/藏/评 66×44/75×44/59×44（icon 30、计数 17sp）；进度条 389×5.4 贴底；详见 T-3</li></ul>
+      </div>
+    </div>
+
+    <!-- C2-2 -->
+    <div class="card" id="c2-2">
+      <div class="shot">
+        <div class="phone dark">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div style="flex:1;min-height:0;position:relative;display:flex;flex-direction:column">
+              <div class="ph" style="position:absolute;inset:0;border:none">
+                <div class="spin" style="border-color:#3a3a3a;border-top-color:#ddd"></div>
+              </div>
+              <div class="row" style="position:relative;z-index:2;padding:6px 8px 0;justify-content:space-between"><span class="backbtn">←</span><span class="grow"></span></div>
+              <div style="position:relative;z-index:2;margin-top:auto;padding:0 8px 6px;display:flex;flex-direction:column;gap:6px;opacity:.45">
+                <div class="row" style="align-items:center"><i class="av mid"></i><div style="height:9px;width:88px;background:#3a3a3a;border-radius:3px;margin-left:5px"></div></div>
+                <div style="height:9px;width:70%;background:#3a3a3a;border-radius:3px"></div>
+              </div>
+            </div>
+            <div style="padding:5px 8px 8px;display:flex;gap:6px;align-items:center">
+              <div class="inp grow" style="min-height:22px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">沉浸式加载态：顶栏与作者栏/标题骨架叠加在视频占位区上；刘海状态栏与底栏保持黑色不侵入；进度条在视频元数据加载后出现（见 C2-1）；加载中仅 ← 可点</div>
+      <div class="meta">
+        <div class="t">C2-2 · 视频详情 — 加载中</div>
+        <div class="pos">位置：视频笔记打开时的过渡态（完整页面）</div>
+        <ul><li>完成 → C2-1；失败 → C2-3</li></ul>
+      </div>
+    </div>
+
+    <!-- C2-3 -->
+    <div class="card" id="c2-3">
+      <div class="shot">
+        <div class="phone dark">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="row" style="padding:8px 8px 0;justify-content:space-between"><span class="backbtn">←</span><span class="grow"></span></div>
+            <div class="grow center">
+              <p style="color:#888;font-size:11px">视频加载失败</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">深色主题失败态＝黑底灰字（文案与图文主题区分场景）；无重试按钮，← 返回后重进</div>
+      <div class="meta">
+        <div class="t">C2-3 · 视频详情 — 加载失败</div>
+        <div class="pos">位置：视频详情请求失败时（完整页面）</div>
+        <ul><li>← 返回来源页</li></ul>
+      </div>
+    </div>
+
+    <!-- C2-4 -->
+    <div class="card" id="c2-4">
+      <div class="shot">
+        <div class="phone dark">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="row" style="padding:8px 8px 0;justify-content:space-between"><span class="backbtn">←</span><span class="grow"></span></div>
+            <div class="ph" style="flex:1;min-height:0;margin:4px 0;border:none">视频（输入时上移缩小）</div>
+            <div style="padding:6px 8px 8px;opacity:.4">
+              <div class="row" style="align-items:center"><i class="av mid"></i><div style="height:9px;width:88px;background:#3a3a3a;border-radius:3px;margin-left:5px"></div></div>
+            </div>
+          </div>
+          <div class="dim"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:2px solid var(--bd);border-radius:14px 14px 0 0;padding:9px 10px 10px;z-index:5">
+            <div style="border:1px solid #bbb;background:#f4f4f4;border-radius:10px;padding:7px 9px;min-height:42px;font-size:10px;color:#999">爱评论的人运气都不差</div>
+            <div class="row" style="justify-content:flex-end;margin-top:8px"><span class="btn rd dis">发送</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="an">视频详情点「说点什么」直接弹出的遮罩评论输入（不经评论列表面板）；占位「爱评论的人运气都不差」，为空时「发送」禁用；点击遮罩或收起键盘取消回 C2-1；与 C3-3/F3-1 共用遮罩式弹出输入框公共组件</div>
+      <div class="meta">
+        <div class="t">C2-4 · 视频详情 — 评论输入（遮罩式弹出）</div>
+        <div class="pos">位置：C2-1 点「说点什么」直接弹出；视频画面变暗上移</div>
+        <ul><li>发送成功 → 评论数+1（D3）；查看/回复已有评论仍经 C3-1 列表面板（点「💬」）</li></ul>
+      </div>
+    </div>
+
+    <!-- C2-5 -->
+    <div class="card" id="c2-5">
+      <div class="shot">
+        <div class="phone dark">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div style="flex:1;min-height:0;position:relative;display:flex;flex-direction:column">
+              <div class="ph" style="position:absolute;inset:0;border:none">视频全屏播放</div>
+              <div class="grow"></div>
+              <p style="position:relative;z-index:2;text-align:center;font-size:11px;margin-bottom:10px"><span style="color:#fff">00:03</span> <span style="color:#888">/ 00:13</span></p>
+              <div style="position:relative;z-index:2;height:6px;background:rgba(255,255,255,.35);margin:0 4px">
+                <div style="position:absolute;left:0;top:0;bottom:0;width:23%;background:#fff"></div>
+                <div style="position:absolute;left:23%;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:#fff"></div>
+              </div>
+            </div>
+            <div style="padding:5px 8px 8px;display:flex;gap:6px;align-items:center">
+              <div class="inp grow" style="min-height:22px">说点什么...</div>
+              <span style="font-size:10px">♥ 403</span><span style="font-size:10px">☆ 11</span><span style="font-size:10px">💬 35</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">seek 态：顶栏与底部作者栏/标题控件隐藏，被时间文本替代；底栏（说点什么/点赞/收藏/评论）保留；刘海状态栏与底栏保持黑色不侵入；时间文本位于进度条上方并留下边距 gap；进度条加粗、白色圆点锚点放大（直径约为线粗 2 倍余）</div>
+      <div class="meta">
+        <div class="t">C2-5 · 视频详情 — seek 拖动中</div>
+        <div class="pos">位置：手指落在视频底部 30% 区域快速左右滑动时进入（完整页面）</div>
+        <ul><li>松开手指 → 跳转至锚点时间并恢复 C2-1 全部控件</li></ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= C3 评论面板 ================= -->
+<section class="group" id="g-c3">
+  <h2>阶段 C3 · 视频笔记评论面板（仅视频）</h2>
+  <p class="gnote">底部圆角弹层，仅用于视频详情（C2-1 点「💬」打开，媒体区上移缩小）。图文详情的评论为页面流嵌入（C1-1/C1-4/C1-5），不使用弹层面板。</p>
+  <div class="grid">
+
+    <!-- C3-1 -->
+    <div class="card" id="c3-1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="ph" style="height:92px;border:none;border-bottom:1px solid var(--bd)">媒体区（面板打开时上移缩小）</div>
+            <div style="flex:1;min-height:0;background:#fff;border-radius:12px 12px 0 0;border-top:2px solid var(--bd);margin-top:-6px;padding:6px;display:flex;flex-direction:column;gap:5px;position:relative;z-index:2">
+              <div class="row center"><b style="font-size:10.5px">共 35 条评论</b><span class="grow"></span><span style="font-size:10px">≡</span><span style="font-size:11px;margin-left:8px">×</span></div>
+              <div class="cm"><i class="av mid"></i><div class="bd2">
+                <div><span class="nm">失色的雪</span> <span class="bauthor">作者</span></div>
+                <div>作者主页 加页&gt;匹配=联合≥排位</div>
+                <div class="mrow">昨天 21:20　回复</div>
+              </div><span style="font-size:9px">♡ 5</span></div>
+              <div class="cm" style="padding-left:24px"><i class="av" style="width:9px;height:9px"></i><div class="bd2">
+                <div><span class="nm">回复者B</span></div>
+                <div>回复 @失色的雪：回复内容</div><div class="mrow">2分钟前　回复</div>
+              </div><span style="font-size:9px">♡</span></div>
+              <div class="row" style="align-items:center;gap:5px;padding-left:24px"><span style="width:18px;border-top:1px solid #999"></span><span style="font-size:9px;color:#555">展开 4 条回复</span></div>
+              <div class="cm"><i class="av mid"></i><div class="bd2">
+                <div><span class="nm">小红薯C</span></div>
+                <div>收藏了！</div><div class="mrow">1小时前　回复</div>
+              </div><span style="font-size:9px">♡ 1</span></div>
+              <div style="flex:1"></div>
+              <div style="border-top:1px solid #eee;padding-top:5px">
+                <div class="row center"><div class="inp grow" style="min-height:21px;border-radius:11px">爱评论的人运气都不差</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">≡＝排序切换；×或点遮罩关闭并恢复媒体区；「—— 展开 N 条回复」＝灰色短横线+灰字（本屏下方控件），N＝该组全部回复总数（无上限）；点击后按钮原位变「⟳ 加载中」（C3-4），加载完该批回复就地平铺（每批 10 条）；未加载完时组尾出「—— 展开更多回复」（C3-5，不带数字），全部加载完后控件直接消失、组尾衔接下一条评论——无「收起」；一级评论滚动距底自动加载下一页（B4-4 局部指示器）；评论 500 字上限由后端校验（#10）、删除无入口（#2）；评论发表情/配图、置顶评论、IP 属地不纳入</div>
+      <div class="meta">
+        <div class="t">C3-1 · 评论面板 — 正常态（底部弹层）</div>
+        <div class="pos">位置：仅视频详情 C2-1 点「💬」打开；圆角弹层约 2/3 高（C2-1 点「说点什么」则直接弹出 C2-4）</div>
+        <ul>
+          <li>点「回复」→ C3-3；评论♥ → D1；点评论者头像 → F2</li>
+          <li>「展开 N 条回复」→ C3-4 加载中 → 该批平铺（未加载完组尾出 C3-5）</li>
+          <li>输入框回车发送 → 一级评论（D3）</li>
+          <li><b>实测(dp)</b>：输入行 52（头像 36、发送 68×40、表情/@ 24）；评论项 80.6：头像 36 @15、正文列 @61（距头像 10）、用户名/内容 17sp、meta 行 20（赞 icon 26×20）；二级回复缩进 @90、头像 24；「展开 N 条回复」行高 32.6；详见 T-3</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- C3-2 -->
+    <div class="card" id="c3-2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="ph" style="height:92px;border:none;border-bottom:1px solid var(--bd)">媒体区</div>
+            <div style="flex:1;min-height:0;background:#fff;border-radius:12px 12px 0 0;border-top:2px solid var(--bd);margin-top:-6px;padding:6px;display:flex;flex-direction:column;gap:5px;position:relative;z-index:2">
+              <div class="row center"><b style="font-size:10.5px">共 0 条评论</b><span class="grow"></span><span style="font-size:10px">≡</span><span style="font-size:11px;margin-left:8px">×</span></div>
+              <div class="grow center">
+                <div class="illus">矢量图插画</div>
+                <p style="margin-top:10px;color:#666;font-size:11px">还没有评论哦</p>
+              </div>
+              <div style="border-top:1px solid #eee;padding-top:5px">
+                <div class="row center"><div class="inp grow" style="min-height:21px;border-radius:11px">爱评论的人运气都不差</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">空态文案「还没有评论哦」；「共 0 条评论」按实际计数显示</div>
+      <div class="meta">
+        <div class="t">C3-2 · 评论面板 — 空数据（完整面板页）</div>
+        <div class="pos">位置：笔记无任何评论时</div>
+        <ul><li>发表首条评论 → 列表出现该评论、计数 +1（D3）</li></ul>
+      </div>
+    </div>
+
+    <!-- C3-3 -->
+    <div class="card" id="c3-3">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="ph" style="height:92px;border:none;border-bottom:1px solid var(--bd)">媒体区</div>
+            <div style="flex:1;min-height:0;background:#fff;border-radius:12px 12px 0 0;border-top:2px solid var(--bd);margin-top:-6px;padding:6px;display:flex;flex-direction:column;gap:5px;position:relative;z-index:2">
+              <div class="row center"><b style="font-size:10.5px">共 35 条评论</b><span class="grow"></span><span style="font-size:10px">≡</span><span style="font-size:11px;margin-left:8px">×</span></div>
+              <div class="cm"><i class="av mid"></i><div class="bd2">
+                <div><span class="nm">小红薯B</span></div>
+                <div>被回复的评论内容</div><div class="mrow">4分钟前　回复</div>
+              </div><span style="font-size:9px">♡ 1</span></div>
+              <div class="cm" style="padding-left:24px"><i class="av" style="width:9px;height:9px"></i><div class="bd2">
+                <div><span class="nm">小红薯D</span></div>
+                <div>回复 @小红薯B：已有回复内容示例</div><div class="mrow">3分钟前　回复</div>
+              </div><span style="font-size:9px">♡</span></div>
+            </div>
+          </div>
+          <div class="dim"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:2px solid var(--bd);border-radius:14px 14px 0 0;padding:9px 10px 10px;z-index:5">
+            <div style="border:1px solid #bbb;background:#f4f4f4;border-radius:10px;padding:7px 9px;min-height:42px;font-size:10px;color:#999">回复 @小红薯B：</div>
+            <div class="row" style="justify-content:flex-end;margin-top:8px"><span class="btn rd dis">发送</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="an">遮罩式回复输入：输入框预填「回复 @昵称：」，为空时「发送」禁用；点击遮罩或收起键盘取消回复；与 C2-4/F3-1 共用遮罩式弹出输入框公共组件</div>
+      <div class="meta">
+        <div class="t">C3-3 · 评论面板 — 回复输入（遮罩式弹出）</div>
+        <div class="pos">位置：C3-1 点「回复」后弹出；面板列表变暗置底</div>
+        <ul><li>发送成功 → 追加到父评论回复列表并自动展开、回复数+1、总数+1、Toast「回复成功」（D3）；取消 → 回 C3-1</li></ul>
+      </div>
+    </div>
+
+    <!-- C3-4 -->
+    <div class="card" id="c3-4">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="ph" style="height:92px;border:none;border-bottom:1px solid var(--bd)">媒体区</div>
+            <div style="flex:1;min-height:0;background:#fff;border-radius:12px 12px 0 0;border-top:2px solid var(--bd);margin-top:-6px;padding:6px;display:flex;flex-direction:column;gap:5px;position:relative;z-index:2">
+              <div class="row center"><b style="font-size:10.5px">共 35 条评论</b><span class="grow"></span><span style="font-size:10px">≡</span><span style="font-size:11px;margin-left:8px">×</span></div>
+              <div class="cm"><i class="av mid"></i><div class="bd2">
+                <div><span class="nm">失色的雪</span> <span class="bauthor">作者</span></div>
+                <div>作者主页 加页&gt;匹配=联合≥排位</div>
+                <div class="mrow">昨天 21:20　回复</div>
+              </div><span style="font-size:9px">♡ 5</span></div>
+              <div class="cm" style="padding-left:24px"><i class="av" style="width:9px;height:9px"></i><div class="bd2">
+                <div><span class="nm">回复者B</span></div>
+                <div>回复 @失色的雪：回复内容</div><div class="mrow">2分钟前　回复</div>
+              </div><span style="font-size:9px">♡</span></div>
+              <div class="row" style="align-items:center;gap:5px;padding-left:24px"><span class="spin" style="width:9px;height:9px;border-width:1.5px"></span><span style="font-size:9px;color:#777">加载中</span></div>
+              <div class="cm"><i class="av mid"></i><div class="bd2">
+                <div><span class="nm">小红薯C</span></div>
+                <div>收藏了！</div><div class="mrow">1小时前　回复</div>
+              </div><span style="font-size:9px">♡ 1</span></div>
+              <div style="flex:1"></div>
+              <div style="border-top:1px solid #eee;padding-top:5px">
+                <div class="row center"><div class="inp grow" style="min-height:21px;border-radius:11px">爱评论的人运气都不差</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">点「展开 N 条回复」后：按钮原位替换为转圈+「加载中」（本屏控件位），不弹层不跳页；加载完成按钮消失、该批回复就地平铺</div>
+      <div class="meta">
+        <div class="t">C3-4 · 评论面板 — 回复加载中（完整面板页）</div>
+        <div class="pos">位置：C3-1 点「—— 展开 N 条回复」后的过渡态</div>
+        <ul><li>完成 → 该批 10 条回复平铺（C3-1）；未加载完 → 组尾出「展开更多回复」（C3-5）；失败 → 全局 Toast、恢复「展开 N 条回复」可重试</li></ul>
+      </div>
+    </div>
+
+    <!-- C3-5 -->
+    <div class="card" id="c3-5">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="ph" style="height:92px;border:none;border-bottom:1px solid var(--bd)">媒体区</div>
+            <div style="flex:1;min-height:0;background:#fff;border-radius:12px 12px 0 0;border-top:2px solid var(--bd);margin-top:-6px;padding:6px;display:flex;flex-direction:column;gap:5px;position:relative;z-index:2">
+              <div class="row center"><b style="font-size:10.5px">共 35 条评论</b><span class="grow"></span><span style="font-size:10px">≡</span><span style="font-size:11px;margin-left:8px">×</span></div>
+              <div class="cm"><i class="av mid"></i><div class="bd2">
+                <div><span class="nm">失色的雪</span> <span class="bauthor">作者</span></div>
+                <div>作者主页 加页&gt;匹配=联合≥排位</div>
+                <div class="mrow">昨天 21:20　回复</div>
+              </div><span style="font-size:9px">♡ 5</span></div>
+              <div class="cm" style="padding-left:24px"><i class="av" style="width:9px;height:9px"></i><div class="bd2">
+                <div><span class="nm">回复者B</span></div>
+                <div>回复 @失色的雪：回复内容</div><div class="mrow">2分钟前　回复</div>
+              </div><span style="font-size:9px">♡</span></div>
+              <div class="cm" style="padding-left:24px"><i class="av" style="width:9px;height:9px"></i><div class="bd2">
+                <div><span class="nm">回复者D</span></div>
+                <div>回复 @失色的雪：已加载的第二条回复</div><div class="mrow">1小时前　回复</div>
+              </div><span style="font-size:9px">♡ 2</span></div>
+              <div class="row" style="align-items:center;gap:5px;padding-left:24px"><span style="width:18px;border-top:1px solid #999"></span><span style="font-size:9px;color:#555">展开更多回复</span></div>
+              <div class="cm"><i class="av mid"></i><div class="bd2">
+                <div><span class="nm">小红薯C</span></div>
+                <div>收藏了！</div><div class="mrow">1小时前　回复</div>
+              </div><span style="font-size:9px">♡ 1</span></div>
+              <div style="flex:1"></div>
+              <div style="border-top:1px solid #eee;padding-top:5px">
+                <div class="row center"><div class="inp grow" style="min-height:21px;border-radius:11px">爱评论的人运气都不差</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">批次尾控件：样式与「展开 N 条回复」一致但不带数字；每点一次追加一批（10 条）就地平铺，按钮随内容下移（列表不自动滚动）；全部回复加载完后控件直接消失，组尾直接衔接下一条评论——无「收起」</div>
+      <div class="meta">
+        <div class="t">C3-5 · 评论面板 — 展开更多回复（批次尾，完整面板页）</div>
+        <div class="pos">位置：组内回复未加载完时（每批 10 条）</div>
+        <ul><li>全部加载完 → 控件消失（无收起）；面板关闭后重开 → 列表整体重载：展开状态重置为折叠、滚动位置回顶部</li></ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= D 互动 ================= -->
+<section class="group" id="g-d">
+  <h2>阶段 D · 互动（点赞 / 收藏 / 关注 / 评论）</h2>
+  <p class="gnote">全部需登录（游客触发 → A2 推入登录页）；全部乐观更新、失败回滚；状态跨页面互通（卡片↔详情↔主页 Tab）。本组为状态机/流程示意，非页面。</p>
+  <div class="grid">
+
+    <!-- D1 -->
+    <div class="card" id="d1">
+      <div class="shot" style="background:#dcdcdc;align-items:center">
+        <div class="col" style="width:300px;margin-top:30px;gap:8px">
+          <div class="row" style="align-items:stretch">
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:4px"><span class="stt">① 点击前</span><p style="font-size:10px">♡ 12　☆ 收藏<br>（计数0时显示「赞」等文字）</p></div>
+            <span class="arrow">→</span>
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:4px"><span class="stt">② 立即点亮</span><p style="font-size:10px"><b>♥ 13　★ 1</b><br>卡片/详情/主页同步</p></div>
+            <span class="arrow">→</span>
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:4px"><span class="stt">③ 失败→回滚</span><p style="font-size:10px">♡ 12　☆ 收藏<br>恢复原值</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="an">再点一次取消（13→12）；收藏同时影响「我页-收藏」Tab 内容；成功时对方收到 G2 通知</div>
+      <div class="meta">
+        <div class="t">D1 · 点赞 / 收藏 — 乐观更新与回滚</div>
+        <div class="pos">位置：首页卡片♥、详情底部栏 ♥★、图文页流评论♥、视频评论面板内评论♥ 共用机制</div>
+        <ul><li>游客点击 → A2；失败回滚并可能伴随全局错误 Toast（I2）</li></ul>
+      </div>
+    </div>
+
+    <!-- D2 -->
+    <div class="card" id="d2">
+      <div class="shot" style="background:#dcdcdc;align-items:center">
+        <div class="col" style="width:300px;margin-top:30px;gap:8px">
+          <div class="row" style="align-items:stretch">
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:5px"><span class="stt">关注（描边）</span><span class="btn ol">关 注</span></div>
+            <span class="arrow">→</span>
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:5px"><span class="stt">已关注（灰底）</span><span class="btn gy">已关注</span><p class="hint" style="margin:0">Toast 关注成功<br>对方粉丝数±1</p></div>
+            <span class="arrow">→</span>
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:5px"><span class="stt">失败→回滚</span><span class="btn ol">关 注</span><p class="hint" style="margin:0">恢复原状</p></div>
+          </div>
+          <div class="row" style="align-items:stretch">
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:5px"><span class="stt">已关注（灰底）</span><span class="btn gy">已关注</span></div>
+            <span class="arrow">→</span>
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:5px"><span class="stt">取关成功</span><span class="btn ol">关 注</span><p class="hint" style="margin:0">Toast 已取消关注<br>对方粉丝数-1</p></div>
+            <span class="arrow">→</span>
+            <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:5px"><span class="stt">失败→回滚</span><span class="btn gy">已关注</span><p class="hint" style="margin:0">恢复原状</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="an">详情头部＝描边胶囊；他人主页＝通栏大按钮（同一状态机）；自己的笔记/主页不显示关注按钮；上行＝关注分支，下行＝取关分支（点击「已关注」触发）</div>
+      <div class="meta">
+        <div class="t">D2 · 关注 / 取关 — 状态机</div>
+        <div class="pos">位置：详情作者栏（C1/C2）、他人主页（F2）、通知列表「回关」（G4）共用</div>
+        <ul><li>关注触发对方 G4 通知</li></ul>
+      </div>
+    </div>
+
+    <!-- D3 -->
+    <div class="card" id="d3">
+      <div class="shot" style="background:#dcdcdc;align-items:center">
+        <div class="col" style="width:300px;margin-top:34px;gap:8px">
+          <div class="row" style="justify-content:center;align-items:center">
+            <span class="step">提交评论/回复</span><span class="arrow">→</span>
+            <span class="toast in">评论成功 / 回复成功</span><span class="arrow">→</span>
+            <span class="step">新内容插入顶部<br>计数+1</span>
+          </div>
+        </div>
+      </div>
+      <div class="an">一级评论插入列表顶部；回复追加到父评论并自动展开；输入框清空；失败错误条/Toast，内容保留</div>
+      <div class="meta">
+        <div class="t">D3 · 发表评论 / 回复 — 成功反馈</div>
+        <div class="pos">位置：评论面板输入框（一级评论）、行内回复输入（回复）</div>
+        <ul><li>成功后对方 G3 可见对应通知</li></ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= E 发布 ================= -->
+<section class="group" id="g-e">
+  <h2>阶段 E · 发布笔记（入口弹层）</h2>
+  <p class="gnote">Tab「＋」→ 底部弹层：从相册选择 / 拍摄 / 写文字 / 取消。图文（≤9图）或视频（1个，≤200MB）；标题必填；封面由后端智能配图。</p>
+  <div class="grid">
+
+    <!-- E1 -->
+    <div class="card" id="e1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="bubble"></span><span class="grow"></span><span style="font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px">发现</span><span class="grow"></span><span style="font-size:12px">⌕</span></div>
+            <div class="wf" style="padding:5px 6px;flex:1;min-height:0">
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:70px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户A</span><span>♥ 31</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:64px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户C</span><span>♥ 12</span></div></div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="tb"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+          <div class="dim"></div>
+          <div class="sheet" style="padding-bottom:6px">
+            <div class="srow">从相册选择</div>
+            <div class="srow">拍摄</div>
+            <div class="srow">写文字</div>
+            <div class="srow" style="border-top:6px solid #f0f0f0;border-bottom:none;color:#999">取消</div>
+          </div>
+        </div>
+      </div>
+      <div class="an">游客点 ＋ → A2 推入登录页；「拍摄」首次触发相机权限（I4）</div>
+      <div class="meta">
+        <div class="t">E1 · 发布入口弹层</div>
+        <div class="pos">位置：底部 Tab「＋」；背景为当前页+遮罩</div>
+        <ul>
+          <li>从相册选择 → 系统相册（多选）→ E2；拍摄 → I4 → E2；写文字 → E3</li>
+          <li>取消/点遮罩关闭弹层</li>
+          <li><b>实测(dp)</b>：弹层总高 274.3＝三行各 70（从相册选择 / 相机·拍摄与直播双行 / 写文字）＋间隔 7.1＋取消 56；行分隔 0.6；行文字 20sp 居中；E3 编辑器：顶栏 44（「下一步」63.4×32 右置）、画布 379.4×506、「写长文」卡 379.4×98；详见 T-3</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- E2 -->
+    <div class="card" id="e2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:12px">发布笔记</b><span class="btn rd">发布</span></div>
+            <div class="row" style="gap:4px;margin-top:6px">
+              <div class="ph" style="width:40px;height:40px">图×</div>
+              <div class="ph" style="width:40px;height:40px">图×</div>
+              <div class="ph" style="width:40px;height:40px">▶</div>
+              <div style="width:40px;height:40px;border:1.5px dashed #999;display:flex;align-items:center;justify-content:center;color:#999">+</div>
+            </div>
+            <div class="col" style="gap:4px;margin-top:6px">
+              <span class="lbl">标题 *</span>
+              <div class="inp" style="min-height:22px">输入标题（必填）</div>
+              <div class="cnt">剩余 187 / 200</div>
+              <span class="lbl">正文</span>
+              <div class="inp ta">分享你的想法...</div>
+              <div class="cnt">剩余 9980 / 10000</div>
+            </div>
+            <div class="grow"></div>
+          </div>
+        </div>
+      </div>
+      <div class="an">表单结构为占位设计，编码前需产品确认细节；无配图按钮（「写文字」路径的配图已在 E3 生成并进媒体列表）；无话题/位置/可见范围字段</div>
+      <div class="meta">
+        <div class="t">E2 · 发布表单页</div>
+        <div class="pos">位置：相册选图/拍摄完成或 E3 配图生成后推入（E3 文字预填标题）；「发布」在顶部右侧</div>
+        <ul>
+          <li>已选媒体缩略可 × 删除、＋ 继续添加（图≤9、视频≤1）；图/视频可共存</li>
+          <li>标题必填 ≤200、正文选填 ≤10000（带剩余字数）</li>
+          <li>← → E7 二次确认（草稿将丢失），确认后回首页 Tab；「发布」→ E4 / E5-1</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- E3 -->
+    <div class="card" id="e3">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">×</span><span class="grow"></span><span class="btn dis">下一步</span></div>
+            <div style="border:1.5px solid var(--bd);border-radius:12px;background:#fff;margin:16px 10px 0;padding:16px 12px;height:300px;position:relative">
+              <span style="font-size:28px;color:#ccc">“</span>
+              <p style="font-weight:700;font-size:13px;margin-top:8px">写想法</p>
+              <p style="font-size:10.5px;color:#999;margin-top:5px">说点什么或提个问题...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">输入后「下一步」点亮；点击后变「生成中...」禁用：调用后端文字配图接口（以所写文字为输入）生成 1 张图片，成功 → 加入 E2 媒体列表并推入 E2（文字预填标题，超 200 上限由 E4 校验拦截）；失败 → Toast「生成配图失败，请稍后重试」停留本页可重试，无法进入 E2（不允许无素材笔记）；× 放弃返回</div>
+      <div class="meta">
+        <div class="t">E3 · 写文字页</div>
+        <div class="pos">位置：E1 弹层「写文字」</div>
+        <ul><li>生成的配图计入「图片 ≤9」，在 E2 可删除（删光后由「至少一图或一视频」校验拦截）；纯文字笔记同样必须有标题（E2 校验）</li></ul>
+      </div>
+    </div>
+
+    <!-- E4 -->
+    <div class="card" id="e4">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:12px">发布笔记</b><span class="btn rd">发布</span></div>
+            <div class="errbar" style="margin-top:6px">请输入笔记标题 ／ 请至少上传一张图片或一个视频 ／ 标题不能超过200个字符</div>
+            <div class="row" style="gap:4px;margin-top:6px">
+              <div class="ph" style="width:40px;height:40px">图×</div>
+              <div class="ph" style="width:40px;height:40px">图×</div>
+              <div style="width:40px;height:40px;border:1.5px dashed #999;display:flex;align-items:center;justify-content:center;color:#999">+</div>
+            </div>
+            <div class="col" style="gap:4px;margin-top:6px">
+              <span class="lbl">标题 *</span>
+              <div class="inp" style="min-height:22px"></div>
+              <div class="cnt">剩余 200 / 200</div>
+              <span class="lbl">正文</span>
+              <div class="inp ta">分享你的想法...</div>
+              <div class="cnt">剩余 10000 / 10000</div>
+            </div>
+            <div class="grow"></div>
+          </div>
+        </div>
+      </div>
+      <div class="an">错误条在页面顶部；已选图片/视频保留不丢；图片超 9 张 → Toast「最多上传9张图片」（单图大小限制待定）</div>
+      <div class="meta">
+        <div class="t">E4 · 发布 — 校验失败（完整页面）</div>
+        <div class="pos">位置：E2 点「发布」未通过前端校验</div>
+        <ul><li>修正后可再次提交</li></ul>
+      </div>
+    </div>
+
+    <!-- E5-1 -->
+    <div class="card" id="e5-1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn" style="opacity:.4">←</span><b style="margin:0 auto;font-size:12px">发布笔记</b><span class="btn rd dis">发布中...</span></div>
+            <div class="row" style="gap:4px;margin-top:6px">
+              <div class="ph" style="width:40px;height:40px">图</div>
+              <div class="ph" style="width:40px;height:40px">图</div>
+            </div>
+            <div class="col" style="gap:4px;margin-top:6px">
+              <span class="lbl">标题 *</span>
+              <div class="inp" style="min-height:22px;color:#333">我的第一篇笔记</div>
+              <div class="cnt">剩余 183 / 200</div>
+              <span class="lbl">正文</span>
+              <div class="inp ta" style="color:#333">今天天气很好……</div>
+              <div class="cnt">剩余 9980 / 10000</div>
+            </div>
+            <div class="grow"></div>
+          </div>
+        </div>
+      </div>
+      <div class="an">顶部「发布」禁用、← 不可返回；请求顺序见 E6；任一步失败 → E4 同款错误条（表单保留可重试）</div>
+      <div class="meta">
+        <div class="t">E5-1 · 发布 — 提交中（完整页面）</div>
+        <div class="pos">位置：校验通过后</div>
+        <ul><li>成功 → E5-2</li></ul>
+      </div>
+    </div>
+
+    <!-- E5-2 -->
+    <div class="card" id="e5-2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="toast">发布成功！</div>
+            <div class="navtop"><span class="bubble"></span><span class="grow"></span><span style="font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px">发现</span><span class="grow"></span><span style="font-size:12px">⌕</span></div>
+            <div class="tabs" style="padding:4px 6px 0"><span class="on">推荐</span><span class="off">穿搭</span><span class="off">美食</span><span class="off">彩妆</span></div>
+            <div class="wf" style="padding:5px 6px;flex:1;min-height:0">
+              <div class="wcol">
+                <div class="pcard" style="border-width:1.5px"><div class="ph" style="height:58px">新笔记封面</div><div class="ttl">我的第一篇笔记</div><div class="ft"><span><i class="av"></i> 我的昵称</span><span>赞</span></div></div>
+                <div class="pcard"><div class="ph" style="height:44px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户D</span><span>♥ 6</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:72px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户C</span><span>♥ 12</span></div></div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="tb on"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">发布页自动弹出回首页 Tab，列表自动刷新，新笔记置顶出现（加粗框示意）；发布页表单关闭</div>
+      <div class="meta">
+        <div class="t">E5-2 · 发布 — 成功</div>
+        <div class="pos">位置：创建笔记成功后（完整页面）</div>
+        <ul><li>新笔记互动数据从 0 开始（计数 0 显示「赞」）</li></ul>
+      </div>
+    </div>
+
+    <!-- E6 -->
+    <div class="card" id="e6">
+      <div class="shot" style="background:#dcdcdc;align-items:center">
+        <div class="col" style="width:300px;margin-top:40px;gap:8px">
+          <div class="row" style="justify-content:center">
+            <span class="step">① 逐张上传图片</span><span class="arrow">→</span>
+            <span class="step">② 上传视频</span><span class="arrow">→</span>
+            <span class="step">③ 创建笔记<br><span style="font-size:8.5px;color:#777">视频封面由后端生成</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="an">顺序执行；视频封面由后端生成；请求统一超时 15 秒</div>
+      <div class="meta">
+        <div class="t">E6 · 提交流程（流程示意，非页面）</div>
+        <div class="pos">位置：E2「发布」点击后的请求顺序</div>
+        <ul><li>失败保留表单（E4）</li></ul>
+      </div>
+    </div>
+
+    <!-- E7 -->
+    <div class="card" id="e7">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:12px">发布笔记</b><span class="btn rd">发布</span></div>
+            <div class="row" style="gap:4px;margin-top:6px">
+              <div class="ph" style="width:40px;height:40px">图</div>
+              <div class="ph" style="width:40px;height:40px">图</div>
+            </div>
+            <div class="col" style="gap:4px;margin-top:6px">
+              <span class="lbl">标题 *</span>
+              <div class="inp" style="min-height:22px;color:#333">我的第一篇笔记</div>
+              <span class="lbl">正文</span>
+              <div class="inp ta" style="color:#333">今天天气很好……</div>
+            </div>
+            <div class="grow"></div>
+          </div>
+          <div class="dim"></div>
+          <div class="sheet">
+            <p style="text-align:center;font-size:11px;padding:10px 0 4px;color:#555">草稿将丢失，确认放弃发布吗？</p>
+            <div class="srow" style="color:#333;font-weight:700">放弃</div>
+            <div class="srow" style="border-bottom:none;color:#999">取消</div>
+          </div>
+        </div>
+      </div>
+      <div class="an">确认弹层与 F6/G6 同款结构（遮罩＋底部确认/取消）；E2 点 ← 触发；E3 的 × 仍为直接放弃返回</div>
+      <div class="meta">
+        <div class="t">E7 · 放弃发布确认（底部弹层）</div>
+        <div class="pos">位置：E2 点 ← 后弹出；遮罩下为 E2 页面</div>
+        <ul>
+          <li>确认「放弃」→ 丢弃已填内容，回首页 Tab（B1）；取消/点遮罩 → 留在 E2，内容保留</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= F 个人主页 ================= -->
+<section class="group" id="g-f">
+  <h2>阶段 F · 个人主页 / 编辑资料 / 设置</h2>
+  <p class="gnote">自己主页＝Tab 根页面（编辑入口+三 Tab+抽屉）；他人主页＝推入页（关注按钮+两 Tab）。</p>
+  <div class="grid">
+
+    <!-- F1 -->
+    <div class="card" id="f1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div style="background:repeating-linear-gradient(45deg,#d8d8d8 0 9px,#e6e6e6 9px 18px);padding:8px 8px 10px;border-bottom:1px solid var(--bd)">
+              <div class="row center" style="margin-bottom:8px"><span class="burger"></span><span class="grow"></span><span class="btn" style="border-radius:12px">✎ 编辑主页</span><span class="grow"></span></div>
+              <div class="row" style="gap:8px;align-items:flex-start">
+                <i class="av big"></i>
+                <div class="grow">
+                  <b style="font-size:12px">我的昵称</b>
+                  <p class="mrow" style="font-size:8.5px">小红书号：6789</p>
+                </div>
+              </div>
+              <p style="font-size:10px;margin-top:5px"><b>20</b> 关注　<b>8</b> 粉丝　<b>15</b> 获赞与收藏</p>
+              <p style="font-size:9px;color:#555;margin-top:2px">点击这里，填写简介　<span style="font-size:8px;color:#777">♂</span></p>
+            </div>
+            <div class="tabs" style="padding:5px 8px 2px;justify-content:center"><span class="on">笔记</span><span class="off">收藏</span><span class="off">赞过</span></div>
+            <div class="wf" style="padding:5px 6px;flex:1;min-height:0">
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:54px">图</div><div class="ttl">我的笔记标题示例</div><div class="ft"><span class="mrow">09-03</span><span>♥ 13</span></div></div>
+                <div class="pcard"><div class="ph" style="height:42px">图</div><div class="ttl">标题示例</div><div class="ft"><span class="mrow">08-26</span><span>♥ 3</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:68px">图<span class="vbadge">▶</span></div><div class="ttl">视频笔记示例</div><div class="ft"><span class="mrow">08-20</span><span>♥ 94</span></div></div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="tb"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb on"><i class="ic"></i>我</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">简介为空时显示引导文案「点击这里，填写简介」；「赞过」仅自己可见</div>
+      <div class="meta">
+        <div class="t">F1 · 我的主页（Tab 根页面）</div>
+        <div class="pos">位置：底部 Tab「我」；三 Tab 懒加载；游客点「我」→ A2</div>
+        <ul>
+          <li>「编辑主页」→ F3；☰ → F4 抽屉；点击笔记 → C1-1</li>
+          <li>空文案：暂无笔记 / 暂无收藏 / 暂无点赞；Tab 失败可重试（B4-2 样式）；用户数据加载失败与列表失败的异常流细分推迟到后期定义</li>
+          <li><b>实测(dp)</b>：头图 282 高（浮层顶栏 44：菜单 29、「编辑主页」pill 93.4×26、扫一扫/分享 24）；头像 108 @(2,78)；昵称 24sp；统计行 24；小组件 131.4×64；segment 页签 44；筛选 chip 26.3；网格卡同首页；详见 T-3</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- F2 -->
+    <div class="card" id="f2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div style="background:repeating-linear-gradient(45deg,#d8d8d8 0 9px,#e6e6e6 9px 18px);padding:8px 8px 10px;border-bottom:1px solid var(--bd)">
+              <div class="row" style="margin-bottom:8px"><span class="backbtn">←</span><span class="grow"></span><span style="font-size:11px">⋯</span></div>
+              <div class="row" style="gap:8px;align-items:flex-start">
+                <i class="av big"></i>
+                <div class="grow">
+                  <b style="font-size:12px">用户昵称</b>
+                  <p class="mrow" style="font-size:8.5px">小红书号：12345</p>
+                </div>
+              </div>
+              <p style="font-size:10px;margin-top:5px"><b>6</b> 关注　<b>6</b> 粉丝　<b>13</b> 获赞与收藏</p>
+              <p style="font-size:9px;color:#555;margin-top:2px">简介文字…　<span style="font-size:8px;color:#777">♀</span></p>
+              <div class="btn rd" style="display:block;text-align:center;margin-top:7px">关 注</div>
+            </div>
+            <div class="tabs" style="padding:5px 8px 2px;justify-content:center"><span class="on">笔记</span><span class="off">收藏</span></div>
+            <div class="wf" style="padding:5px 6px;flex:1;min-height:0">
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:58px">图</div><div class="ttl">TA的笔记1</div><div class="ft"><span class="mrow">33分钟前</span><span>♥ 4</span></div></div>
+                <div class="pcard"><div class="ph" style="height:46px">图</div><div class="ttl">TA的笔记3</div><div class="ft"><span class="mrow">3天前</span><span>♥ 2</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:70px">图<span class="vbadge">▶</span></div><div class="ttl">TA的笔记2</div><div class="ft"><span class="mrow">昨天</span><span>♥ 3</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">「⋯」菜单为视觉占位；关注数/粉丝数仅数字，无列表页</div>
+      <div class="meta">
+        <div class="t">F2 · 他人主页（推入式）</div>
+        <div class="pos">位置：从卡片作者/详情作者栏/评论者/通知发起者头像推入；← 返回</div>
+        <ul>
+          <li>「关注」→ D2；Tab 仅「笔记/收藏」（无「赞过」）；点击笔记 → C1-1</li>
+          <li>四态同 B4（列表态）；用户数据加载失败态同 F1（推迟后期定义）</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- F3 -->
+    <div class="card" id="f3">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:12px">编辑资料</b><span class="btn pri">保存</span></div>
+            <div style="text-align:center;margin-top:12px">
+              <div style="width:54px;height:54px;border-radius:50%;background:#d2d2d2;border:1px solid #9a9a9a;display:inline-flex;align-items:center;justify-content:center;position:relative">头像<i style="position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;background:var(--bd);color:#fff;border-radius:50%;font-size:8px;display:flex;align-items:center;justify-content:center">📷</i></div>
+            </div>
+            <div style="border:1px solid #ccc;border-radius:10px;margin-top:14px;font-size:10px;overflow:hidden">
+              <div class="row" style="justify-content:space-between;padding:7px 8px;border-bottom:1px solid #eee"><span>名字</span><span style="color:#777">我的昵称 ›</span></div>
+              <div class="row" style="justify-content:space-between;padding:7px 8px;border-bottom:1px solid #eee"><span>小红书号</span><span style="color:#999">6789</span></div>
+              <div class="row" style="justify-content:space-between;padding:7px 8px;border-bottom:1px solid #eee"><span>背景图</span><span style="color:#777">▮ ›</span></div>
+            </div>
+            <div style="border:1px solid #ccc;border-radius:10px;margin-top:8px;font-size:10px;overflow:hidden">
+              <div class="row" style="justify-content:space-between;padding:7px 8px"><span>简介</span><span style="color:#bbb">介绍一下自己 ›</span></div>
+            </div>
+            <div style="border:1px solid #ccc;border-radius:10px;margin-top:8px;font-size:10px;overflow:hidden">
+              <div class="row" style="justify-content:space-between;padding:7px 8px;border-bottom:1px solid #eee"><span>性别</span><span style="color:#777">男 ›</span></div>
+              <div class="row" style="justify-content:space-between;padding:7px 8px;border-bottom:1px solid #eee"><span>手机号</span><span style="color:#bbb">输入手机号 ›</span></div>
+              <div class="row" style="justify-content:space-between;padding:7px 8px"><span>邮箱</span><span style="color:#bbb">输入邮箱地址 ›</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">行点击行为：名字/简介/邮箱/手机号 → F3-1 遮罩输入（与 C2-4/C3-3 同组件）；性别 → F3-2 遮罩选项；头像/背景图 → 系统相册选图并即时预览；小红书号＝用户 ID 不可点击编辑；遮罩内的修改先落在本页行上（未提交后端），由右上「保存」统一提交；邮箱为可选字段</div>
+      <div class="meta">
+        <div class="t">F3 · 编辑资料页（推入式）</div>
+        <div class="pos">位置：F1「编辑主页」；字段预填当前资料</div>
+        <ul>
+          <li>背景图为新增字段（后端需补数据模型与接口契约）；保存时头像/背景图先上传再更新资料</li>
+          <li>右上「保存」：仅提交有变化的字段，全未变 → Toast「没有修改任何信息」直接弹回；成功 → Toast「保存成功」弹回 F1 即时更新；失败停留可重试；提交中「保存中...」禁用且不可返回</li>
+          <li><b>实测(dp)</b>：顶栏 44（标题居中、右上动作字 17sp）；表单行距 48、行高 24（背景图行 40 带缩略图）；label 宽 89.1 @32、值 @137.1 宽 226.3；行序＝名字/小红书号/背景图/简介/性别/生日/地区/职业/学校/原创信息/组件管理；详见 T-3</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- F3-1 -->
+    <div class="card" id="f3-1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:12px">编辑资料</b><span class="btn pri">保存</span></div>
+            <div style="border:1px solid #ccc;border-radius:10px;margin-top:14px;font-size:10px;overflow:hidden">
+              <div class="row" style="justify-content:space-between;padding:7px 8px;border-bottom:1px solid #eee"><span>名字</span><span style="color:#777">我的昵称 ›</span></div>
+              <div class="row" style="justify-content:space-between;padding:7px 8px;border-bottom:1px solid #eee"><span>小红书号</span><span style="color:#999">6789</span></div>
+              <div class="row" style="justify-content:space-between;padding:7px 8px"><span>背景图</span><span style="color:#777">▮ ›</span></div>
+            </div>
+          </div>
+          <div class="dim"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:2px solid var(--bd);border-radius:14px 14px 0 0;padding:9px 10px 10px;z-index:5">
+            <div style="border:1px solid #bbb;background:#f4f4f4;border-radius:10px;padding:7px 9px;min-height:42px;font-size:10px;color:#333">我的昵称</div>
+            <div class="cnt" style="text-align:right;margin-top:3px">剩余 16 / 20</div>
+            <div class="row" style="justify-content:flex-end;margin-top:6px"><span class="btn rd">发送</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="an">与 C2-4/C3-3 共用遮罩式弹出输入框公共组件（输入框＋发送，结构一致）；点 F3 的名字/简介/邮箱/手机号行弹出：输入框预填当前值、占位随字段变化；名字/简介在输入框下方显示剩余字数（邮箱/手机号无字数上限不显示计数）；点遮罩或收起键盘取消回 F3；为空时「发送」禁用</div>
+      <div class="meta">
+        <div class="t">F3-1 · 编辑资料 — 文本字段遮罩输入</div>
+        <div class="pos">位置：F3 点名字/简介/邮箱/手机号行后弹出；遮罩下为 F3 页面</div>
+        <ul>
+          <li>点「发送」后校验：字数超限（名字&gt;20/简介&gt;200）或手机号格式错误（1[3-9] 开头 11 位）→ 停留本遮罩，Toast 提醒（如「名字最多20个字符」「手机号格式不正确」）</li>
+          <li>校验通过 → 关闭遮罩，新值写入 F3 对应行（仅本页暂存，未提交后端，由「保存」统一提交）</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- F3-2 -->
+    <div class="card" id="f3-2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:12px">编辑资料</b><span class="btn pri">保存</span></div>
+            <div style="border:1px solid #ccc;border-radius:10px;margin-top:14px;font-size:10px;overflow:hidden">
+              <div class="row" style="justify-content:space-between;padding:7px 8px;border-bottom:1px solid #eee"><span>名字</span><span style="color:#777">我的昵称 ›</span></div>
+              <div class="row" style="justify-content:space-between;padding:7px 8px"><span>性别</span><span style="color:#777">男 ›</span></div>
+            </div>
+          </div>
+          <div class="dim"></div>
+          <div class="sheet" style="padding-bottom:6px">
+            <div class="srow">男</div>
+            <div class="srow">女</div>
+            <div class="srow">保密</div>
+            <div class="srow" style="border-top:6px solid #f0f0f0;border-bottom:none;color:#999">取消</div>
+          </div>
+        </div>
+      </div>
+      <div class="an">与 E1 共用遮罩式选项弹层；单选：点选项 → 关闭弹层并把新值写入 F3 性别行（本页暂存，由「保存」统一提交）；点取消/遮罩关闭不修改</div>
+      <div class="meta">
+        <div class="t">F3-2 · 编辑资料 — 性别遮罩选项</div>
+        <div class="pos">位置：F3 点「性别」行后弹出；遮罩下为 F3 页面</div>
+        <ul><li>选项＝男/女/保密；「保密」即未设置性别（资料页不显示性别图标）</li></ul>
+      </div>
+    </div>
+
+    <!-- F4 -->
+    <div class="card" id="f4">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div style="background:repeating-linear-gradient(45deg,#d8d8d8 0 9px,#e6e6e6 9px 18px);padding:8px 8px 10px;border-bottom:1px solid var(--bd)">
+              <div class="row center"><span class="burger"></span><span class="grow"></span><span class="btn" style="border-radius:12px">✎ 编辑主页</span><span class="grow"></span></div>
+            </div>
+            <div class="wf" style="padding:5px 6px;flex:1;min-height:0">
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:54px">图</div><div class="ttl">已有卡片</div><div class="ft"><span class="mrow">09-03</span><span>♥ 13</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:66px">图</div><div class="ttl">已有卡片</div><div class="ft"><span class="mrow">08-20</span><span>♥ 94</span></div></div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="tb"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb on"><i class="ic"></i>我</div>
+            </div>
+          </div>
+          <div class="dim"></div>
+          <div class="drawer">
+            <p style="font-weight:700;font-size:11px;margin:4px 2px 10px">我的昵称</p>
+            <div style="border:1px solid #ccc;border-radius:10px;overflow:hidden;font-size:10.5px;background:#fff">
+              <div style="padding:10px 8px;border-bottom:1px solid #eee">设置</div>
+              <div style="padding:10px 8px;border-bottom:1px solid #eee">社区公约</div>
+              <div style="padding:10px 8px"><b>退出登录</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">抽屉自 F1 左上 ☰ 打开，点遮罩关闭；抽屉仅登录态可达，游客点 ☰ → A2 推入登录页（无游客抽屉）</div>
+      <div class="meta">
+        <div class="t">F4 · 抽屉（☰ 菜单，精简版）</div>
+        <div class="pos">位置：我页 ☰ 打开</div>
+        <ul><li>「设置」→ F5；「社区公约」为占位（#9）；「退出登录」→ F6；「关于我们」原样无行为（#9）</li></ul>
+      </div>
+    </div>
+
+    <!-- F5 -->
+    <div class="card" id="f5">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:12px">设置</b><span style="width:17px"></span></div>
+            <div style="border:1px solid #ccc;border-radius:10px;margin-top:12px;font-size:10px;overflow:hidden">
+              <div class="row" style="justify-content:space-between;padding:9px 8px;border-bottom:1px solid #eee"><span>账号与安全</span><span style="color:#bbb">›</span></div>
+              <div class="row" style="justify-content:space-between;padding:9px 8px;border-bottom:1px solid #eee"><span>通用设置</span><span style="color:#bbb">›</span></div>
+              <div class="row" style="justify-content:space-between;padding:9px 8px;border-bottom:1px solid #eee"><span>通知设置</span><span style="color:#bbb">›</span></div>
+              <div class="row" style="justify-content:space-between;padding:9px 8px"><span>关于小红书</span><span style="color:#bbb">›</span></div>
+            </div>
+            <div style="border:1px solid #ccc;border-radius:10px;margin-top:14px;font-size:10px;text-align:center;padding:9px"><b>退出登录</b></div>
+          </div>
+        </div>
+      </div>
+      <div class="an">设置子项为占位，范围待产品定义</div>
+      <div class="meta">
+        <div class="t">F5 · 设置页（推入式）</div>
+        <div class="pos">位置：F4 抽屉「设置」</div>
+        <ul><li>子页均为占位；「退出登录」→ F6</li>
+        <li><b>实测(dp)</b>：列表行距 52（label 15sp @68、icon 24 @28、右值灰如「2.25 GB」@313）；分组＝账号与安全/通用设置/通知设置/多语言和翻译/隐私设置｜存储空间/内容偏好调节/收货地址/添加小组件/未成年人模式｜新功能体验｜帮助与客服/关于小红书；底部「切换账号」居中 15sp；详见 T-3</li></ul>
+      </div>
+    </div>
+
+    <!-- F6 -->
+    <div class="card" id="f6">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div style="background:repeating-linear-gradient(45deg,#d8d8d8 0 9px,#e6e6e6 9px 18px);padding:8px 8px 10px;border-bottom:1px solid var(--bd)">
+              <div class="row center"><span class="burger"></span><span class="grow"></span><span class="btn" style="border-radius:12px">✎ 编辑主页</span><span class="grow"></span></div>
+            </div>
+            <div class="wf" style="padding:5px 6px;flex:1;min-height:0">
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:54px">图</div><div class="ttl">已有卡片</div><div class="ft"><span class="mrow">09-03</span><span>♥ 13</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:66px">图</div><div class="ttl">已有卡片</div><div class="ft"><span class="mrow">08-20</span><span>♥ 94</span></div></div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="tb"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb on"><i class="ic"></i>我</div>
+            </div>
+          </div>
+          <div class="dim"></div>
+          <div class="sheet">
+            <p style="text-align:center;font-size:11px;padding:10px 0 4px;color:#555">确认退出该账号 @我的昵称 吗？</p>
+            <div class="srow" style="color:#333;font-weight:700">退出登录</div>
+            <div class="srow" style="border-bottom:none;color:#999">取消</div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="t">F6 · 退出登录确认（底部弹层）</div>
+        <div class="pos">位置：F4 抽屉 / F5 设置的「退出登录」</div>
+        <ul><li>确认 → 清登录态与角标 → 回游客首页（A1，带登录悬浮条）；取消关闭弹层</li></ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= G 消息 ================= -->
+<section class="group" id="g-g">
+  <h2>阶段 G · 消息（三入口卡片 + 点点会话）</h2>
+  <p class="gnote">通知共 6 种文案：赞了你的笔记 / 收藏了你的笔记 / 评论了你的笔记 / 回复了你的评论 / 赞了你的评论 / 开始关注你了。自己对自己的操作不产生通知。未读角标 15 秒轮询。</p>
+  <div class="grid">
+
+    <!-- G1 -->
+    <div class="card" id="g1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop" style="justify-content:center;font-weight:700"><span style="margin:0 auto">消息</span></div>
+            <div style="padding:8px 8px 2px">
+              <div class="row" style="gap:0">
+                <div class="grow" style="text-align:center;position:relative;padding:4px 0 5px">
+                  <div style="position:relative;width:34px;height:34px;margin:0 auto;background:#e6e6e6;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px">♥<span class="bdg2" style="right:-5px;top:-4px">2</span></div>
+                  <p style="font-size:8.5px;margin-top:4px">赞和收藏</p>
+                </div>
+                <div class="grow" style="text-align:center;padding:4px 0 5px">
+                  <div style="width:34px;height:34px;margin:0 auto;background:#e6e6e6;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px">👤</div>
+                  <p style="font-size:8.5px;margin-top:4px">新增关注</p>
+                </div>
+                <div class="grow" style="text-align:center;position:relative;padding:4px 0 5px">
+                  <div style="position:relative;width:34px;height:34px;margin:0 auto;background:#e6e6e6;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px">💬<span class="bdg2" style="right:-5px;top:-4px">1</span></div>
+                  <p style="font-size:8.5px;margin-top:4px">评论和@</p>
+                </div>
+              </div>
+            </div>
+            <div class="hr" style="margin-top:6px"></div>
+            <div class="row" style="gap:6px;padding:7px 8px;align-items:center;border-bottom:1px solid #eee">
+              <span style="width:24px;height:24px;border-radius:8px;background:#cfe8e4;border:1px solid #8ab8b0;display:inline-flex;align-items:center;justify-content:center;font-size:8px">ai</span>
+              <div class="grow" style="font-size:9.5px"><b>点点</b><div class="mrow">想继续之前的话题，还是开启全新…</div></div>
+              <span class="mrow" style="font-size:8px">09-05</span>
+            </div>
+            <div class="tabbar" style="margin-top:auto">
+              <div class="tb"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb on"><i class="ic"></i>消息<span class="bdg2">3</span></div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">会话列表仅「点点」一个会话入口（行首 ai 小标）；Tab 角标＝三入口未读之和（&gt;99 显示 99+）；游客点「消息」Tab → A2；一键已读在各通知列表页右上 🧹（G6）。<b>三入口点击区＝整个入口卡列</b>（三等分、无间隙、含图标与标签的整块均可点）；灰色圆角方块（48dp）只是视觉图标范围，不是点击边界</div>
+      <div class="meta">
+        <div class="t">G1 · 消息页（Tab 根页面）</div>
+        <div class="pos">位置：底部 Tab「消息」</div>
+        <ul>
+          <li>三入口卡片 → G2/G3/G4 列表页；「点点」会话行 → H2</li>
+          <li>入口无未读时角标隐藏；角标数字随条目已读递减</li>
+          <li><b>实测(dp)</b>：顶栏 44 标题居中、右上创建 24×24（触区 36/44）；三入口<b>点击区＝整卡 126.3×102</b>（三等分、无间隙、含标签，区高 112），48×48 圆角方块（浅色底、无边框、圆角≈14）仅为视觉图标，label 13sp 在图标下 12；会话项 72：头像 48 @16、标题 15sp @76、预览 13sp、时间右侧 @364–371；未读红点 8；详见 T-3</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- G2 -->
+    <div class="card" id="g2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:11.5px">收到的赞和收藏</b><span style="width:17px;text-align:center;font-size:11px">🧹</span></div>
+            <div class="col" style="margin-top:8px;gap:8px">
+              <div class="row" style="gap:6px;align-items:flex-start;border-bottom:1px solid #eee;padding-bottom:8px">
+                <span style="color:var(--bd);font-size:7px;margin-top:4px">●</span><i class="av mid"></i>
+                <div class="grow" style="font-size:9.5px"><b>小红薯D</b><div class="mrow">赞了你的笔记　2小时前</div></div>
+                <div class="ph" style="width:30px;height:30px">图</div>
+              </div>
+              <div class="row" style="gap:6px;align-items:flex-start;border-bottom:1px solid #eee;padding-bottom:8px">
+                <span style="color:var(--bd);font-size:7px;margin-top:4px">●</span><i class="av mid"></i>
+                <div class="grow" style="font-size:9.5px"><b>小红薯E</b><div class="mrow">收藏了你的笔记　5小时前</div></div>
+                <div class="ph" style="width:30px;height:30px">图</div>
+              </div>
+              <div class="row" style="gap:6px;align-items:flex-start;border-bottom:1px solid #eee;padding-bottom:8px;opacity:.5">
+                <span style="visibility:hidden;font-size:7px">●</span><i class="av mid"></i>
+                <div class="grow" style="font-size:9.5px"><b>小红薯F</b><div class="mrow">赞了你的评论　3天前</div></div>
+              </div>
+              <div class="grow"></div>
+              <p style="text-align:center;color:#888;font-size:9.5px;padding-bottom:8px">查看历史消息</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">未读条目带左侧红点，已读条目整行变淡（图中第三条）；缩略图＝笔记封面（无封面用默认占位图）</div>
+      <div class="meta">
+        <div class="t">G2 · 收到的赞和收藏（推入式列表）</div>
+        <div class="pos">位置：G1「赞和收藏」卡片；含「赞了你的笔记/收藏了你的笔记/赞了你的评论」三类</div>
+        <ul>
+          <li>点击条目 → 标记已读（角标-1）→ C1-1 详情；点击头像 → F2</li>
+          <li>「查看历史消息」＝加载更早通知；右上 🧹 一键已读 → G6 确认弹层</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- G3 -->
+    <div class="card" id="g3">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:11.5px">收到的评论和@</b><span style="width:17px;text-align:center;font-size:11px">🧹</span></div>
+            <div class="col" style="margin-top:8px;gap:8px">
+              <div class="row" style="gap:6px;align-items:flex-start;border-bottom:1px solid #eee;padding-bottom:8px">
+                <span style="color:var(--bd);font-size:7px;margin-top:4px">●</span><i class="av mid"></i>
+                <div class="grow" style="font-size:9.5px">
+                  <b>小红薯A</b><div class="mrow">评论了你的笔记　3分钟前</div>
+                  <div>拍得太好了，求滤镜参数！</div>
+                  <div class="mrow" style="margin-top:3px"><span class="btn" style="font-size:8px;padding:0 6px">💬 回复</span>　<span class="btn" style="font-size:8px;padding:0 5px">♡</span></div>
+                </div>
+                <div class="ph" style="width:30px;height:30px">图</div>
+              </div>
+              <div class="row" style="gap:6px;align-items:flex-start;border-bottom:1px solid #eee;padding-bottom:8px;opacity:.5">
+                <span style="visibility:hidden;font-size:7px">●</span><i class="av mid"></i>
+                <div class="grow" style="font-size:9.5px">
+                  <b>小红薯B</b><div class="mrow">回复了你的评论　1小时前</div>
+                  <div>好的，下次一起去！</div>
+                </div>
+                <div class="ph" style="width:30px;height:30px">图</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">「回复」→ 行内展开输入框+「发送」（发送成功 Toast「回复成功」+自动已读）；♡＝点赞该条评论（乐观更新）；Tab 名含「@」但无提及功能；本页列表结构为占位设计，编码前需产品确认</div>
+      <div class="meta">
+        <div class="t">G3 · 收到的评论和@（推入式列表）</div>
+        <div class="pos">位置：G1「评论和@」卡片；含「评论了你的笔记/回复了你的评论」两类</div>
+        <ul><li>点击条目 → 已读 → C1-1 详情；点击头像 → F2</li><li>右上 🧹 一键已读 → G6 确认弹层</li></ul>
+      </div>
+    </div>
+
+    <!-- G4 -->
+    <div class="card" id="g4">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:11.5px">新增关注</b><span style="width:17px;text-align:center;font-size:11px">🧹</span></div>
+            <div class="col" style="margin-top:10px;gap:10px">
+              <div class="row center" style="gap:6px;border-bottom:1px solid #eee;padding-bottom:9px"><span style="color:var(--bd);font-size:7px">●</span><i class="av mid"></i><div class="grow" style="font-size:9.5px"><b>小红薯G</b><div class="mrow">开始关注你了　刚刚</div></div><span class="btn pri">回关</span></div>
+              <div class="row center" style="gap:6px;border-bottom:1px solid #eee;padding-bottom:9px"><span style="visibility:hidden;font-size:7px">●</span><i class="av mid"></i><div class="grow" style="font-size:9.5px"><b>小红薯H</b><div class="mrow">开始关注你了　2天前</div></div><span class="btn gy">已关注</span></div>
+              <div class="grow"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">「回关」→ D2 关注逻辑（按钮切「已关注」），自动标记已读；点击头像/条目 → F2 对方主页</div>
+      <div class="meta">
+        <div class="t">G4 · 新增关注（推入式列表）</div>
+        <div class="pos">位置：G1「新增关注」卡片</div>
+        <ul><li>列表结构为占位设计，编码前需产品确认；右上 🧹 一键已读 → G6 确认弹层</li></ul>
+      </div>
+    </div>
+
+    <!-- G5-1 -->
+    <div class="card" id="g5-1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:11.5px">收到的赞和收藏</b><span style="width:17px"></span></div>
+            <div class="grow center">
+              <div class="illus">矢量图插画</div>
+              <p style="margin-top:10px;color:#666;font-size:11px">暂无消息</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">三入口列表页共用空文案「暂无消息」；未登录不会到达本页（A2 拦截）</div>
+      <div class="meta">
+        <div class="t">G5-1 · 通知列表 — 空数据（完整页面）</div>
+        <div class="pos">位置：G2/G3/G4 无任何通知时</div>
+        <ul><li>收到新互动后列表出现条目（角标同步）</li></ul>
+      </div>
+    </div>
+
+    <!-- G5-2 -->
+    <div class="card" id="g5-2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:11.5px">收到的赞和收藏</b><span style="width:17px"></span></div>
+            <div class="grow center" style="justify-content:center">
+              <div class="spin"></div>
+              <p style="font-size:10px;color:#888;margin-top:8px">加载中...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">切 Tab/进入列表时的过渡态；已读标记失败不阻断操作，下次轮询校正（异常恢复）</div>
+      <div class="meta">
+        <div class="t">G5-2 · 通知列表 — 加载中（完整页面）</div>
+        <div class="pos">位置：G2/G3/G4 首次进入时</div>
+        <ul><li>完成 → 对应列表 / 失败 → G5-3</li></ul>
+      </div>
+    </div>
+
+    <!-- G5-3 -->
+    <div class="card" id="g5-3">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:11.5px">收到的赞和收藏</b><span style="width:17px"></span></div>
+            <div class="grow center" style="justify-content:center">
+              <p style="color:#666;font-size:11px">加载失败，请稍后重试</p>
+              <div class="btn pri" style="margin-top:10px">重试</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">通知列表加载失败＝整页错误+重试（B4-2 同款结构），替代仅全局 Toast 的降级；G2/G3/G4 共用本态</div>
+      <div class="meta">
+        <div class="t">G5-3 · 通知列表 — 加载失败（完整页面）</div>
+        <div class="pos">位置：G2/G3/G4 请求失败时替换整个内容区</div>
+        <ul><li>点「重试」→ G5-2 → 成功进列表 / 失败停留本态；← 返回 G1</li></ul>
+      </div>
+    </div>
+
+    <!-- G6 -->
+    <div class="card" id="g6">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content">
+            <div class="row center"><span class="backbtn">←</span><b style="margin:0 auto;font-size:11.5px">收到的赞和收藏</b><span style="width:17px;text-align:center;font-size:11px">🧹</span></div>
+            <div class="col" style="margin-top:8px;gap:8px">
+              <div class="row" style="gap:6px;align-items:flex-start;border-bottom:1px solid #eee;padding-bottom:8px">
+                <span style="color:var(--bd);font-size:7px;margin-top:4px">●</span><i class="av mid"></i>
+                <div class="grow" style="font-size:9.5px"><b>小红薯D</b><div class="mrow">赞了你的笔记　2小时前</div></div>
+                <div class="ph" style="width:30px;height:30px">图</div>
+              </div>
+              <div class="row" style="gap:6px;align-items:flex-start;border-bottom:1px solid #eee;padding-bottom:8px">
+                <span style="color:var(--bd);font-size:7px;margin-top:4px">●</span><i class="av mid"></i>
+                <div class="grow" style="font-size:9.5px"><b>小红薯E</b><div class="mrow">收藏了你的笔记　5小时前</div></div>
+                <div class="ph" style="width:30px;height:30px">图</div>
+              </div>
+            </div>
+          </div>
+          <div class="dim"></div>
+          <div class="sheet">
+            <p style="text-align:center;font-size:11px;padding:10px 0 4px;color:#555">确认将全部消息标记为已读吗？</p>
+            <div class="srow" style="color:#333;font-weight:700">一键已读</div>
+            <div class="srow" style="border-bottom:none;color:#999">取消</div>
+          </div>
+        </div>
+      </div>
+      <div class="an">确认弹层与 F6 同款结构（遮罩＋底部确认/取消）；G2/G3/G4 共用本弹层，遮罩下为当前列表页</div>
+      <div class="meta">
+        <div class="t">G6 · 一键已读确认（底部弹层）</div>
+        <div class="pos">位置：G2/G3/G4 右上 🧹 点击后弹出</div>
+        <ul>
+          <li>确认 → 当前列表全部条目标记已读（红点消失、整行变淡），G1 对应入口角标清零、消息 Tab 角标同步减少</li>
+          <li>取消/点遮罩关闭弹层，不修改</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= H AI点点 ================= -->
+<section class="group" id="g-h">
+  <h2>阶段 H · AI 助手「点点」</h2>
+  <p class="gnote">单轮问答（不携带上下文）；对话仅内存保存。入口：底部 Tab「点点」＋ 首页顶栏左上气泡 ＋ G1 会话行。</p>
+  <div class="grid">
+
+    <!-- H1 -->
+    <div class="card" id="h1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="backbtn">←</span><span class="bubble" style="background:#d9d9d9"></span><b style="font-size:11px">点点</b><span class="grow"></span><span style="font-size:11px">⋯</span></div>
+            <div style="flex:1;min-height:0;padding:10px 9px;display:flex;flex-direction:column;gap:10px">
+              <div style="background:#f6f6f6;border-radius:0 10px 10px 10px;padding:8px 10px;font-size:9.5px;max-width:82%">哈喽，你终于来了！是想继续之前的话题，还是开启全新的聊天都可以。</div>
+              <div class="col" style="gap:6px">
+                <span class="btn" style="border-radius:14px;align-self:flex-start">想找人少景美的地方，怎么挑目的地？</span>
+                <span class="btn" style="border-radius:14px;align-self:flex-start">帮我规划一套每周3次的居家有氧运动方案</span>
+                <span class="btn" style="border-radius:14px;align-self:flex-start">怎么通过穿搭让整个人看起来更有气场？</span>
+              </div>
+            </div>
+            <div style="border-top:1px solid #ddd;padding:6px 8px 4px">
+              <div class="row center"><div class="inp grow" style="min-height:23px;border-radius:12px">发消息...</div><span style="font-size:12px">⊕</span></div>
+              <p style="text-align:center;font-size:8px;color:#bbb;margin-top:4px">内容由AI生成</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">「⋯」→「新建对话」清空回本态（对话仅内存保存）；⊕ 为视觉占位；本页为推入式页面（Tab 仅为入口，无底部 Tab 栏），仅登录用户可达：游客点底部「点点」Tab → A2 推入登录页</div>
+      <div class="meta">
+        <div class="t">H1 · 点点 — 空态（首次使用）</div>
+        <div class="pos">位置：Tab「点点」/顶栏气泡/G1 会话行进入；← 返回来源页</div>
+        <ul><li>输入 ≤4000 字符，回车或发送；点建议问题直接发送 → H2</li>
+        <li><b>实测(dp)</b>：顶栏 56（返回/标题 icon+17sp/右 24）；AI 气泡宽 379.4 @16、操作钮 复制/分享/不喜欢 32×32 间距 8；笔记卡 164×236（图 158.9×159.4）；建议问题 chip 高 44、间距 12；底部输入条 48（胶囊 387.4 @12、语音/表情/+ 各 24）＋「内容由AI生成」21.4；详见 T-3</li></ul>
+      </div>
+    </div>
+
+    <!-- H2 -->
+    <div class="card" id="h2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="backbtn">←</span><span class="bubble" style="background:#d9d9d9"></span><b style="font-size:11px">点点</b><span class="grow"></span><span style="font-size:11px">⋯</span></div>
+            <div style="flex:1;min-height:0;padding:9px 8px;display:flex;flex-direction:column;gap:8px">
+              <div class="row" style="justify-content:flex-end"><div style="background:#e8e8e8;border-radius:10px 0 10px 10px;padding:5px 9px;font-size:9.5px;max-width:62%">想找人少景美的地方，怎么挑目的地？</div></div>
+              <div style="border:1px solid #ccc;border-radius:10px;padding:8px 10px;font-size:9.5px;max-width:90%">
+                <p><b>🐢 挑选思路</b></p>
+                <p style="margin-top:3px">可以考虑这些方向：</p>
+                <p style="margin:2px 0 2px 8px">• 避开节假日高峰，选择小众替代目的地</p>
+                <p style="margin:2px 0 2px 8px">• 提前查看景区实时人流数据</p>
+                <p style="margin:2px 0 2px 8px">• 优先选择自然景观类景点</p>
+                <div class="row" style="gap:8px;margin-top:7px;color:#777;font-size:9px"><span>⧉</span><span>★</span><span>↗</span><span class="grow"></span><span>👎</span><span>↻</span></div>
+              </div>
+              <div class="row" style="justify-content:flex-end"><div style="background:#e8e8e8;border-radius:10px 0 10px 10px;padding:5px 9px;font-size:9.5px;max-width:62%">那住宿有什么建议？</div></div>
+              <p style="text-align:center;font-size:8px;color:#bbb">— 聊聊新话题 —</p>
+            </div>
+            <div style="border-top:1px solid #ddd;padding:6px 8px 4px">
+              <div class="row center"><div class="inp grow" style="min-height:23px;border-radius:12px">发消息...</div><span style="font-size:12px">⊕</span></div>
+              <p style="text-align:center;font-size:8px;color:#bbb;margin-top:4px">内容由AI生成</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">用户消息右侧灰气泡、AI 回复左侧白卡片（支持「•」列表渲染）；回答下操作条＝复制/★/分享｜踩/重新生成（★与分享为视觉占位）</div>
+      <div class="meta">
+        <div class="t">H2 · 点点 — 对话态</div>
+        <div class="pos">位置：发出首条消息后</div>
+        <ul><li>单轮问答每次只发当前问题；历史仅内存保存（#12）；「新建对话」清空回 H1</li></ul>
+      </div>
+    </div>
+
+    <!-- H3-1 -->
+    <div class="card" id="h3-1">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="backbtn">←</span><span class="bubble" style="background:#d9d9d9"></span><b style="font-size:11px">点点</b><span class="grow"></span><span style="font-size:11px">⋯</span></div>
+            <div style="flex:1;min-height:0;padding:9px 8px;display:flex;flex-direction:column;gap:8px">
+              <div class="row" style="justify-content:flex-end"><div style="background:#e8e8e8;border-radius:10px 0 10px 10px;padding:5px 9px;font-size:9.5px;max-width:62%">帮我规划一套每周3次的居家有氧运动方案</div></div>
+              <div class="row" style="gap:4px;padding:6px 0"><span style="width:7px;height:7px;background:#999;border-radius:50%"></span><span style="width:7px;height:7px;background:#bbb;border-radius:50%"></span><span style="width:7px;height:7px;background:#ddd;border-radius:50%"></span></div>
+            </div>
+            <div style="border-top:1px solid #ddd;padding:6px 8px 4px">
+              <div class="row center"><div class="inp grow" style="min-height:23px;border-radius:12px;opacity:.5">发消息...</div><span style="font-size:12px;opacity:.5">⊕</span></div>
+              <p style="text-align:center;font-size:8px;color:#bbb;margin-top:4px">内容由AI生成</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">三点脉冲动画；期间输入框与发送禁用</div>
+      <div class="meta">
+        <div class="t">H3-1 · 点点 — 思考中（完整页面）</div>
+        <div class="pos">位置：消息发送后的过渡态</div>
+        <ul><li>回复到达 → 追加 AI 卡片（H2）</li></ul>
+      </div>
+    </div>
+
+    <!-- H3-2 -->
+    <div class="card" id="h3-2">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="backbtn">←</span><span class="bubble" style="background:#d9d9d9"></span><b style="font-size:11px">点点</b><span class="grow"></span><span style="font-size:11px">⋯</span></div>
+            <div style="flex:1;min-height:0;padding:9px 8px;display:flex;flex-direction:column;gap:8px">
+              <div class="row" style="justify-content:flex-end"><div style="background:#e8e8e8;border-radius:10px 0 10px 10px;padding:5px 9px;font-size:9.5px;max-width:62%">帮我规划一套每周3次的居家有氧运动方案</div></div>
+              <div style="border:1.5px dashed #555;padding:5px 8px;font-size:9.5px;max-width:80%;color:#888">AI服务暂时不可用，请稍后重试</div>
+            </div>
+            <div style="border-top:1px solid #ddd;padding:6px 8px 4px">
+              <div class="row center"><div class="inp grow" style="min-height:23px;border-radius:12px">发消息...</div><span style="font-size:12px">⊕</span></div>
+              <p style="text-align:center;font-size:8px;color:#bbb;margin-top:4px">内容由AI生成</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="an">错误以对话流中的气泡呈现（正式 UI 为红色，含超时文案「请求超时，请检查网络」）；失败不中断会话，可直接重新提问，之前消息保留</div>
+      <div class="meta">
+        <div class="t">H3-2 · 点点 — 回复失败（完整页面）</div>
+        <div class="pos">位置：请求失败/超时时</div>
+        <ul><li>输入恢复可用（异常恢复）</li></ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= I 全局与会话 ================= -->
+<section class="group" id="g-i">
+  <h2>阶段 I · 全局机制与会话（任何阶段都可能发生）</h2>
+  <p class="gnote">会话过期、网络错误、加载组件、权限申请。I1 为流程示意；I2/I3 为组件规范（非页面）；I4 为系统权限弹窗叠加在产品页面上的完整形态。</p>
+  <div class="grid">
+
+    <!-- I1 -->
+    <div class="card" id="i1">
+      <div class="shot" style="background:#dcdcdc;align-items:center">
+        <div class="row" style="width:300px;margin-top:44px;align-items:stretch">
+          <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:3px"><span class="stt">① 触发</span><p style="font-size:9.5px">任一请求 401/1005<br>（Token 过期/失效）</p></div>
+          <span class="arrow">→</span>
+          <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:3px"><span class="stt">② 清登录态</span><span class="toast in">登录已失效，请重新登录</span><p class="hint" style="margin:0">清 Token 与角标</p></div>
+          <span class="arrow">→</span>
+          <div class="state grow" style="text-align:center;display:flex;flex-direction:column;justify-content:center;gap:3px"><span class="stt">③ 推入登录页</span><p style="font-size:9.5px">弹到 A3<br>登录后可回原页</p></div>
+        </div>
+      </div>
+      <div class="an">启动/重进 APP 时本地有 Token → 静默校验恢复登录态；失败走同上流程</div>
+      <div class="meta">
+        <div class="t">I1 · 会话过期自动登出（流程示意）</div>
+        <div class="pos">位置：任意页面的任意请求触发，全局统一处理</div>
+        <ul><li>与 A2 的差异：I1 面向「登录态失效」，A2 面向「从未登录」</li></ul>
+      </div>
+    </div>
+
+    <!-- I2 -->
+    <div class="card" id="i2">
+      <div class="shot" style="background:#dcdcdc;justify-content:center;align-items:center">
+        <div class="col" style="width:300px;gap:8px;align-items:center">
+          <span class="toast in">网络异常，请稍后重试</span>
+          <span class="toast in">请求超时，请检查网络</span>
+          <span class="toast in">服务器开小差了，请稍后重试</span>
+          <span class="toast in">请求的资源不存在</span>
+        </div>
+      </div>
+      <div class="an">Toast 显示在屏幕中心，2.5 秒自动消失；统一超时 15 秒</div>
+      <div class="meta">
+        <div class="t">I2 · 全局网络错误 Toast 文案集（组件规范）</div>
+        <div class="pos">位置：全局；按场景分三类反馈——Toast / 列表错误态+重试（B4-2）/ 表单错误条（A5-1、E4）</div>
+        <ul><li>恢复：Toast→手动重试；列表→点重试；表单→修正后重新提交（内容保留）</li></ul>
+      </div>
+    </div>
+
+    <!-- I3 -->
+    <div class="card" id="i3">
+      <div class="shot" style="background:#dcdcdc;align-items:center">
+        <div class="col" style="width:300px;margin-top:24px;gap:8px">
+          <div class="row" style="align-items:center;gap:8px"><div class="spin"></div><span style="font-size:10px;color:#666">页面级（居中大指示器）——整页/详情/消息列表加载</span></div>
+          <div class="row" style="align-items:center;gap:8px"><div class="spin" style="width:12px;height:12px;border-width:2px"></div><span style="font-size:10px;color:#666">局部（行内小指示器）——加载更多 / 展开回复</span></div>
+          <div class="row" style="align-items:center;gap:8px"><span class="btn rd dis">登录中... / 发布中... / 保存中...</span></div>
+          <p style="font-size:10px;color:#666">按钮级（文案变化+禁用+不可返回）——登录/发布/编辑资料提交时</p>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="t">I3 · 加载组件三档（组件规范）</div>
+        <div class="pos">位置：全局</div>
+        <ul><li>实际出现在各页的位置见 B4-1（页面级）、B4-4（局部）、A5-2/E5-1（按钮级）</li></ul>
+      </div>
+    </div>
+
+    <!-- I4 -->
+    <div class="card" id="i4">
+      <div class="shot">
+        <div class="phone">
+          <div class="sbar"><span>9:41</span><span>▮▮▮ ⌁ ▉</span></div>
+          <div class="content" style="padding:0">
+            <div class="navtop"><span class="bubble"></span><span class="grow"></span><span style="font-weight:700;border-bottom:2px solid var(--bd);padding-bottom:1px">发现</span><span class="grow"></span><span style="font-size:12px">⌕</span></div>
+            <div class="wf" style="padding:5px 6px;flex:1;min-height:0">
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:70px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户A</span><span>♥ 31</span></div></div>
+              </div>
+              <div class="wcol">
+                <div class="pcard"><div class="ph" style="height:64px">图</div><div class="ttl">已有卡片</div><div class="ft"><span><i class="av"></i> 用户C</span><span>♥ 12</span></div></div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="tb"><i class="ic"></i>首页</div>
+              <div class="tb"><i class="ic"></i>点点</div>
+              <div class="tb"><span class="plus hot">＋</span></div>
+              <div class="tb"><i class="ic"></i>消息</div>
+              <div class="tb"><i class="ic"></i>我</div>
+            </div>
+          </div>
+          <div class="dim"></div>
+          <div class="sheet" style="padding-bottom:8px">
+            <p style="text-align:center;font-weight:700;font-size:11px;padding:10px 0 2px">允许「小红书复刻」拍摄照片和视频吗？</p>
+            <p style="text-align:center;font-size:9px;color:#777;padding-bottom:8px">相机权限用于拍摄笔记素材</p>
+            <div class="srow" style="color:#333;font-weight:700">允许</div>
+            <div class="srow" style="border-bottom:none;color:#999">仅本次使用 / 拒绝</div>
+          </div>
+        </div>
+      </div>
+      <div class="an">唯一系统权限场景：E1「拍摄」首次触发；「从相册选择」走系统照片选择器无需权限；拒绝 → 降级提示「未授权相机，可从相册选择」并回 E1；仅拍摄，无直播/美化能力</div>
+      <div class="meta">
+        <div class="t">I4 · 权限申请 — 相机（系统弹窗 + 完整页面）</div>
+        <div class="pos">位置：E1「拍摄」首次触发时</div>
+        <ul><li>允许 → 打开系统相机 → 拍摄后进 E2</li></ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  移动端 APP 低保真线框图 v5 · 开发编码参考（自包含：页面结构 / 状态 / 交互规则 / 数据约束以本文为准）·
+  共 67 屏：A7（含 A2/A6 流程示意）/ B10 / C15（C1-1~5 图文 · C2-1~5 视频 · C3-1~5 视频评论面板，C3-4 回复加载中 / C3-5 展开更多回复）/ D3（状态机示意）/ E8（含 E6 流程示意 · E7 放弃发布确认）/ F8（F3 遮罩编辑拆 F3-1 文本输入 / F3-2 性别选项）/ G8（G5-3 通知列表失败态 · G6 一键已读确认）/ H4 / I4（含 I2/I3 组件规范）·
+  手机框统一 9:20（288×640）；手机内部零标注，开发说明在屏下灰字与说明区 ·
+  两处占位需产品确认后编码：B5 关注流数据源、E2 发布表单细节。
+</footer>
+
+</div>
+</body>
+</html>

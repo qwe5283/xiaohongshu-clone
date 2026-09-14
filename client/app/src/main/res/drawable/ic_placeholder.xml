@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared stand-in for any icon or illustration that has no source asset.
+     Deliberately obvious: rounded-square frame + diagonal slash ("missing image").
+     Used for both small icons and empty-state illustrations, so it must read at 16dp and 72dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- frame: rounded square, 3,3 -> 21,21 with 4-unit corner radius, stroked -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2"
+        android:pathData="M7 3 h10 a4 4 0 0 1 4 4 v10 a4 4 0 0 1 -4 4 h-10 a4 4 0 0 1 -4 -4 v-10 a4 4 0 0 1 4 -4 Z"
+        />
+    <!-- slash: "/" bar, filled quad from (8,16) to (16,8), 2.3 units thick -->
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M7.187 15.187 L15.187 7.187 L16.813 8.813 L8.813 16.813 Z"
+        />
+</vector>

@@ -1,0 +1,4 @@
+# mock server runtime artefacts
+uploads/
+.verify/
+*.log

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      窗口背景设为白色，避免 Compose 首帧前的黑/灰闪屏。
+      状态栏由 Activity 的 enableEdgeToEdge + 各页面 WindowInsets 处理（沉浸式视频页自行置黑）。
+    -->
+    <style name="Theme.Xiaohongshu" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+</resources>
