@@ -1,5 +1,6 @@
 package com.xiaohongshu.app.navigation
 
+import androidx.compose.animation.EnterTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +33,10 @@ import com.xiaohongshu.app.feature.publish.PublishFormRoute
 import com.xiaohongshu.app.feature.publish.WriteTextRoute
 import com.xiaohongshu.app.feature.search.SearchResultRoute
 import com.xiaohongshu.app.feature.search.SearchRoute
+import com.xiaohongshu.app.navigation.Transitions.popEnter
+import com.xiaohongshu.app.navigation.Transitions.popExit
+import com.xiaohongshu.app.navigation.Transitions.pushEnter
+import com.xiaohongshu.app.navigation.Transitions.pushExit
 
 /**
  * 全局导航图。
@@ -89,8 +94,20 @@ fun AppNavHost(container: AppContainer) {
     NavHost(
         navController = navController,
         startDestination = Routes.MAIN,
+        // 全部推入页（登录/注册/搜索/详情/发布/主页/设置/通知/点点）统一「右进左出 + 旧页 1/4 视差」，
+        // 返回自动反向。个别页面要换观感时，在该 composable 上覆盖这四个参数即可。
+        enterTransition = { pushEnter() },
+        exitTransition = { pushExit() },
+        popEnterTransition = { popEnter() },
+        popExitTransition = { popExit() },
     ) {
-        composable(Routes.MAIN) { MainScaffold(navigator) }
+        // 根页（Tab 宿主）不参与横推：Tab 切换在 MainScaffold 内手写，不经过 NavHost；
+        // 而所有「回首页」走的都是 popBackStack（自然拿 pop 过渡）。这里只钉住进场，
+        // 防止将来有人改用 navigate(Routes.MAIN) 推入时根页从左侧滑回。
+        composable(
+            route = Routes.MAIN,
+            enterTransition = { EnterTransition.None },
+        ) { MainScaffold(navigator) }
 
         composable(Routes.LOGIN) { LoginRoute(navigator) }
         composable(Routes.REGISTER) { RegisterRoute(navigator) }
