@@ -2,7 +2,6 @@ package com.xiaohongshu.app.core.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -170,7 +168,7 @@ fun XhsBottomTabBar(
                         .height(Dimens.plusButtonHeight)
                         .clip(RoundedCornerShape(Dimens.plusButtonRadius))
                         .background(if (guestMode) XhsColor.BtnGray else XhsColor.Red)
-                        .clickableNoRipple(onClick = onPublish),
+                        .clickable(onClick = onPublish),
                     contentAlignment = Alignment.Center,
                 ) {
                     XhsPlusGlyph(
@@ -226,7 +224,7 @@ private fun BottomTabItem(
         modifier = modifier
             .fillMaxWidth()
             .height(Dimens.bottomBar)
-            .clickableNoRipple { onSelect(index) },
+            .clickable { onSelect(index) },
         contentAlignment = Alignment.Center,
     ) {
         // 内层 Box 由文字撑开，角标才挂得上「文字右上角」而不是整格右上角
@@ -248,19 +246,6 @@ private fun BottomTabItem(
         }
     }
 }
-
-/**
- * 无涟漪点击。
- *
- * 原版底 Tab 与「＋」是瞬时切换/推入，没有 Material 水波纹；[Modifier.clickable] 默认取
- * `LocalIndication`（M3 = ripple），故显式把 indication 置空。
- */
-@Composable
-private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier = clickable(
-    interactionSource = remember { MutableInteractionSource() },
-    indication = null,
-    onClick = onClick,
-)
 
 /** 缩放下箭头：复用 chevron-left 旋转 90°（B3-1 筛选「全部▾」、E1 展开类控件）。 */
 @Composable
