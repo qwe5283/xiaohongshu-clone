@@ -55,9 +55,9 @@ object Dimens {
     val channelFadeArrow = 16.dp
 
     // ---- 底部 Tab ----
-    /** ＋按钮 56×48 圆角 12 满高红块。 */
-    val plusButtonWidth = 56.dp
-    val plusButtonHeight = 32.dp
+    /** ＋按钮 52×36 圆角 12 满高红块。 */
+    val plusButtonWidth = 52.dp
+    val plusButtonHeight = 36.dp
     val plusButtonRadius = 12.dp
 
     // ---- 瀑布流 ----
