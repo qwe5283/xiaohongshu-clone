@@ -2,7 +2,6 @@ package com.xiaohongshu.app.core.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -120,7 +119,7 @@ fun XhsTopBar(
  *
  * 固定五栏：首页 / 点点 / ＋ / 消息 / 我（本复刻以「点点」替换原版「市集」，见章节 H）。
  * [selectedIndex] 取值 0（首页）、1（点点）、3（消息）、4（我）；2 为 ＋，不是选中态。
- * [unreadCount] 仅作用于「消息」栏，>0 时显示红底数字角标（>99 显示 99+）。
+ * [unreadCount] 仅作用于「消息」栏，>0 时在文字右上角显示红底数字角标（>99 显示 99+）。
  * [guestMode] = true 时（A1 游客态）＋ 按钮渲染为灰块而非品牌红。
  */
 @Composable
@@ -133,7 +132,6 @@ fun XhsBottomTabBar(
     guestMode: Boolean = false,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        XhsDivider()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -147,14 +145,7 @@ fun XhsBottomTabBar(
                 selected = selectedIndex == 0,
                 onSelect = onSelect,
                 modifier = Modifier.weight(1f),
-            ) { selected ->
-                Icon(
-                    painter = painterResource(R.drawable.ic_home),
-                    contentDescription = null,
-                    tint = if (selected) XhsColor.Text1 else XhsColor.Text2,
-                    modifier = Modifier.size(Dimens.icon24),
-                )
-            }
+            )
 
             BottomTabItem(
                 index = 1,
@@ -162,14 +153,7 @@ fun XhsBottomTabBar(
                 selected = selectedIndex == 1,
                 onSelect = onSelect,
                 modifier = Modifier.weight(1f),
-            ) { selected ->
-                Icon(
-                    painter = painterResource(R.drawable.ic_assistant),
-                    contentDescription = null,
-                    tint = if (selected) XhsColor.Text1 else XhsColor.Text2,
-                    modifier = Modifier.size(Dimens.icon24),
-                )
-            }
+            )
 
             // ＋ 发布：满高圆角红块，不是「选中态」
             Box(
@@ -181,7 +165,7 @@ fun XhsBottomTabBar(
                 Box(
                     modifier = Modifier
                         .width(Dimens.plusButtonWidth)
-                        .height(Dimens.bottomBar)
+                        .height(Dimens.plusButtonHeight)
                         .clip(RoundedCornerShape(Dimens.plusButtonRadius))
                         .background(if (guestMode) XhsColor.BtnGray else XhsColor.Red)
                         .clickable(onClick = onPublish),
@@ -201,14 +185,7 @@ fun XhsBottomTabBar(
                 onSelect = onSelect,
                 badgeCount = unreadCount,
                 modifier = Modifier.weight(1f),
-            ) { selected ->
-                Icon(
-                    painter = painterResource(R.drawable.ic_notify),
-                    contentDescription = null,
-                    tint = if (selected) XhsColor.Text1 else XhsColor.Text2,
-                    modifier = Modifier.size(Dimens.icon24),
-                )
-            }
+            )
 
             BottomTabItem(
                 index = 4,
@@ -216,13 +193,7 @@ fun XhsBottomTabBar(
                 selected = selectedIndex == 4,
                 onSelect = onSelect,
                 modifier = Modifier.weight(1f),
-            ) { selected ->
-                XhsPersonGlyph(
-                    size = Dimens.icon24,
-                    color = if (selected) XhsColor.Text1 else XhsColor.Text2,
-                    filled = selected,
-                )
-            }
+            )
         }
         // 底部手势条留白（edge-to-edge 下避免被系统手势条遮挡）
         Spacer(
@@ -234,6 +205,12 @@ fun XhsBottomTabBar(
     }
 }
 
+/**
+ * 单个 Tab：文字水平垂直居中，整格可点（高 45 ≥ [Dimens.minTouchTarget]）。
+ *
+ * [badgeCount] > 0 时数字角标贴在**文字右上角**——原版此处是同一位置的 8×8 红点
+ * （dump：点右缘超文字右缘 4dp、点下缘超文字上缘 4dp）；有具体未读数时用数字角标。
+ */
 @Composable
 private fun BottomTabItem(
     index: Int,
@@ -242,34 +219,28 @@ private fun BottomTabItem(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     badgeCount: Long = 0,
-    icon: @Composable (Boolean) -> Unit,
 ) {
-    Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(Dimens.bottomBar)
-                .clickable { onSelect(index) },
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                icon(selected)
-                if (badgeCount > 0) {
-                    XhsCountBadge(
-                        count = badgeCount,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .offset(x = 10.dp, y = (-6).dp),
-                    )
-                }
-            }
-            if (label.isNotEmpty()) {
-                Text(
-                    text = label,
-                    style = if (selected) XhsType.s(17, emphasis = true) else XhsType.s(15),
-                    color = if (selected) XhsColor.Text1 else XhsColor.Text2,
-                    maxLines = 1,
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(Dimens.bottomBar)
+            .clickable { onSelect(index) },
+        contentAlignment = Alignment.Center,
+    ) {
+        // 内层 Box 由文字撑开，角标才挂得上「文字右上角」而不是整格右上角
+        Box {
+            Text(
+                text = label,
+                style = if (selected) XhsType.bottomTabSelected else XhsType.bottomTabUnselected,
+                color = if (selected) XhsColor.Text1 else XhsColor.Text2,
+                maxLines = 1,
+            )
+            if (badgeCount > 0) {
+                XhsCountBadge(
+                    count = badgeCount,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 4.dp, y = (-10).dp),
                 )
             }
         }

@@ -53,6 +53,10 @@ object XhsType {
     val pageTitle = s(17, emphasis = true)
     val inputPlaceholder = s(17)
 
+    /** 底 Tab 五栏文字（纯文字无图标）。 */
+    val bottomTabUnselected = s(16)
+    val bottomTabSelected = s(17, emphasis = true)
+
     // ---- 20sp：顶栏页签「关注/发现」、发布弹层行、编辑资料 label、详情页码 ----
     val topBarTab = s(20, emphasis = true)
     val sheetRow = s(20)

@@ -15,7 +15,7 @@ object XhsColor {
     val Text1 = Color(0xFF333333)
 
     /** 文字次级：未选 Tab/频道、时间戳、辅助说明。 */
-    val Text2 = Color(0xFF999999)
+    val Text2 = Color(0xFF8C8C8C)
 
     /** 弱文字/占位：输入框占位、禁用、空态插画线。 */
     val Text3 = Color(0xFFCCCCCC)

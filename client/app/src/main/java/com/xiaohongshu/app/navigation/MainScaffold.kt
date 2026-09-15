@@ -85,7 +85,7 @@ fun MainScaffold(navigator: AppNavigator) {
                 if (session.loggedIn) showPublishSheet = true else navigator.toLogin()
             },
             // A1 游客态：＋ 为灰块、无消息角标
-            guestMode = !session.loggedIn,
+            // guestMode = !session.loggedIn,
         )
     }
 

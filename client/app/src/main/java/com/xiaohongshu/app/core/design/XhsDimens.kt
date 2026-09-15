@@ -47,8 +47,8 @@ object Dimens {
     /** 点点「内容由AI生成」声明行 24（实测 21.4）。 */
     val aiDisclaimerBar = 24.dp
 
-    /** 底 Tab 栏 48。 */
-    val bottomBar = 48.dp
+    /** 底 Tab 栏 45。 */
+    val bottomBar = 45.dp
 
     /** 频道栏右侧渐隐宽度 60、箭头 16。 */
     val channelFadeWidth = 60.dp
@@ -57,6 +57,7 @@ object Dimens {
     // ---- 底部 Tab ----
     /** ＋按钮 56×48 圆角 12 满高红块。 */
     val plusButtonWidth = 56.dp
+    val plusButtonHeight = 32.dp
     val plusButtonRadius = 12.dp
 
     // ---- 瀑布流 ----
