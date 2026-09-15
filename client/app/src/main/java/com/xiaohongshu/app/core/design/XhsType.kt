@@ -59,7 +59,7 @@ object XhsType {
 
     // ---- 20sp：顶栏页签「关注/发现」、发布弹层行、编辑资料 label、详情页码 ----
     val topBarTab = s(20, emphasis = true)
-    val sheetRow = s(20)
+    val sheetRow = s(17)
     val pageIndicator = s(20, emphasis = true)
 
     // ---- 24sp：个人主页昵称 ----
