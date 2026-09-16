@@ -132,7 +132,7 @@ private fun HomeScreen(
             onSelect = onChannelSelect,
         )
 
-        Box(modifier = Modifier.weight(1f)) {
+        Box(modifier = Modifier.weight(1f).background(XhsColor.WaterfallBg)) {
             XhsListStateHost(
                 state = state.page,
                 onRetry = onRetry,
@@ -153,7 +153,7 @@ private fun HomeScreen(
                     contentPadding = PaddingValues(
                         start = Dimens.waterfallMargin,
                         end = Dimens.waterfallMargin,
-                        top = Dimens.waterfallMargin,
+                        top = Dimens.s0,
                         // 游客态为底部悬浮条预留空间，避免最后一行被永久遮住
                         bottom = if (loggedIn) Dimens.waterfallMargin
                         else Dimens.waterfallMargin + HomeGuestBarReserved,

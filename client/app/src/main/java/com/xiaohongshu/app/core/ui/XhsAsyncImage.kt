@@ -15,8 +15,13 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -97,22 +102,50 @@ fun XhsAsyncImage(
 /**
  * 圆形头像。线框头像 5 档：24 / 36 / 48 / 60 / 108。
  * 缺图时用统一占位素材，不用「默认头像」第二套资源。
+ *
+ * @param borderWidthPx 描边宽度，单位为**物理像素**：发丝线传 1f 即可（1dp 在
+ *   高密度屏约合 3px，视觉过粗）；0 表示不描边。描边画在头像外沿、贴着裁剪圆，
+ *   可见宽度即该值，且不改变组件占位尺寸。
+ * @param borderColor 描边颜色，仅 [borderWidthPx] > 0 时生效。
  */
 @Composable
 fun XhsAvatar(
     url: String,
     size: Dp,
     modifier: Modifier = Modifier,
+    borderWidthPx: Float = 0f,
+    borderColor: Color = XhsColor.DotInactive,
 ) {
-    XhsAsyncImage(
-        url = url,
-        modifier = modifier.size(size),
-        contentScale = ContentScale.Crop,
-        targetWidthDp = size,
-        targetHeightDp = size,
-        clip = CircleShape,
-        showGlyphOnFailure = true,
-    )
+    Box(
+        modifier = modifier
+            .size(size)
+            .drawBehind {
+                // 矩形四边外扩半线宽，使整条描边落在裁剪圆之外：
+                // 既不被不透明图片盖住，可见宽度也恰好等于 borderWidthPx
+                if (borderWidthPx > 0f) {
+                    val half = borderWidthPx / 2f
+                    // this.size 是 DrawScope 的节点尺寸（px）；裸写 size 会被外层 Dp 形参遮蔽
+                    val side = this.size.width
+                    drawRoundRect(
+                        color = borderColor,
+                        topLeft = Offset(-half, -half),
+                        size = Size(side + borderWidthPx, side + borderWidthPx),
+                        cornerRadius = CornerRadius((side + borderWidthPx) / 2f),
+                        style = Stroke(width = borderWidthPx),
+                    )
+                }
+            },
+    ) {
+        XhsAsyncImage(
+            url = url,
+            modifier = Modifier.matchParentSize(),
+            contentScale = ContentScale.Crop,
+            targetWidthDp = size,
+            targetHeightDp = size,
+            clip = CircleShape,
+            showGlyphOnFailure = true,
+        )
+    }
 }
 
 /**

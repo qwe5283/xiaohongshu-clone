@@ -26,6 +26,9 @@ object XhsColor {
     /** 页面背景。 */
     val Bg = Color(0xFFFFFFFF)
 
+    /** 瀑布流背景。 */
+    val WaterfallBg = Color(0xFFF4F4F4)
+
     /** 浅灰胶囊/分隔底：详情输入胶囊、灰底块、覆盖层图标底。 */
     val BgGray = Color(0xFFF5F5F5)
 

@@ -119,13 +119,14 @@ fun WaterfallCard(
             XhsAvatar(
                 url = note.authorAvatar,
                 size = Dimens.avatarCard,
+                borderWidthPx = 2f,
                 modifier = Modifier.clickable { onAuthorClick(note.authorId) },
             )
             Spacer(modifier = Modifier.width(Dimens.s8))
             Text(
                 text = note.authorLabel,
                 style = XhsType.cardFooter,
-                color = XhsColor.Text1,
+                color = XhsColor.Text2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
@@ -161,9 +162,10 @@ fun WaterfallCard(
  * 双列瀑布流列表。
  *
  * 用 `LazyVerticalStaggeredGrid` 而非两列手排，卡片高度随封面比例自然错落，
- * 与线框「混排 4:3 与 3:4」的要求一致。
  *
  * 各页面（B1/B3/B5/F1/F2）共用本组件；页面级差异通过 [header] / [footer] 槽位注入。
+ *
+ * 现状：[footer] 被全部调用方注入 [XhsListFooter] 作分页页脚（加载中/没有更多了）；[header] 暂无使用方，为「列表顶部随滚动内容」预留。
  */
 @Composable
 fun PostWaterfall(

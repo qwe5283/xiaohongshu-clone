@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 object Dimens {
 
     // ---- 间距阶梯 4 / 8 / 12 / 16 / 24 / 32 ----
+    val s0 = 0.dp
     val s4 = 4.dp
     val s8 = 8.dp
     val s12 = 12.dp
@@ -78,8 +79,8 @@ object Dimens {
     /** chip·胶囊·按钮·徽标 pill（用 50% 或大值兜底）。 */
     val radiusPill = 999.dp
 
-    // ---- 头像 5 档 24 / 36 / 48 / 60 / 108 ----
-    val avatarCard = 24.dp   // 卡片脚栏
+    // ---- 头像 5 档 18 / 36 / 48 / 60 / 108 ----
+    val avatarCard = 18.dp   // 卡片脚栏
     val avatarComment = 36.dp
     val avatarConversation = 48.dp
     val avatarDetailAuthor = 60.dp
