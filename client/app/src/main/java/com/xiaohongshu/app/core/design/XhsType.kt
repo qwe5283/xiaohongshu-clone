@@ -58,7 +58,8 @@ object XhsType {
     val bottomTabSelected = s(17, emphasis = true)
 
     // ---- 20sp：顶栏页签「关注/发现」、发布弹层行、编辑资料 label、详情页码 ----
-    val topBarTab = s(20, emphasis = true)
+    val topBarTabSelected = s(16, emphasis = true)
+    val topBarTabUnselected = s(16)
     val sheetRow = s(17)
     val pageIndicator = s(20, emphasis = true)
 

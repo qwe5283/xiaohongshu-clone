@@ -29,6 +29,9 @@ object Dimens {
     /** 页面顶栏 44。 */
     val topBar = 44.dp
 
+    /** 页面顶栏 Tab 选中态装饰条长度 28。 */
+    val topBarTabUnderlineWidth = 28.dp
+
     /** 频道栏 40。 */
     val channelBar = 40.dp
 

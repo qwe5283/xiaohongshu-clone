@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -87,20 +88,20 @@ internal fun HomeTopBar(
             Row(
                 modifier = Modifier.align(Alignment.Center),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimens.s12),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.s24),
             ) {
                 UnderlineLabel(
                     text = "关注",
-                    textStyle = if (tab == HomeTab.FOLLOWING) XhsType.topBarTab else XhsType.s(20),
+                    textStyle = if (tab == HomeTab.FOLLOWING) XhsType.topBarTabSelected else XhsType.topBarTabUnselected,
                     contentColor = if (tab == HomeTab.FOLLOWING) XhsColor.Text1 else XhsColor.Text2,
-                    underlineColor = if (tab == HomeTab.FOLLOWING) XhsColor.Text1 else Color.Transparent,
+                    underlineColor = if (tab == HomeTab.FOLLOWING) XhsColor.Red else Color.Transparent,
                     onClick = { onTabSelect(HomeTab.FOLLOWING) },
                 )
                 UnderlineLabel(
                     text = "发现",
-                    textStyle = if (tab == HomeTab.DISCOVER) XhsType.topBarTab else XhsType.s(20),
+                    textStyle = if (tab == HomeTab.DISCOVER) XhsType.topBarTabSelected else XhsType.topBarTabUnselected,
                     contentColor = if (tab == HomeTab.DISCOVER) XhsColor.Text1 else XhsColor.Text2,
-                    underlineColor = if (tab == HomeTab.DISCOVER) XhsColor.Text1 else Color.Transparent,
+                    underlineColor = if (tab == HomeTab.DISCOVER) XhsColor.Red else Color.Transparent,
                     onClick = { onTabSelect(HomeTab.DISCOVER) },
                 )
             }
@@ -250,6 +251,8 @@ internal fun GuestLoginBar(
  *
  * 下划线用 `drawBehind` 画在文字自身尺寸之下（宽度＝文字实际宽度，无需再测量），
  * 外层 Box 补足 ≥44dp 触控热区。
+ *
+ * 想隐藏下划线时为 `underlineColor` 传入透明值。
  */
 @Composable
 private fun UnderlineLabel(
@@ -274,10 +277,16 @@ private fun UnderlineLabel(
             color = contentColor,
             maxLines = 1,
             modifier = Modifier.drawBehind {
-                drawRect(
+                val underlineHeight = TabUnderlineHeight.toPx()
+                val underlineWidth = Dimens.topBarTabUnderlineWidth.toPx()
+                drawRoundRect(
                     color = underlineColor,
-                    topLeft = Offset(x = 0f, y = size.height + TabUnderlineGap.toPx()),
-                    size = Size(width = size.width, height = TabUnderlineHeight.toPx()),
+                    topLeft = Offset(
+                        x = (size.width - underlineWidth) / 2f,
+                        y = size.height + TabUnderlineGap.toPx()
+                    ),
+                    size = Size(width = underlineWidth, height = underlineHeight),
+                    cornerRadius = CornerRadius(underlineHeight / 2f) // 高度一半 = 完美体育场形
                 )
             },
         )
@@ -291,5 +300,5 @@ internal val HomeGuestBarHeight = 40.dp
 internal val HomeGuestBarReserved = HomeGuestBarHeight + Dimens.s16
 
 private val TabUnderlineHeight = 2.dp
-private val TabUnderlineGap = 2.dp
+private val TabUnderlineGap = 4.dp
 private val GuestLoginBorderWidth = 1.dp
