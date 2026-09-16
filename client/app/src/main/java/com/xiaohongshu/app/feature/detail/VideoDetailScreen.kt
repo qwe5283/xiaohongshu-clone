@@ -318,12 +318,12 @@ private fun VideoMediaArea(
                         contentDescription = "搜索",
                     )
                     Spacer(modifier = Modifier.width(Dimens.s8))
-                    // ↗ 分享：线框未定义行为 → 统一占位素材、点击 no-op
+                    // ↗ 分享：线框未定义行为 → 点击 no-op
                     XhsIconButton(
-                        iconRes = R.drawable.ic_placeholder,
+                        iconRes = R.drawable.ic_share,
                         onClick = {},
                         tint = Color.White,
-                        contentDescription = "分享（占位）",
+                        contentDescription = "分享",
                     )
                 }
             }

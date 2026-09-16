@@ -16,7 +16,7 @@ import com.xiaohongshu.app.core.design.XhsColor
 /**
  * 用 Canvas 直接绘制的少量基础字形。
  *
- * 为什么不都用占位素材：＋ 按钮（底部 Tab 正中的主操作）、☰ 抽屉入口、▶ 视频角标、
+ * 为什么不都用占位素材：＋ 按钮（底部 Tab 正中的主操作）、☰ 抽屉入口、
  * 协议勾选圆圈属于**结构性控件**，用占位素材会让产品看起来是坏的。这几个形状简单到
  * 可以精确绘制，因此就地画；其余真正缺失的图标一律沿用统一占位素材（见 [PlaceholderIconRes]）。
  */
@@ -73,25 +73,6 @@ fun XhsMenuGlyph(
                 cap = cap,
             )
         }
-    }
-}
-
-/** ▶ 视频角标（瀑布流卡片右上 20×20）。 */
-@Composable
-fun XhsPlayGlyph(
-    size: Dp,
-    color: Color,
-    modifier: Modifier = Modifier,
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val w = size.toPx()
-        val path = Path().apply {
-            moveTo(w * 0.30f, w * 0.18f)
-            lineTo(w * 0.82f, w * 0.50f)
-            lineTo(w * 0.30f, w * 0.82f)
-            close()
-        }
-        drawPath(path, color)
     }
 }
 

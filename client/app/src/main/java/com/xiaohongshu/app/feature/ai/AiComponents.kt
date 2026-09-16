@@ -327,7 +327,7 @@ private fun AiActionRow(
             onClick = onPlaceholderAction,
         )
         AiActionIcon(
-            iconRes = PlaceholderIconRes,
+            iconRes = R.drawable.ic_share,
             contentDescription = "分享",
             onClick = onPlaceholderAction,
         )

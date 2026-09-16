@@ -50,7 +50,6 @@ import com.xiaohongshu.app.core.ui.PlaceholderIconRes
 import com.xiaohongshu.app.core.ui.XhsAsyncImage
 import com.xiaohongshu.app.core.ui.XhsCharCounter
 import com.xiaohongshu.app.core.ui.XhsChevronRight
-import com.xiaohongshu.app.core.ui.XhsPlayGlyph
 import com.xiaohongshu.app.core.ui.XhsPlusGlyph
 import com.xiaohongshu.app.core.ui.XhsSpinner
 import kotlinx.coroutines.Dispatchers
@@ -139,14 +138,19 @@ internal fun MediaThumb(
         }
 
         if (item.isVideo) {
-            // 线框 E2：视频缩略用 ▶ 区分（复用结构性字形 XhsPlayGlyph）
+            // 线框 E2：视频缩略用 ▶ 区分
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(XhsColor.PageBadge),
                 contentAlignment = Alignment.Center,
             ) {
-                XhsPlayGlyph(size = Dimens.icon24, color = Color.White)
+                Icon(
+                    painter = painterResource(R.drawable.ic_play),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(Dimens.icon24),
+                )
             }
         }
 

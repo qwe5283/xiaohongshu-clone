@@ -84,9 +84,12 @@ fun WaterfallCard(
                         .background(androidx.compose.ui.graphics.Color(0x66000000)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    XhsPlayGlyph(
-                        size = 10.dp,
-                        color = androidx.compose.ui.graphics.Color.White,
+                    // ▶ 圆角实心三角；ic_play 按原 Canvas 字形的占位比例归一化，故尺寸不变
+                    Icon(
+                        painter = painterResource(R.drawable.ic_play),
+                        contentDescription = null,
+                        tint = androidx.compose.ui.graphics.Color.White,
+                        modifier = Modifier.size(10.dp),
                     )
                 }
             }

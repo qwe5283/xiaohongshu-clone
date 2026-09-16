@@ -14,10 +14,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.list.PagedList
 import com.xiaohongshu.app.core.list.PagedListEffect
-import com.xiaohongshu.app.core.ui.PlaceholderIconRes
 import com.xiaohongshu.app.core.ui.XhsConfirmSheet
 import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsListFooter
@@ -115,9 +115,9 @@ private fun NotificationListScreen(
                 title = categoryTitle(state.category),
                 onBack = onBack,
                 actions = {
-                    // 🧹 素材缺失 → ic_placeholder（线框 G2/G3/G4 右上）
+                    // 🧹 一键已读（线框 G2/G3/G4 右上）
                     XhsIconButton(
-                        iconRes = PlaceholderIconRes,
+                        iconRes = R.drawable.ic_broom,
                         onClick = { confirmReadAll = true },
                         contentDescription = "一键已读",
                     )

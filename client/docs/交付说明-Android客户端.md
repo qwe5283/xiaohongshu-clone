@@ -19,11 +19,11 @@
 | 交付物 | 路径 |
 |--------|------|
 | 安装包（release，已签名，推荐） | `client/dist/xiaohongshu-clone-release.apk`（26 MB） |
-| 安装包（debug） | `client/dist/xiaohongshu-clone-debug.apk`（37 MB） |
+| 安装包（debug） | `client/dist/xiaohongshu-clone-debug.apk`（35 MB，2026-09-17 重出：含新图标） |
 | **接口契约 v2（转交后端）** | `client/docs/API契约-v2.md` |
 | 架构与开发规范 | `client/docs/客户端架构与开发规范.md` |
 | Mock Server（API 联调用，零依赖 Node） | `client/mockserver/`（含 README、44 个路由、50 篇种子笔记、真实 PNG 生成、可播放 mp4） |
-| 图标等素材 | `client/app/src/main/res/drawable/`（23 个真实图标 + 2 个占位 + logo） |
+| 图标等素材 | `client/app/src/main/res/drawable/`（29 个真实图标素材，含 logo；另有 2 个占位与启动图标）。**源 SVG 与图标规范见 §8.1** |
 
 > **安装包签名说明**：release APK 用 Android 调试密钥（`~/.android/debug.keystore`）签名，仅为便于你安装验收。
 > 上架/正式发布请换成正式 keystore，并在 `app/build.gradle.kts` 里配置 `signingConfigs`。
@@ -154,29 +154,36 @@ cd client
 
 - **`ic_placeholder.xml`** —— 所有缺失图标与插画共用的占位（一个带斜杠的圆角方框，一眼能看出是占位）。
 - **`ic_placeholder_illus.xml`** —— 空态插画占位（`XhsIllustrationSlot` 使用）。
-- 另：**结构性控件已用 Canvas 精确绘制**（`XhsPlusGlyph` ＋ / `XhsMenuGlyph` ☰ / `XhsPlayGlyph` ▶ / `XhsPersonGlyph` 人形 / `XhsCheckCircle` 协议勾选），**不需要替换**。
+- 另：**结构性控件已用 Canvas 精确绘制**（`XhsPlusGlyph` ＋ / `XhsMenuGlyph` ☰ / `XhsPersonGlyph` 人形 / `XhsCheckCircle` 协议勾选），**不需要替换**。
 
-**缺素材、当前用占位顶替的位置（共 16 个文件、约 57 处）**：
+**缺素材、当前用占位顶替的位置（共 12 个文件、28 处；2026-09-17 按当前代码重新清点）**：
 
 | 位置 | 具体缺哪些图标 |
 |------|---------------|
-| `feature/ai/AiComponents.kt`（8 处） | 语音、表情、＋、复制、★、分享、踩、重新生成 |
-| `feature/profile/ProfileHeader.kt`（6 处） | 扫一扫、分享、编辑主页 pill 内图标、复制小红书号 |
-| `feature/profile/ProfileCommon.kt`（6 处） | 去发布 banner 图标、segment 搜索框、部件卡图标等 |
-| `feature/message/MessageRoutes.kt`（5 处） | 顶栏「创建」、置顶图标 |
-| `feature/message/NotificationRoutes.kt`（3 处） | 右上「一键已读」🧹 |
-| `feature/profile/MyProfileScreen.kt`（4 处） | 抽屉四个条目图标 |
-| `feature/profile/SettingsScreen.kt`（3 处） | 设置行图标（除「关于小红书」用 `ic_about`） |
-| `feature/detail/VideoDetailScreen.kt`（3 处） | 分享、音乐碟、作者行分享 |
-| `feature/detail/NoteDetailScreen.kt` / `CommentPanel.kt`（各 2 处） | 分享 ↗、评论面板 emoji/@、排序 ≡（≡ 已用 Canvas 字形） |
-| `feature/search/SearchComponents.kt`（3 处） | 拍照搜索相机、历史记录 🗑 |
-| `feature/publish/PublishComponents.kt`（3 处） | 删除 ×、长文卡箭头等 |
-| `feature/profile/EditProfileScreen.kt`（2 处） | 头像相机角标 |
-| `feature/home/HomeBars.kt` | 无需替换（均为 Canvas 字形） |
+| `feature/ai/AiComponents.kt`（5 处） | 语音、表情、＋、复制、踩、重新生成 |
+| `feature/profile/ProfileCommon.kt`（5 处） | 去发布 banner 图标、segment 搜索框、部件卡图标等 |
+| `feature/profile/MyProfileScreen.kt`（3 处） | 抽屉条目图标 |
+| `feature/profile/ProfileHeader.kt`（2 处） | 复制小红书号（12dp）、他人主页 ⋯（24dp） |
+| `feature/message/MessageRoutes.kt`（2 处） | 顶栏「创建」、置顶图标 |
+| `feature/detail/VideoDetailScreen.kt`（2 处） | 音乐碟、作者行分享 |
+| `feature/detail/CommentPanel.kt`（2 处） | 评论面板 emoji / @ |
+| `feature/search/SearchComponents.kt`（2 处） | 拍照搜索相机、历史记录 🗑 |
+| `feature/publish/PublishComponents.kt`（2 处） | 删除 ×、长文卡箭头等 |
+| `feature/profile/SettingsScreen.kt`（1 处） | 设置行图标（除「关于小红书」用 `ic_about`） |
+| `feature/profile/EditProfileScreen.kt`（1 处） | 头像相机角标 |
+| `feature/detail/NoteDetailScreen.kt`（1 处） | 分享 ↗ |
 
-**已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo`。
+**已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_share / ic_scan / ic_edit / ic_broom / ic_play`。
 
 > 2026-09-15 更新：底 Tab 改为**纯文字无图标**（对齐原版），故 `ic_home`、`ic_notify` 已无用例（文件保留但不再引用）；`ic_assistant` 仍用于首页顶栏点点气泡与 H1 会话页。
+>
+> 2026-09-17 更新：新增 `ic_share`、`ic_scan`、`ic_edit`、`ic_broom`、`ic_play` 五个素材并已接线（分享 3 处 / 扫一扫 / 编辑主页 pill / 一键已读 / 视频角标与发布页缩略图），上述清单里对应条目已移除。原来的 Canvas 直角三角 `XhsPlayGlyph` 已被 `ic_play`（圆角）取代并删除。
+
+### 8.1 图标规范与源文件
+
+**规范**：24 视口（`viewportWidth/Height=24`，`width/height=24dp`）+ 描边 1.8dp + 图形占位 18~20dp + 填充版与描边版必须同外缘。细则见 `客户端架构与开发规范.md` §图标。
+
+**源文件**：新下载的 5 个 iconfont SVG 存在 `client/docs/assets/`（`分享 / 扫一扫 / 扫帚 / 播放_填充 / 编辑 .svg`）；同目录的 `图标验收对照-2026-09-17.png` 是改造后 10 个图标的等大对照图（含心形/星形两个配对）。它们是**设计源**，不是可编译资源；再要新增或改动图标时，按上一节规范改 `res/drawable/*.xml`（或重新走一遍 SVG→VectorDrawable 转换），**不要把 .svg 放回 `res/drawable/`**（aapt2 只收 `.xml`/`.png`，放了会直接构建失败）。
 
 ---
 

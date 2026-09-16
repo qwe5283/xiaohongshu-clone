@@ -214,9 +214,9 @@ private fun ProfileFloatingTopBar(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (isMe) {
-                    // 扫一扫 / 分享：线框明确为**视觉占位**（无行为），素材按 §4.5 统一占位
+                    // 扫一扫 / 分享：线框明确为**视觉占位**（无行为），但素材已就位
                     XhsIconButton(
-                        iconRes = PlaceholderIconRes,
+                        iconRes = R.drawable.ic_scan,
                         onClick = {},
                         tint = XhsColor.Text1,
                         iconSize = Dimens.icon24,
@@ -224,7 +224,7 @@ private fun ProfileFloatingTopBar(
                     )
                     Spacer(modifier = Modifier.width(Dimens.profileTopIconGap))
                     XhsIconButton(
-                        iconRes = PlaceholderIconRes,
+                        iconRes = R.drawable.ic_share,
                         onClick = {},
                         tint = XhsColor.Text1,
                         iconSize = Dimens.icon24,
@@ -266,9 +266,9 @@ private fun EditProfilePill(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        // 铅笔图标为缺失素材（§4.5）；18dp 取 Dimens 中唯一的同档 token（segmentIcon = 18）
+        // 铅笔图标；18dp 取 Dimens 中唯一的同档 token（segmentIcon = 18）
         Icon(
-            painter = painterResource(PlaceholderIconRes),
+            painter = painterResource(R.drawable.ic_edit),
             contentDescription = null,
             tint = XhsColor.Text1,
             modifier = Modifier.size(Dimens.segmentIcon),
