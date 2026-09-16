@@ -161,7 +161,7 @@ internal fun ChannelBar(
                 // 右侧多留出渐隐宽度，保证可横滑到底时最后一项不被渐隐/箭头盖住
                 .padding(start = Dimens.pagePadding, end = Dimens.channelFadeWidth),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.s24),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.s12),
         ) {
             channels.forEach { channel ->
                 val isSelected = channel == selected
@@ -169,7 +169,7 @@ internal fun ChannelBar(
                     text = channel,
                     textStyle = if (isSelected) XhsType.tabSelected else XhsType.tabUnselected,
                     contentColor = if (isSelected) XhsColor.Text1 else XhsColor.Text2,
-                    underlineColor = if (isSelected) XhsColor.Text1 else Color.Transparent,
+                    underlineColor = Color.Transparent,
                     onClick = { onSelect(channel) },
                 )
             }

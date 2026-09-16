@@ -28,7 +28,7 @@ enum class HomeTab { DISCOVER, FOLLOWING }
  * 线框注 #3：**点击仅高亮，不改变数据**——频道栏只是视觉态，不做服务端过滤
  * （契约 §2.5 只有 `keyword`/`type`/`sortType`，没有频道维度）。
  */
-val HomeChannels: List<String> = listOf("推荐", "穿搭", "美食", "彩妆", "影视", "职场", "情感")
+val HomeChannels: List<String> = listOf("推荐", "穿搭", "美食", "彩妆", "影视", "职场", "情感", "数码")
 
 /** B1 首页 UI 状态（两个 Tab 各持一份分页态，互不干扰）。 */
 data class HomeUiState(
