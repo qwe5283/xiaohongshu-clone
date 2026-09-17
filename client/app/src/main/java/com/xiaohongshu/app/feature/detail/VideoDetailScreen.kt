@@ -638,7 +638,7 @@ private fun VideoBottomBar(
             contentAlignment = Alignment.CenterStart,
         ) {
             Text(
-                text = NoteTexts.EmptyInput.random(),
+                text = rememberInputPlaceholder(null),
                 style = XhsType.meta,
                 color = XhsColors.text2,
                 maxLines = 1,

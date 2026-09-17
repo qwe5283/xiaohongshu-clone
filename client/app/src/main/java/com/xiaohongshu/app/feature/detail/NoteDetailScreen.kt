@@ -135,6 +135,9 @@ internal fun NoteDetailScreen(
         }
     }
 
+    // 占位文案随机一条并缓存：IME 开合动画压缩视口时每帧重组不再跳变，行内与底栏共用同一条
+    val inputPlaceholder = rememberInputPlaceholder(state.replyTarget?.nickname)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -182,7 +185,7 @@ internal fun NoteDetailScreen(
                         item(key = "comments-input") {
                             InlineCommentInputRow(
                                 myAvatar = myAvatar,
-                                placeholder = NoteTexts.inputPlaceholder(state.replyTarget?.nickname),
+                                placeholder = inputPlaceholder,
                                 onComposeStart = onComposeStart,
                             )
                         }
@@ -249,7 +252,7 @@ internal fun NoteDetailScreen(
                 NoteBottomBar(
                     note = note,
                     commentTotal = state.commentTotal,
-                    placeholder = NoteTexts.inputPlaceholder(state.replyTarget?.nickname),
+                    placeholder = inputPlaceholder,
                     composing = state.composing,
                     draft = state.draft,
                     sending = state.sending,
@@ -592,6 +595,11 @@ private fun NoteLoadingContent() {
         }
     }
 }
+
+/** 占位文案随机一条并缓存（按回复目标记忆）：避免每次重组重掷导致文案跳变。 */
+@Composable
+internal fun rememberInputPlaceholder(replyNickname: String?): String =
+    remember(replyNickname) { NoteTexts.inputPlaceholder(replyNickname) }
 
 /** C1 文案（线框已定稿，不自创）。 */
 internal object NoteTexts {
