@@ -301,8 +301,9 @@ private fun NoteTopBar(
                     modifier = Modifier
                         .requiredSize(Dimens.avatarDetailAuthor)
                         .clickable { onAuthorClick(note.authorId) },
+                    borderWidthPx = 2f,
                 )
-                Spacer(modifier = Modifier.width(Dimens.s8))
+                Spacer(modifier = Modifier.width(Dimens.s16))
                 Text(
                     text = note.authorLabel,
                     style = XhsType.topBarNickname,
@@ -321,10 +322,11 @@ private fun NoteTopBar(
                 }
                 // ↗ 分享：线框未定义其行为 → 统一缺失素材占位（ic_placeholder）、点击 no-op
                 XhsIconButton(
-                    iconRes = R.drawable.ic_placeholder,
+                    iconRes = R.drawable.ic_share,
                     onClick = {},
-                    tint = XhsColor.Text2,
-                    contentDescription = "分享（占位）",
+                    tint = XhsColor.Text1,
+                    iconSize = Dimens.icon24,
+                    contentDescription = "分享",
                 )
             }
         }

@@ -82,8 +82,8 @@ object Dimens {
     // ---- 头像 5 档 18 / 36 / 48 / 60 / 108 ----
     val avatarCard = 18.dp   // 卡片脚栏
     val avatarComment = 36.dp
+    val avatarDetailAuthor = 36.dp
     val avatarConversation = 48.dp
-    val avatarDetailAuthor = 60.dp
     val avatarProfile = 108.dp
 
     /** 二级回复头像 24。 */

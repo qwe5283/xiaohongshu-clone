@@ -66,10 +66,10 @@ object XhsType {
     // ---- 24sp：个人主页昵称 ----
     val profileNickname = s(24, emphasis = true)
 
-    // ---- 按钮/计数等常用强调档 ----
+    // ---- 按钮/计数等不使用强调档 ----
     val countEmphasis = s(17, emphasis = true)
-    val buttonLabel = s(15, emphasis = true)
-    val buttonLabelSmall = s(14, emphasis = true)
+    val buttonLabel = s(15)
+    val buttonLabelSmall = s(14)
 
     val centerAlign = TextAlign.Center
 }
