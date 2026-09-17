@@ -212,7 +212,7 @@ internal fun GuestLoginBar(
         modifier = modifier
             .fillMaxWidth()
             .height(HomeGuestBarHeight)
-            .clip(RoundedCornerShape(Dimens.radiusPill))
+            .clip(RoundedCornerShape(Dimens.s8))
             .background(XhsColor.Dark)
             // 整条可点：既是「登录」入口，也避免点空白处误触到下方卡片
             .clickable(onClick = onLogin)
@@ -222,7 +222,7 @@ internal fun GuestLoginBar(
     ) {
         Text(
             text = "🔒 登录后体验更多功能",
-            style = XhsType.s(15),
+            style = XhsType.s(14),
             color = Color.White,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -232,16 +232,11 @@ internal fun GuestLoginBar(
             modifier = Modifier
                 .height(Dimens.buttonFollow)
                 .clip(RoundedCornerShape(Dimens.radiusPill))
-                .border(
-                    width = GuestLoginBorderWidth,
-                    color = Color.White,
-                    shape = RoundedCornerShape(Dimens.radiusPill),
-                )
                 .clickable(onClick = onLogin)
                 .padding(horizontal = Dimens.s12),
             contentAlignment = Alignment.Center,
         ) {
-            Text(text = "登录", style = XhsType.body, color = Color.White)
+            Text(text = "去登录", style = XhsType.body, color = Color.Red)
         }
     }
 }
@@ -301,4 +296,3 @@ internal val HomeGuestBarReserved = HomeGuestBarHeight + Dimens.s16
 
 private val TabUnderlineHeight = 2.dp
 private val TabUnderlineGap = 4.dp
-private val GuestLoginBorderWidth = 1.dp
