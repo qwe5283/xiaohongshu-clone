@@ -201,7 +201,7 @@ object Dimens {
     val profileHeaderImage = 282.dp
 
     /** 浮层顶栏菜单 29、「编辑主页」pill 93.4×26、扫一扫/分享 24（间距 12）。 */
-    val profileMenuIcon = 29.dp
+    val profileMenuIcon = 24.dp
     val profileEditPillWidth = 93.dp
     val profileEditPillHeight = 26.dp
     val profileTopIconGap = 12.dp

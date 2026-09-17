@@ -48,7 +48,6 @@ import com.xiaohongshu.app.core.ui.XhsEmptyState
 import com.xiaohongshu.app.core.ui.XhsErrorState
 import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsListFooter
-import com.xiaohongshu.app.core.ui.XhsMenuGlyph
 import com.xiaohongshu.app.core.ui.XhsPageLoading
 import com.xiaohongshu.app.domain.model.Comment
 import com.xiaohongshu.app.domain.model.ReplyGroupState
@@ -141,7 +140,12 @@ internal fun CommentPanel(
                 modifier = Modifier.size(Dimens.icon24),
                 contentAlignment = Alignment.Center,
             ) {
-                XhsMenuGlyph(size = Dimens.icon16, color = XhsColor.Text2)
+                Icon(
+                    painter = painterResource(R.drawable.ic_menu),
+                    contentDescription = "排序",
+                    tint = XhsColor.Text1,
+                    modifier = Modifier.size(Dimens.icon16),
+                )
             }
             Spacer(modifier = Modifier.width(Dimens.s12))
             XhsIconButton(

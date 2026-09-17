@@ -19,11 +19,11 @@
 | 交付物 | 路径 |
 |--------|------|
 | 安装包（release，已签名，推荐） | `client/dist/xiaohongshu-clone-release.apk`（26 MB） |
-| 安装包（debug） | `client/dist/xiaohongshu-clone-debug.apk`（35 MB，2026-09-17 重出：含新图标） |
+| 安装包（debug） | `client/dist/xiaohongshu-clone-debug.apk`（35 MB，2026-09-18 重出：含全部图标规范改造） |
 | **接口契约 v2（转交后端）** | `client/docs/API契约-v2.md` |
 | 架构与开发规范 | `client/docs/客户端架构与开发规范.md` |
 | Mock Server（API 联调用，零依赖 Node） | `client/mockserver/`（含 README、44 个路由、50 篇种子笔记、真实 PNG 生成、可播放 mp4） |
-| 图标等素材 | `client/app/src/main/res/drawable/`（29 个真实图标素材，含 logo；另有 2 个占位与启动图标）。**源 SVG 与图标规范见 §8.1** |
+| 图标等素材 | `client/app/src/main/res/drawable/`（32 个真实图标素材，含 logo；另有 2 个占位与启动图标）。**源 SVG 与图标规范见 §8.1** |
 
 > **安装包签名说明**：release APK 用 Android 调试密钥（`~/.android/debug.keystore`）签名，仅为便于你安装验收。
 > 上架/正式发布请换成正式 keystore，并在 `app/build.gradle.kts` 里配置 `signingConfigs`。
@@ -154,9 +154,9 @@ cd client
 
 - **`ic_placeholder.xml`** —— 所有缺失图标与插画共用的占位（一个带斜杠的圆角方框，一眼能看出是占位）。
 - **`ic_placeholder_illus.xml`** —— 空态插画占位（`XhsIllustrationSlot` 使用）。
-- 另：**结构性控件已用 Canvas 精确绘制**（`XhsPlusGlyph` ＋ / `XhsMenuGlyph` ☰ / `XhsPersonGlyph` 人形 / `XhsCheckCircle` 协议勾选），**不需要替换**。
+- 另：**结构性控件已用 Canvas 精确绘制**（`XhsPlusGlyph` ＋ / `XhsCheckCircle` 协议勾选），**不需要替换**；原先同一批就地画的 ☰ / ▶ / 人形已改为矢量资源（`ic_menu` / `ic_play` / `ic_user_circle`），见 §8.1。
 
-**缺素材、当前用占位顶替的位置（共 12 个文件、28 处；2026-09-17 按当前代码重新清点）**：
+**缺素材、当前用占位顶替的位置（共 11 个文件、27 处；2026-09-18 按当前代码重新清点）**：
 
 | 位置 | 具体缺哪些图标 |
 |------|---------------|
@@ -171,19 +171,22 @@ cd client
 | `feature/publish/PublishComponents.kt`（2 处） | 删除 ×、长文卡箭头等 |
 | `feature/profile/SettingsScreen.kt`（1 处） | 设置行图标（除「关于小红书」用 `ic_about`） |
 | `feature/profile/EditProfileScreen.kt`（1 处） | 头像相机角标 |
-| `feature/detail/NoteDetailScreen.kt`（1 处） | 分享 ↗ |
 
-**已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_share / ic_scan / ic_edit / ic_broom / ic_play`。
+**已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_share / ic_scan / ic_edit / ic_broom / ic_play / ic_menu / ic_user / ic_user_circle`。
 
 > 2026-09-15 更新：底 Tab 改为**纯文字无图标**（对齐原版），故 `ic_home`、`ic_notify` 已无用例（文件保留但不再引用）；`ic_assistant` 仍用于首页顶栏点点气泡与 H1 会话页。
 >
-> 2026-09-17 更新：新增 `ic_share`、`ic_scan`、`ic_edit`、`ic_broom`、`ic_play` 五个素材并已接线（分享 3 处 / 扫一扫 / 编辑主页 pill / 一键已读 / 视频角标与发布页缩略图），上述清单里对应条目已移除。原来的 Canvas 直角三角 `XhsPlayGlyph` 已被 `ic_play`（圆角）取代并删除。
+> 2026-09-17 更新（第一批）：新增 `ic_share`、`ic_scan`、`ic_edit`、`ic_broom`、`ic_play` 五个素材并已接线（分享 3 处 / 扫一扫 / 编辑主页 pill / 一键已读 / 视频角标与发布页缩略图），上述清单里对应条目已移除。`ic_heart` / `ic_heart_filled` / `ic_star_filled` / `ic_assistant` 同时修掉了线宽与配对跳动问题。
+>
+> 2026-09-17 更新（第二批）：`ic_chevron_left/right`（1.5→1.8dp）、`ic_close`（2.0→1.8dp）统一线宽并重绘为「中线 + 描边」；就地画的 ☰ 与 人形 落地为 `ic_menu`（3 处调用：首页/个人页顶栏、评论排序）、`ic_user_circle`（消息页「新增关注」入口），Canvas 字形 `XhsMenuGlyph` / `XhsPersonGlyph` 删除。`ic_user`（实心人形）已转换但**当前无用例**，留作备用。
 
 ### 8.1 图标规范与源文件
 
-**规范**：24 视口（`viewportWidth/Height=24`，`width/height=24dp`）+ 描边 1.8dp + 图形占位 18~20dp + 填充版与描边版必须同外缘。细则见 `客户端架构与开发规范.md` §图标。
+**规范**：24 视口（`viewportWidth/Height=24`，`width/height=24dp`）+ 描边 1.8dp + 图形占位 18~20dp（工具/结构性字形例外）+ 填充版与描边版必须同外缘。细则见 `客户端架构与开发规范.md` §4.5.1。
 
-**源文件**：新下载的 5 个 iconfont SVG 存在 `client/docs/assets/`（`分享 / 扫一扫 / 扫帚 / 播放_填充 / 编辑 .svg`）；同目录的 `图标验收对照-2026-09-17.png` 是改造后 10 个图标的等大对照图（含心形/星形两个配对）。它们是**设计源**，不是可编译资源；再要新增或改动图标时，按上一节规范改 `res/drawable/*.xml`（或重新走一遍 SVG→VectorDrawable 转换），**不要把 .svg 放回 `res/drawable/`**（aapt2 只收 `.xml`/`.png`，放了会直接构建失败）。
+**源文件**：共用那批图标（heart / star / comment / search / close / chevron / more / home / notify / about / live / male / female / publish / red / assistant / ai-* 等 22 个）的**源 SVG 在 `frontend/src/assets/icons/`**——Android 的 drawable 就是从这里转出来的；新下载的 `user.svg` / `user_circle.svg` 在 `client/docs/assets/`。（第一批下载的 `分享 / 扫一扫 / 扫帚 / 播放_填充 / 编辑` 五个源 SVG 已不在仓库里，**以 `res/drawable/*.xml` 为准**。）它们是**设计源**，不是可编译资源；再要新增或改动图标时，按上一节规范改 `res/drawable/*.xml`（或重新走一遍 SVG→VectorDrawable 转换），**不要把 .svg 放回 `res/drawable/`**（aapt2 只收 `.xml`/`.png`，放了会直接构建失败）。
+
+> ⚠️ **跨端待办**：这批线宽统一只做了 Android 侧，`frontend/src/assets/icons/` 里同名图标仍是老线宽（heart / chevron 6.25%、close 8.3%），两端现在不一致。要对齐就照规范 §4.5.1 第 2 条处理 Web 那批。
 
 ---
 

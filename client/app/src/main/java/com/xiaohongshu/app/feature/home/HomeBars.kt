@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.material3.Icon
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -29,6 +31,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,7 +42,6 @@ import com.xiaohongshu.app.core.design.XhsType
 import com.xiaohongshu.app.core.ui.XhsChevronRight
 import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.ui.XhsIconButton
-import com.xiaohongshu.app.core.ui.XhsMenuGlyph
 
 /**
  * B1/A1 首页顶栏：高 44（含状态栏 inset）。
@@ -133,7 +135,12 @@ private fun MenuEntryButton(onClick: () -> Unit, modifier: Modifier = Modifier) 
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        XhsMenuGlyph(size = Dimens.icon24, color = XhsColor.Text1)
+        Icon(
+            painter = painterResource(R.drawable.ic_menu),
+            contentDescription = "菜单",
+            tint = XhsColor.Text1,
+            modifier = Modifier.size(Dimens.icon24),
+        )
     }
 }
 

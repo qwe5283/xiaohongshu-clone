@@ -35,7 +35,6 @@ import com.xiaohongshu.app.core.ui.PlaceholderIconRes
 import com.xiaohongshu.app.core.ui.XhsAsyncImage
 import com.xiaohongshu.app.core.ui.XhsAvatar
 import com.xiaohongshu.app.core.ui.XhsIconButton
-import com.xiaohongshu.app.core.ui.XhsMenuGlyph
 import com.xiaohongshu.app.domain.model.User
 
 /**
@@ -186,9 +185,11 @@ private fun ProfileFloatingTopBar(
                 contentAlignment = Alignment.Center,
             ) {
                 if (isMe) {
-                    XhsMenuGlyph(
-                        size = Dimens.profileMenuIcon,
-                        color = XhsColor.Text1,
+                    Icon(
+                        painter = painterResource(R.drawable.ic_menu),
+                        contentDescription = "菜单",
+                        tint = XhsColor.Text1,
+                        modifier = Modifier.size(Dimens.profileMenuIcon),
                     )
                 } else {
                     Icon(

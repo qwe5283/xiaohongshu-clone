@@ -16,9 +16,9 @@ import com.xiaohongshu.app.core.design.XhsColor
 /**
  * 用 Canvas 直接绘制的少量基础字形。
  *
- * 为什么不都用占位素材：＋ 按钮（底部 Tab 正中的主操作）、☰ 抽屉入口、
- * 协议勾选圆圈属于**结构性控件**，用占位素材会让产品看起来是坏的。这几个形状简单到
- * 可以精确绘制，因此就地画；其余真正缺失的图标一律沿用统一占位素材（见 [PlaceholderIconRes]）。
+ * 为什么不都用占位素材：＋ 按钮（底部 Tab 正中的主操作）、协议勾选圆圈属于**结构性控件**，
+ * 用占位素材会让产品看起来是坏的。这两个形状简单到可以精确绘制，因此就地画；
+ * 其余真正缺失的图标一律沿用统一占位素材（见 [PlaceholderIconRes]）。
  */
 private const val DEFAULT_STROKE_RATIO = 0.1f
 
@@ -49,30 +49,6 @@ fun XhsPlusGlyph(
             strokeWidth = stroke,
             cap = cap,
         )
-    }
-}
-
-/** ☰ 抽屉入口（仅「我」页左上角使用，线框 F1/F4）。 */
-@Composable
-fun XhsMenuGlyph(
-    size: Dp,
-    color: Color,
-    modifier: Modifier = Modifier,
-    strokeWidth: Dp = size * DEFAULT_STROKE_RATIO,
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val stroke = strokeWidth.toPx()
-        val w = size.toPx()
-        val cap = StrokeCap.Round
-        listOf(0.22f, 0.5f, 0.78f).forEach { fraction ->
-            drawLine(
-                color = color,
-                start = Offset(stroke, w * fraction),
-                end = Offset(w - stroke, w * fraction),
-                strokeWidth = stroke,
-                cap = cap,
-            )
-        }
     }
 }
 
@@ -128,51 +104,6 @@ fun XhsIllustrationSlot(
             contentDescription = null,
             tint = XhsColor.Text3,
             modifier = Modifier.size(width * 0.66f, height * 0.66f),
-        )
-    }
-}
-
-/**
- * 人形字形（底 Tab「我」、他人主页入口）。
- *
- * 这是底部导航的结构性图标，用占位素材会让主导航看起来是坏的，故就地绘制；
- * [filled] 为选中态（线框底 Tab 选中为加粗/实心）。
- */
-@Composable
-fun XhsPersonGlyph(
-    size: Dp,
-    color: Color,
-    filled: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    Canvas(modifier = modifier.size(size)) {
-        val w = size.toPx()
-        val headRadius = w * 0.185f
-        val headCenter = Offset(w / 2f, w * 0.285f)
-
-        if (filled) {
-            drawCircle(color = color, radius = headRadius, center = headCenter)
-        } else {
-            drawCircle(
-                color = color,
-                radius = headRadius,
-                center = headCenter,
-                style = Stroke(width = w * 0.095f),
-            )
-        }
-
-        // 肩部：上凸半椭圆
-        val bodyWidth = w * 0.56f
-        val bodyHeight = w * 0.46f
-        drawArc(
-            color = color,
-            startAngle = 180f,
-            sweepAngle = 180f,
-            useCenter = filled,
-            topLeft = Offset((w - bodyWidth) / 2f, w * 0.56f),
-            size = androidx.compose.ui.geometry.Size(bodyWidth, bodyHeight),
-            style = if (filled) androidx.compose.ui.graphics.drawscope.Fill
-            else Stroke(width = w * 0.095f),
         )
     }
 }

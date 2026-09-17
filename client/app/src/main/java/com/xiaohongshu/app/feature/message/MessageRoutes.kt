@@ -42,7 +42,6 @@ import com.xiaohongshu.app.core.ui.XhsCountBadge
 import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.ui.XhsDotBadge
 import com.xiaohongshu.app.core.ui.XhsIconButton
-import com.xiaohongshu.app.core.ui.XhsPersonGlyph
 import com.xiaohongshu.app.core.ui.XhsTopBar
 import com.xiaohongshu.app.core.util.Formatters
 import com.xiaohongshu.app.data.dto.NotificationCategory
@@ -144,11 +143,11 @@ private fun MessageScreen(
                 width = entryWidth,
                 onClick = { onEntryClick(NotificationCategory.FOLLOW) },
             ) {
-                // 结构性字形（core 已用 Canvas 精确绘制），不用占位素材
-                XhsPersonGlyph(
-                    size = Dimens.icon24,
-                    color = XhsColor.Text1,
-                    filled = false,
+                Icon(
+                    painter = painterResource(R.drawable.ic_user),
+                    contentDescription = null,
+                    tint = XhsColor.Text1,
+                    modifier = Modifier.size(Dimens.icon24),
                 )
             }
         }
