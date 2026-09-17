@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.xiaohongshu.app.R
+import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.image.ImageLoader
 
@@ -113,7 +114,7 @@ fun XhsAvatar(
     url: String,
     size: Dp,
     modifier: Modifier = Modifier,
-    borderWidthPx: Float = 0f,
+    borderWidthPx: Float = Dimens.avatarBorderWidthPx,
     borderColor: Color = XhsColor.DotInactive,
 ) {
     Box(

@@ -262,7 +262,7 @@ fun XhsCountText(
 ) {
     Text(
         text = if (count > 0) com.xiaohongshu.app.core.util.Formatters.formatCount(count) else zeroLabel,
-        style = XhsType.commentName,
+        style = XhsType.body,
         color = color,
         maxLines = 1,
         modifier = modifier,

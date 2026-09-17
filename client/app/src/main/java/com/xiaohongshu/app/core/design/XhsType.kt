@@ -31,12 +31,13 @@ object XhsType {
     val meta = s(12)
     val aiDisclaimer = s(12)
 
-    // ---- 14sp：Tab、正文、评论内容、话题标签、顶栏昵称 ----
+    // ---- 14sp：Tab、正文、评论内容、话题标签、顶栏昵称、输入占位 ----
     val tabSelected = s(14, emphasis = true)
     val tabUnselected = s(14)
     val body = s(14)
     val comment = s(14)
     val topBarNickname = s(14)
+    val inputPlaceholder = s(14)
 
     // ---- 15sp：Tab/底 Tab、列表标题、会话标题、设置行、segment、搜索条目 ----
     val listTitle = s(15)
@@ -48,10 +49,9 @@ object XhsType {
     val detailTitle = s(16, emphasis = true)
     val sectionTitle = s(16, emphasis = true)
 
-    // ---- 17sp：评论用户名、页面大标题、输入占位 ----
+    // ---- 17sp：评论用户名、页面大标题 ----
     val commentName = s(17)
     val pageTitle = s(17, emphasis = true)
-    val inputPlaceholder = s(17)
 
     /** 底 Tab 五栏文字（纯文字无图标）。 */
     val bottomTabUnselected = s(16)
@@ -61,7 +61,7 @@ object XhsType {
     val topBarTabSelected = s(16, emphasis = true)
     val topBarTabUnselected = s(16)
     val sheetRow = s(17)
-    val pageIndicator = s(20, emphasis = true)
+    val pageIndicator = s(12)
 
     // ---- 24sp：个人主页昵称 ----
     val profileNickname = s(24, emphasis = true)

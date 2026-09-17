@@ -122,7 +122,6 @@ fun WaterfallCard(
             XhsAvatar(
                 url = note.authorAvatar,
                 size = Dimens.avatarCard,
-                borderWidthPx = 2f,
                 modifier = Modifier.clickable { onAuthorClick(note.authorId) },
             )
             Spacer(modifier = Modifier.width(Dimens.s8))

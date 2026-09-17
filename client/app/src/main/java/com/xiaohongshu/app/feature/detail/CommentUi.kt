@@ -112,7 +112,7 @@ internal fun CommentRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = comment.nickname.ifBlank { "小红书用户" },
-                    style = XhsType.commentName,
+                    style = XhsType.comment,
                     color = XhsColor.Text2,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -125,7 +125,7 @@ internal fun CommentRow(
             }
             Text(
                 text = comment.displayContent,
-                style = XhsType.commentName,
+                style = XhsType.comment,
                 color = XhsColor.Text1,
             )
             CommentMetaRow(
@@ -331,7 +331,7 @@ internal fun CommentSendButton(
 internal fun CommentsHeader(count: Int, modifier: Modifier = Modifier) {
     Text(
         text = "共 $count 条评论",
-        style = XhsType.s(14, emphasis = true),
+        style = XhsType.body,
         color = XhsColor.Text1,
         modifier = modifier.padding(top = CommentsHeaderTopPadding),
     )

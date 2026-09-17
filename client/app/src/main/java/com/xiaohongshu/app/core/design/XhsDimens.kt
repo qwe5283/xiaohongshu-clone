@@ -85,6 +85,7 @@ object Dimens {
     val avatarDetailAuthor = 36.dp
     val avatarConversation = 48.dp
     val avatarProfile = 108.dp
+    val avatarBorderWidthPx = 2f
 
     /** 二级回复头像 24。 */
     val avatarReply = 24.dp

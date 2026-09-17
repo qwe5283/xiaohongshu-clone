@@ -301,7 +301,6 @@ private fun NoteTopBar(
                     modifier = Modifier
                         .requiredSize(Dimens.avatarDetailAuthor)
                         .clickable { onAuthorClick(note.authorId) },
-                    borderWidthPx = 2f,
                 )
                 Spacer(modifier = Modifier.width(Dimens.s16))
                 Text(
@@ -364,8 +363,8 @@ private fun NoteMedia(images: List<NoteImage>) {
                         .align(Alignment.TopEnd)
                         .padding(PageBadgeInset)
                         .clip(RoundedCornerShape(Dimens.radiusPill))
-                        .background(XhsColor.Scrim)
-                        .padding(horizontal = Dimens.s8, vertical = 2.dp),
+                        .background(XhsColor.ScrimGray)
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
                 )
             }
         }
@@ -404,12 +403,13 @@ private fun NoteBody(note: Note, modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(Dimens.s8))
             Text(text = note.content, style = XhsType.body, color = XhsColor.Text1)
         }
-        Spacer(modifier = Modifier.height(Dimens.s8))
+        Spacer(modifier = Modifier.height(Dimens.s16))
         Text(
             text = Formatters.formatNoteTime(note.createdAt),
             style = XhsType.meta,
             color = XhsColor.Text2,
         )
+        Spacer(modifier = Modifier.height(Dimens.s16))
     }
 }
 
@@ -601,9 +601,16 @@ internal object NoteTexts {
     const val Like = "赞"
     const val Collect = "收藏"
     const val Comment = "评论"
-    const val EmptyInput = "说点什么..."
+    /** C1-5 空态占位文案池：每次随机取一条展示。 */
+    val EmptyInput = listOf(
+        "说点什么...",
+        "留下你精彩的评论吧",
+        "友善发言，暖心互动",
+        "来说说你的看法吧",
+        "分享你的想法吧",
+    )
 
-    /** C1-5：回复态占位变「回复 @昵称：」，否则「说点什么...」。 */
+    /** C1-5：回复态占位变「回复 @昵称：」，否则从文案池随机取一条。 */
     fun inputPlaceholder(replyNickname: String?): String =
-        if (replyNickname.isNullOrBlank()) EmptyInput else "回复 @$replyNickname："
+        if (replyNickname.isNullOrBlank()) EmptyInput.random() else "回复 @$replyNickname："
 }

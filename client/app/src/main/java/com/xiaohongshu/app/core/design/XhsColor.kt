@@ -40,6 +40,7 @@ object XhsColor {
 
     /** 弹层/遮罩输入/弹窗遮罩。 */
     val Scrim = Color(0x99000000)
+    val ScrimGray = Color(0x66000000)
 
     /** 轮播圆点未选中 / 进度轨道 / 骨架条底色。 */
     val DotInactive = Color(0xFFD9D9D9)
