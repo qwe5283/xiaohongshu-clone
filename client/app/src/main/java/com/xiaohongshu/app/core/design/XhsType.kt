@@ -69,7 +69,7 @@ object XhsType {
     // ---- 按钮/计数等不使用强调档 ----
     val countEmphasis = s(17, emphasis = true)
     val buttonLabel = s(15)
-    val buttonLabelSmall = s(14)
+    val buttonLabelSmall = s(13)
 
     val centerAlign = TextAlign.Center
 }

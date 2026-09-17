@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -85,17 +86,29 @@ fun XhsFollowPill(
     modifier: Modifier = Modifier,
     height: Dp = Dimens.buttonFollow,
     minWidth: Dp = 64.dp,
+    toFollowBg: Color = XhsColor.Red,
+    followingBg: Color = XhsColor.BtnGray,
+    cornerRadius: Dp = Dimens.radiusPill,
+    borderWidthPx: Float = 0f,
 ) {
     val container by animateColorAsState(
-        targetValue = if (followed) XhsColor.BtnGray else XhsColor.Red,
+        targetValue = if (followed) followingBg else toFollowBg,
         label = "followContainer",
     )
+    val borderWidth = with(LocalDensity.current) { borderWidthPx.toDp() }
     Box(
         modifier = modifier
             .height(height)
             .defaultMinSize(minWidth = minWidth)
-            .clip(RoundedCornerShape(Dimens.radiusPill))
+            .clip(RoundedCornerShape(cornerRadius))
             .background(container)
+            .then(
+                if (borderWidthPx > 0f) {
+                    Modifier.border(borderWidth, XhsColor.BtnGray, RoundedCornerShape(cornerRadius))
+                } else {
+                    Modifier
+                },
+            )
             // 触控热区扩到 ≥44（线框 T-4c：小图标 24 视觉 + 透明扩边）
             .clickable(onClick = onToggle)
             .padding(horizontal = 12.dp),
