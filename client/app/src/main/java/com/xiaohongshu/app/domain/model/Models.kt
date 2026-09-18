@@ -84,9 +84,13 @@ data class Note(
     /**
      * 瀑布流封面比例。图笔记取首图真实比例，视频笔记无图片尺寸信息时用 3:4。
      * 线框要求混排 4:3 与 3:4，故不能写死。
+     *
+     * 极端比例（截长屏、全景图）会让卡片高于视口或压成细条，钳到线框两档之间。
+     * 只收窄封面；[NoteImage.ratio] 保留真实值。
      */
     val coverRatio: Float
-        get() = images.firstOrNull()?.ratio ?: Dimens.RATIO_TALL
+        get() = (images.firstOrNull()?.ratio ?: Dimens.RATIO_TALL)
+            .coerceIn(Dimens.RATIO_TALL, Dimens.RATIO_WIDE)
 
     /** 详情大图列表；图笔记至少有 1 张（发布侧已禁止无素材笔记）。 */
     val detailImages: List<NoteImage>
