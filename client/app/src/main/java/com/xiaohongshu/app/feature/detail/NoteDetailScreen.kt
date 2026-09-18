@@ -319,7 +319,14 @@ private fun NoteTopBar(
                 )
                 // D2：自己的笔记不显示关注按钮；详情用描边胶囊（他人主页用通栏按钮）
                 if (!isSelf) {
-                    XhsFollowPill(followed = followed, onToggle = onFollowClick, followingBg = Color.Transparent, borderWidthPx = 2f)
+                    XhsFollowPill(
+                        followed = followed,
+                        onToggle = onFollowClick,
+                        followFg = XhsColor.Red,
+                        followBg = Color.Transparent,
+                        followedBg = Color.Transparent,
+                        borderWidthPx = 2f,
+                    )
                     Spacer(modifier = Modifier.width(Dimens.s8))
                 }
                 // ↗ 分享：线框未定义其行为 → 统一缺失素材占位（ic_placeholder）、点击 no-op

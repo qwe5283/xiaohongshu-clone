@@ -86,16 +86,21 @@ fun XhsFollowPill(
     modifier: Modifier = Modifier,
     height: Dp = Dimens.buttonFollow,
     minWidth: Dp = 64.dp,
-    toFollowBg: Color = XhsColor.Red,
-    followingBg: Color = XhsColor.BtnGray,
+    followFg: Color = Color.White,
+    followBg: Color = XhsColor.Red,
+    followedFg: Color = XhsColor.BtnGrayText,
+    followedBg: Color = XhsColor.BtnGray,
     cornerRadius: Dp = Dimens.radiusPill,
     borderWidthPx: Float = 0f,
+    followBorderColor: Color = XhsColor.Red,
+    followedBorderColor: Color = XhsColor.BtnGray,
 ) {
     val container by animateColorAsState(
-        targetValue = if (followed) followingBg else toFollowBg,
+        targetValue = if (followed) followedBg else followBg,
         label = "followContainer",
     )
     val borderWidth = with(LocalDensity.current) { borderWidthPx.toDp() }
+    val borderColor = if (followed) followedBorderColor else followBorderColor
     Box(
         modifier = modifier
             .height(height)
@@ -104,7 +109,7 @@ fun XhsFollowPill(
             .background(container)
             .then(
                 if (borderWidthPx > 0f) {
-                    Modifier.border(borderWidth, XhsColor.BtnGray, RoundedCornerShape(cornerRadius))
+                    Modifier.border(borderWidth, borderColor, RoundedCornerShape(cornerRadius))
                 } else {
                     Modifier
                 },
@@ -117,7 +122,7 @@ fun XhsFollowPill(
         Text(
             text = if (followed) "已关注" else "关注",
             style = XhsType.buttonLabelSmall,
-            color = if (followed) XhsColor.BtnGrayText else Color.White,
+            color = if (followed) followedFg else followFg,
         )
     }
 }
