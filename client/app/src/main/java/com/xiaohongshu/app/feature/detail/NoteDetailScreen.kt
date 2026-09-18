@@ -168,7 +168,9 @@ internal fun NoteDetailScreen(
                 val note = state.note
                 Box(modifier = Modifier.weight(1f)) {
                     LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
-                        item(key = "media") { NoteMedia(images = note.detailImages) }
+                        item(key = "media") {
+                            NoteMedia(images = note.detailImages, ratio = note.coverRatio)
+                        }
 
                         item(key = "body") {
                             NoteBody(note = note, modifier = Modifier.padding(horizontal = DetailContentPadding))
@@ -343,9 +345,15 @@ private fun NoteTopBar(
     }
 }
 
-/** 大图区：全宽 3:4 + 左右滑动 + 多图页码角标 + 图下居中圆点（单图两者都不显示）。 */
+/**
+ * 大图区：全宽 + 左右滑动 + 多图页码角标 + 图下居中圆点（单图两者都不显示）。
+ *
+ * [ratio] 由首图比例钳制而来（[com.xiaohongshu.app.domain.model.Note.coverRatio]，
+ * 3:4~4:3），整篇笔记共用——多图轮播时各页高度一致，不随翻页跳动。
+ * 图片按 contain（[ContentScale.Fit]）缩放，与盒子比例不符时留白露出占位底色。
+ */
 @Composable
-private fun NoteMedia(images: List<NoteImage>) {
+private fun NoteMedia(images: List<NoteImage>, ratio: Float) {
     if (images.isEmpty()) return
     val pagerState = rememberPagerState(pageCount = { images.size })
     val multiple = images.size > 1
@@ -354,14 +362,13 @@ private fun NoteMedia(images: List<NoteImage>) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(Dimens.RATIO_DETAIL_IMAGE)
-                .background(XhsColor.PlaceholderBg),
+                .aspectRatio(ratio)
         ) {
             HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
                 XhsAsyncImage(
                     url = images[page].url,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     showGlyphOnFailure = false,
                 )
             }

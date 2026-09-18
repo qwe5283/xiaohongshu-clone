@@ -79,7 +79,7 @@ fun XhsAsyncImage(
 
     val base = if (clip != null) modifier.clip(clip) else modifier
 
-    Box(modifier = base.background(XhsColor.PlaceholderBg), contentAlignment = alignment) {
+    Box(modifier = base.background(Color.Transparent), contentAlignment = alignment) {
         val current = bitmap
         if (current != null) {
             Image(
