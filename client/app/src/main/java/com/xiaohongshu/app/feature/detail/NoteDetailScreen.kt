@@ -509,6 +509,7 @@ private fun NoteBottomBar(
                     count = note.collectCount,
                     zeroLabel = NoteTexts.Collect,
                     onClick = onCollectClick,
+                    activeTint = XhsColor.Yellow,
                 )
                 XhsInteractionAction(
                     iconRes = R.drawable.ic_comment,

@@ -196,7 +196,7 @@ private fun CommentMetaRow(
                 Text(
                     text = Formatters.formatCount(comment.likeCount),
                     style = XhsType.meta,
-                    color = if (comment.liked) XhsColor.Red else XhsColor.Text2,
+                    color = XhsColor.Text2,
                 )
             }
         }

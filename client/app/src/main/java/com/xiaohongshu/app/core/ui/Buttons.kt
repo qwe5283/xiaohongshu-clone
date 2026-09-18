@@ -309,7 +309,7 @@ fun XhsInteractionAction(
         XhsCountText(
             count = count,
             zeroLabel = zeroLabel,
-            color = if (active) activeTint else tint,
+            color = tint,
         )
     }
 }

@@ -663,6 +663,7 @@ private fun VideoBottomBar(
             zeroLabel = NoteTexts.Collect,
             onClick = onCollectClick,
             tint = Color.White,
+            activeTint = XhsColor.Yellow,
         )
         // 点「💬」→ C3-1 评论列表面板
         XhsInteractionAction(

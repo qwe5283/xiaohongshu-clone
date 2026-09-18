@@ -12,6 +12,9 @@ object XhsColor {
     val Red = Color(0xFFEA3F4A)
     val RedBg = Color(0xFFFFEDF0)
 
+    /** 黄色，用于收藏按钮填充色 */
+    val Yellow = Color(0xFFFCBC53)
+
     /** 文字主色：标题/正文/选中态。 */
     val Text1 = Color(0xFF333333)
 
