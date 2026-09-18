@@ -18,7 +18,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -175,8 +174,16 @@ internal class CommentsController(
 
     private val _groups = MutableStateFlow<Map<Long, ReplyGroupState>>(emptyMap())
 
-    /** 回复组展开态（key = 一级评论 id）。 */
-    val groups: StateFlow<Map<Long, ReplyGroupState>> = _groups.asStateFlow()
+    /**
+     * 回复组展开态（key = 一级评论 id）。楼中楼回复的 ♥ 与一级评论共用同一份
+     * 乐观覆盖，故 [ReplyGroupState.replies] 渲染前也要经 store 合并——否则点赞
+     * 请求成功但图标停在服务端旧值。内部状态机仍读写 [_groups] 的服务端原始
+     * 快照（[rawComment] 的提交基准，见类头约定 1）。
+     */
+    val groups: StateFlow<Map<Long, ReplyGroupState>> =
+        combine(_groups, store.commentOverrides) { g, _ ->
+            g.mapValues { it.value.copy(replies = store.mergeComments(it.value.replies)) }
+        }.stateIn(scope, SharingStarted.Eagerly, emptyMap())
 
     /** 每组已拉取的批次数：只用于推进「展开更多回复」的页码，不参与渲染。 */
     private val loadedBatches = mutableMapOf<Long, Int>()
