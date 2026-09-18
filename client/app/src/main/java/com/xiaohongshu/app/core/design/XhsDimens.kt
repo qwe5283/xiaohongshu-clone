@@ -170,9 +170,9 @@ object Dimens {
     val videoProgressTrack = 2.dp
     val videoProgressTouch = 6.dp
 
-    /** 轮播圆点 5 / 点距 8。 */
+    /** 轮播圆点 5 / 点距 4。 */
     val carouselDot = 5.dp
-    val carouselDotGap = 8.dp
+    val carouselDotGap = 4.dp
 
     /** 未读点 8。 */
     val unreadDot = 8.dp

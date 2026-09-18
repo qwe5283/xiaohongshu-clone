@@ -394,7 +394,7 @@ private fun NoteMedia(images: List<NoteImage>) {
                             .size(Dimens.carouselDot)
                             .clip(RoundedCornerShape(Dimens.radiusPill))
                             .background(
-                                if (index == pagerState.currentPage) XhsColor.Text1 else XhsColor.DotInactive,
+                                if (index == pagerState.currentPage) XhsColor.Red else XhsColor.DotInactive,
                             ),
                     )
                 }
