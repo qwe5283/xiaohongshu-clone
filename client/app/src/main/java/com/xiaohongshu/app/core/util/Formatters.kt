@@ -53,7 +53,7 @@ object Formatters {
     }
 
     /**
-     * 评论/通知的相对时间：`3分钟前` `2小时前` `昨天` `09-14`。
+     * 评论/通知的相对时间：`3分钟前` `2小时前` `昨天 13:14` `09-14`。
      * 线框评论 meta 行与通知条目使用。
      */
     fun formatRelative(epochMillis: Long): String {
@@ -66,7 +66,7 @@ object Formatters {
             diffMinutes < 1 -> "刚刚"
             diffMinutes < 60 -> "${diffMinutes}分钟前"
             diffMinutes < 60 * 24 -> "${diffMinutes / 60}小时前"
-            diffMinutes < 60 * 24 * 2 -> "昨天"
+            diffMinutes < 60 * 24 * 2 -> "昨天 ${toLocal(epochMillis).format(HOUR_MINUTE)}"
             diffMinutes < 60 * 24 * 30 -> toLocal(epochMillis).format(MONTH_DAY)
             else -> toLocal(epochMillis).format(YEAR_MONTH_DAY)
         }
