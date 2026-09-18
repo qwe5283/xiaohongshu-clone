@@ -27,21 +27,25 @@ internal data class UserProfileUiState(
     val tab: ProfileTab = ProfileTab.NOTES,
     val notesState: PagedState<Note> = PagedState(),
     val collectedState: PagedState<Note> = PagedState(),
+    val likedState: PagedState<Note> = PagedState(),
     val notes: List<Note> = emptyList(),
     val collected: List<Note> = emptyList(),
+    val liked: List<Note> = emptyList(),
     /** 已合并本地乐观态的关注态（渲染用）。 */
     val followed: Boolean = false,
-    /** 自己的主页不显示关注按钮（线框 D2/F2）。 */
+    /** 自己的主页不显示关注按钮，但展示「编辑主页」pill 与「赞过」Tab（线框 D2/F1/F2）。 */
     val isMe: Boolean = false,
 ) {
     fun pageStateOf(tab: ProfileTab): PagedState<Note> = when (tab) {
         ProfileTab.NOTES -> notesState
-        else -> collectedState
+        ProfileTab.COLLECTED -> collectedState
+        ProfileTab.LIKED -> likedState
     }
 
     fun itemsOf(tab: ProfileTab): List<Note> = when (tab) {
         ProfileTab.NOTES -> notes
-        else -> collected
+        ProfileTab.COLLECTED -> collected
+        ProfileTab.LIKED -> liked
     }
 
     val pageState: PagedState<Note> get() = pageStateOf(tab)
@@ -88,6 +92,13 @@ internal class UserProfileViewModel(
         fetch = { page, size -> posts.collectedPosts(userId = userId, page = page, pageSize = size) },
     )
 
+    /** 「赞过」Tab（契约 §4，🔒）：仅 isMe 时可达（「赞过」仅自己可见，线框 F1 注）。 */
+    private val liked = PagedList<Note>(
+        keyOf = { it.id },
+        toasts = toasts,
+        fetch = { page, size -> posts.likedPosts(userId = userId, page = page, pageSize = size) },
+    )
+
     private val base: kotlinx.coroutines.flow.Flow<UserProfileUiState> = combine(
         session.state,
         _tab,
@@ -108,11 +119,14 @@ internal class UserProfileViewModel(
     val state: StateFlow<UserProfileUiState> = combine(
         base,
         collected.state,
+        liked.state,
         interactions.followOverrides,
         interactions.noteOverrides,
-    ) { ui, collectedState, _, _ ->
+    ) { ui, collectedState, likedState, _, _ ->
         // 昵称/头像：资料接口不可用时用列表里的作者信息兜底（契约 §2.12 的 author* 字段）
-        val firstNote = ui.notesState.items.firstOrNull() ?: collectedState.items.firstOrNull()
+        val firstNote = ui.notesState.items.firstOrNull()
+            ?: collectedState.items.firstOrNull()
+            ?: likedState.items.firstOrNull()
         val author = ui.author.copy(
             nickname = ui.author.nickname.ifBlank { firstNote?.authorNickname.orEmpty() },
             avatar = ui.author.avatar.ifBlank { firstNote?.authorAvatar.orEmpty() },
@@ -120,9 +134,11 @@ internal class UserProfileViewModel(
         ui.copy(
             author = author,
             collectedState = collectedState,
+            likedState = likedState,
             // 渲染用合并值；写操作仍按 id 反查 raw（§4.3）
             notes = interactions.mergeAll(ui.notesState.items),
             collected = interactions.mergeAll(collectedState.items),
+            liked = interactions.mergeAll(likedState.items),
             followed = interactions.followedOf(userId, ui.followed),
         )
     }.stateIn(
@@ -169,7 +185,8 @@ internal class UserProfileViewModel(
 
     fun listOf(tab: ProfileTab): PagedList<Note> = when (tab) {
         ProfileTab.NOTES -> notes
-        else -> collected
+        ProfileTab.COLLECTED -> collected
+        ProfileTab.LIKED -> liked
     }
 
     fun retry() {
@@ -187,6 +204,7 @@ internal class UserProfileViewModel(
     fun toggleLike(id: Long) {
         val raw = notes.state.value.items.firstOrNull { it.id == id }
             ?: collected.state.value.items.firstOrNull { it.id == id }
+            ?: liked.state.value.items.firstOrNull { it.id == id }
             ?: return
         viewModelScope.launch { interactions.toggleLike(raw) }
     }

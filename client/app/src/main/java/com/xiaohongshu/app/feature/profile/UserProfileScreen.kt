@@ -27,13 +27,19 @@ import com.xiaohongshu.app.core.ui.XhsListFooter
 import com.xiaohongshu.app.core.ui.XhsListStateHost
 import com.xiaohongshu.app.domain.model.Note
 
-/** F2 他人主页内容层（无状态；路由与 VM 见 [com.xiaohongshu.app.feature.profile.UserProfileRoute]）。 */
+/**
+ * F2 他人主页内容层（无状态；路由与 VM 见 [com.xiaohongshu.app.feature.profile.UserProfileRoute]）。
+ *
+ * isMe（评论区点自己头像进入）时是「推入态的个人页」：顶栏 ← + 「编辑主页」pill、
+ * 隐藏关注按钮、Tab 含「赞过」——与原版仅差左上角按钮与底 Tab（底 Tab 由宿主决定，本页无感）。
+ */
 @Composable
 internal fun UserProfileScreen(
     state: UserProfileUiState,
     loggedIn: Boolean,
     onBack: () -> Unit,
     onMoreClick: () -> Unit,
+    onEditProfile: () -> Unit,
     onCopyRedId: () -> Unit,
     onFollowToggle: () -> Unit,
     onTabSelect: (ProfileTab) -> Unit,
@@ -45,8 +51,12 @@ internal fun UserProfileScreen(
 ) {
     val notesGrid = rememberLazyStaggeredGridState()
     val collectedGrid = rememberLazyStaggeredGridState()
-    fun gridFor(tab: ProfileTab): LazyStaggeredGridState =
-        if (tab == ProfileTab.NOTES) notesGrid else collectedGrid
+    val likedGrid = rememberLazyStaggeredGridState()
+    fun gridFor(tab: ProfileTab): LazyStaggeredGridState = when (tab) {
+        ProfileTab.NOTES -> notesGrid
+        ProfileTab.COLLECTED -> collectedGrid
+        ProfileTab.LIKED -> likedGrid
+    }
 
     // 懒加载：只有展示过的 Tab 才挂载分页副作用（挂载即首刷一次，之后常驻）
     var visited by remember { mutableStateOf(setOf(state.tab)) }
@@ -63,10 +73,14 @@ internal fun UserProfileScreen(
     ) {
         ProfileHeader(
             user = state.author,
-            isMe = false,
+            isMe = state.isMe,
+            pushed = true,
             onLeftAction = onBack,
             onCopyRedId = onCopyRedId,
             onMoreClick = onMoreClick,
+            // isMe 槽位：编辑 pill 与简介引导（点简介也进编辑，与 F1 行为一致）
+            onEditProfile = if (state.isMe) onEditProfile else null,
+            onBioClick = if (state.isMe) onEditProfile else null,
             footer = {
                 // D2：他人主页用通栏大按钮；自己的主页不显示（线框 F2/D2）
                 if (!state.isMe) {
@@ -79,8 +93,9 @@ internal fun UserProfileScreen(
             },
         )
 
+        // 「赞过」仅自己可见（线框 F1 注）：isMe 时用全量 Tab，否则公集
         ProfileSegmentRow(
-            tabs = ProfileTab.Public,
+            tabs = if (state.isMe) ProfileTab.entries else ProfileTab.Public,
             selected = state.tab,
             onSelect = onTabSelect,
         )

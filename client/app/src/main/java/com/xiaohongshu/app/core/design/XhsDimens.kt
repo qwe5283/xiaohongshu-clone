@@ -217,22 +217,11 @@ object Dimens {
     val genderChipWidth = 30.dp
     val genderChipHeight = 20.dp
 
-    /** 小组件卡 131.4×64（内 123.4×48）：icon 16、label 15sp、副文 12sp。 */
-    val widgetCardHeight = 64.dp
-    val widgetCardInnerHeight = 48.dp
-
     /** 页签行条目宽 64/86（icon 18）、右搜索 44×44。 */
     val segmentItemNarrow = 64.dp
     val segmentItemWide = 86.dp
     val segmentIcon = 18.dp
     val segmentSearchBox = 44.dp
-
-    /** 「去发布」banner 401.7×64：icon 40、CTA 46×23.7、关闭 32×64。 */
-    val publishBannerHeight = 64.dp
-    val publishBannerIcon = 40.dp
-    val publishBannerCtaWidth = 46.dp
-    val publishBannerCtaHeight = 24.dp
-    val publishBannerCloseWidth = 32.dp
 
     /** F3 编辑资料：label 宽 89 @32、值 @137 宽 226。 */
     val editLabelWidth = 89.dp

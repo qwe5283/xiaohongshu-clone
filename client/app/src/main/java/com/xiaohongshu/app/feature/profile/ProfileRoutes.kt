@@ -79,11 +79,6 @@ fun MyProfileRoute(navigator: AppNavigator) {
             onBioClick = {
                 if (session.loggedIn) navigator.toEditProfile() else navigator.toLogin()
             },
-            // 「去发布」：写操作，先过登录拦截（§4.4），未登录则暂存动作并推入登录页
-            onPublish = {
-                if (!container.loginGate.runOrDefer { navigator.toPublishForm() }) navigator.toLogin()
-            },
-            onBannerClose = vm::dismissPublishBanner,
             onTabSelect = vm::selectTab,
             onNoteClick = navigator::toNote,
             onAuthorClick = navigator::toUserProfile,
@@ -127,7 +122,10 @@ fun MyProfileRoute(navigator: AppNavigator) {
  * F2 他人主页（推入式，线框 F2）。
  *
  * 与 F1 的差异：无小组件行、无「去发布」banner、无「编辑主页」pill（顶栏左为 ←、右为「⋯」视觉占位）、
- * Tab 仅「笔记 / 收藏」、关注为**通栏大按钮**（D2 同一状态机）；自己的主页不显示关注按钮。
+ * Tab 仅「笔记 / 收藏」、关注为**通栏大按钮**（D2 同一状态机）。
+ *
+ * isMe（评论区等入口点自己头像）时为「推入态个人页」：顶栏 ← + 「编辑主页」pill、
+ * Tab 含「赞过」、隐藏关注按钮——与 Tab 根页面仅差左上角按钮与底 Tab。
  */
 @Composable
 fun UserProfileRoute(
@@ -159,6 +157,8 @@ fun UserProfileRoute(
         onBack = navigator::back,
         // F2「⋯」菜单为视觉占位：无行为
         onMoreClick = {},
+        // isMe（推入态个人页）时的「编辑主页」pill；isMe 必为登录态（currentUserId == userId）
+        onEditProfile = navigator::toEditProfile,
         onCopyRedId = { copyToClipboard(context, "小红书号", state.author.displayRedId) },
         onFollowToggle = {
             // D2：需登录的写操作，先过登录拦截（§4.4，不弹 Toast）

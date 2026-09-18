@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,15 +30,12 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
@@ -156,123 +152,6 @@ private fun ProfileSegmentItem(
             color = if (selected) XhsColor.Text1 else XhsColor.Text2,
             maxLines = 1,
         )
-    }
-}
-
-/**
- * F1 小组件卡（线框 F1：131.4×64，内 123.4×48 —— 即左右各 4 内边距；icon 16 / label 15sp / 副文 12sp）。
- *
- * 宽度由调用方按 [com.xiaohongshu.app.core.design.Waterfall] 的公式传入，禁止写死像素宽（§4.1）。
- */
-@Composable
-internal fun ProfileWidgetCard(
-    iconRes: Int,
-    label: String,
-    subCopy: String,
-    onClick: () -> Unit,
-    width: Dp,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .width(width)
-            .height(Dimens.widgetCardHeight)
-            .clip(RoundedCornerShape(Dimens.radiusCard))
-            .background(XhsColor.BgGray)
-            .clickable(onClick = onClick)
-            .padding(horizontal = Dimens.s4),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            tint = XhsColor.Text1,
-            modifier = Modifier.size(Dimens.icon16),
-        )
-        Spacer(modifier = Modifier.width(Dimens.s8))
-        Column(
-            modifier = Modifier.height(Dimens.widgetCardInnerHeight),
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = label,
-                style = XhsType.settingRow,
-                color = XhsColor.Text1,
-                maxLines = 1,
-            )
-            Text(
-                text = subCopy,
-                style = XhsType.meta,
-                color = XhsColor.Text2,
-                maxLines = 1,
-            )
-        }
-    }
-}
-
-/**
- * F1「去发布」banner（线框 T-3：401.7×64，icon 40、CTA 46×24、关闭 32×64）。
- *
- * 宽度用 `fillMaxWidth + waterfallMargin`（4）近似实测 401.7 = 411.4 − 2×4.85；
- * 左侧 40dp 图标为**缺失素材**（线框未提供），按 §4.5 用 [PlaceholderIconRes]。
- */
-@Composable
-internal fun PublishBanner(
-    onPublish: () -> Unit,
-    onClose: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = Dimens.waterfallMargin)
-            .height(Dimens.publishBannerHeight)
-            .clip(RoundedCornerShape(Dimens.radiusCard))
-            .background(XhsColor.BgGray)
-            .clickable(onClick = onPublish),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Spacer(modifier = Modifier.width(Dimens.s12))
-        Icon(
-            painter = painterResource(PlaceholderIconRes),
-            contentDescription = null,
-            tint = XhsColor.Text2,
-            modifier = Modifier.size(Dimens.publishBannerIcon),
-        )
-        Spacer(modifier = Modifier.width(Dimens.s12))
-        Text(
-            text = "分享你的生活，记录美好瞬间",
-            style = XhsType.body,
-            color = XhsColor.Text1,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        Box(
-            modifier = Modifier
-                .width(Dimens.publishBannerCtaWidth)
-                .height(Dimens.publishBannerCtaHeight)
-                .clip(RoundedCornerShape(Dimens.radiusPill))
-                .background(XhsColor.Red),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(text = "去发布", style = XhsType.badge, color = Color.White)
-        }
-        // 关闭：32×64（吞掉点击，不触发 banner 本身的跳转）
-        Box(
-            modifier = Modifier
-                .width(Dimens.publishBannerCloseWidth)
-                .height(Dimens.publishBannerHeight)
-                .clickable(onClick = onClose),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_close),
-                contentDescription = "关闭",
-                tint = XhsColor.Text2,
-                modifier = Modifier.size(Dimens.icon16),
-            )
-        }
     }
 }
 

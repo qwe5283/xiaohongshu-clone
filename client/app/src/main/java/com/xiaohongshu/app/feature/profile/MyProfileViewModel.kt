@@ -32,8 +32,6 @@ internal data class MyProfileUiState(
     val notes: List<Note> = emptyList(),
     val collected: List<Note> = emptyList(),
     val liked: List<Note> = emptyList(),
-    /** 「去发布」banner 是否可见（线框 F1：关闭后本次会话不再出现）。 */
-    val publishBannerVisible: Boolean = true,
 ) {
     fun pageStateOf(tab: ProfileTab): PagedState<Note> = when (tab) {
         ProfileTab.NOTES -> notesState
@@ -71,7 +69,6 @@ internal class MyProfileViewModel(
 ) : ViewModel() {
 
     private val _tab = MutableStateFlow(ProfileTab.NOTES)
-    private val _bannerVisible = MutableStateFlow(true)
 
     /** F1「笔记」Tab 数据源（契约 §2.7 `GET /api/post/my`，🔒）。 */
     private val notes = PagedList<Note>(
@@ -118,8 +115,6 @@ internal class MyProfileViewModel(
             collected = interactions.mergeAll(ui.collected),
             liked = interactions.mergeAll(ui.liked),
         )
-    }.combine(_bannerVisible) { ui, visible ->
-        ui.copy(publishBannerVisible = visible)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
@@ -128,8 +123,8 @@ internal class MyProfileViewModel(
     )
 
     init {
-        // §F1：收藏/取消收藏可能在**详情页**发生，回到本页时「收藏」Tab 与小组件卡副文（collectedPostCount）
-        // 都必须反映最新状态 —— 订阅 collectionVersion，仅当收藏 Tab 处于选中态时重置其分页。
+        // §F1：收藏/取消收藏可能在**详情页**发生，回到本页时「收藏」Tab 必须反映最新状态
+        // —— 订阅 collectionVersion，仅当收藏 Tab 处于选中态时重置其分页。
         viewModelScope.launch {
             interactions.collectionVersion.drop(1).collect {
                 if (!session.isLoggedIn) return@collect
@@ -186,17 +181,12 @@ internal class MyProfileViewModel(
         ?: collected.state.value.items.firstOrNull { it.id == id }
         ?: liked.state.value.items.firstOrNull { it.id == id }
 
-    // ------------------------------------------------------------------ 资料与横幅
+    // ------------------------------------------------------------------ 资料
 
-    /** 进入 / 返回本页时刷新统计数字（关注、粉丝、获赞与收藏、小组件卡副文）。 */
+    /** 进入 / 返回本页时刷新统计数字（关注、粉丝、获赞与收藏）。 */
     fun refreshUser() {
         if (!session.isLoggedIn) return
         viewModelScope.launch { session.refreshMe() }
-    }
-
-    /** 「去发布」banner 的关闭（线框 F1：本次会话不再出现）。 */
-    fun dismissPublishBanner() {
-        _bannerVisible.value = false
     }
 
     /** 收藏/赞过列表的 URL 需要当前用户 id；未登录时用 0（此时不会发请求）。 */

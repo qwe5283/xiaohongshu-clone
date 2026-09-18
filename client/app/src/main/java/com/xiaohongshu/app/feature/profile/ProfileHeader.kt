@@ -48,6 +48,8 @@ import com.xiaohongshu.app.domain.model.User
  * 差异通过参数表达，而不是复制两份：
  * - [onEditProfile] 非空 = F1（带「编辑主页」pill）；为空 = F2；
  * - [onMoreClick] 非空 = F2（「⋯」视觉占位）；
+ * - [pushed] = 推入态（F2 / 评论区点自己头像进入的个人页）：左上角渲染 ← 而非 ☰。
+ *   isMe 只管内容形态（编辑 pill、扫一扫/分享、简介引导），与进页方式正交；
  * - 小组件行 / 「去发布」banner 不属于本组件，由 F1 单独渲染。
  */
 @Composable
@@ -57,6 +59,7 @@ internal fun ProfileHeader(
     onLeftAction: () -> Unit,
     onCopyRedId: () -> Unit,
     modifier: Modifier = Modifier,
+    pushed: Boolean = false,
     onEditProfile: (() -> Unit)? = null,
     onMoreClick: (() -> Unit)? = null,
     onBioClick: (() -> Unit)? = null,
@@ -77,6 +80,7 @@ internal fun ProfileHeader(
 
         ProfileFloatingTopBar(
             isMe = isMe,
+            pushed = pushed,
             onLeftAction = onLeftAction,
             onEditProfile = onEditProfile,
             onMoreClick = onMoreClick,
@@ -160,6 +164,7 @@ internal fun ProfileHeader(
 @Composable
 private fun ProfileFloatingTopBar(
     isMe: Boolean,
+    pushed: Boolean,
     onLeftAction: () -> Unit,
     onEditProfile: (() -> Unit)?,
     onMoreClick: (() -> Unit)?,
@@ -175,7 +180,8 @@ private fun ProfileFloatingTopBar(
                 .fillMaxWidth()
                 .height(Dimens.topBar),
         ) {
-            // 左：F1 ☰（开抽屉）/ F2 ←（返回）
+            // 左：F1 ☰（开抽屉）/ 推入态 ←（返回）。推入的自个人页是「← + isMe 内容」，
+            // 故 ☰ 只在「我 + Tab 根页面」时出现
             Box(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
@@ -184,7 +190,7 @@ private fun ProfileFloatingTopBar(
                     .clickable(onClick = onLeftAction),
                 contentAlignment = Alignment.Center,
             ) {
-                if (isMe) {
+                if (isMe && !pushed) {
                     Icon(
                         painter = painterResource(R.drawable.ic_menu),
                         contentDescription = "菜单",

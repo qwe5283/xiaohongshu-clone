@@ -8,7 +8,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,12 +34,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
-import com.xiaohongshu.app.core.design.Waterfall
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
 import com.xiaohongshu.app.core.list.PagedList
@@ -65,8 +61,6 @@ internal fun MyProfileScreen(
     onEditProfile: () -> Unit,
     onCopyRedId: () -> Unit,
     onBioClick: () -> Unit,
-    onPublish: () -> Unit,
-    onBannerClose: () -> Unit,
     onTabSelect: (ProfileTab) -> Unit,
     onNoteClick: (Long, Boolean) -> Unit,
     onAuthorClick: (Long) -> Unit,
@@ -75,9 +69,6 @@ internal fun MyProfileScreen(
     onLogin: () -> Unit,
     listFor: (ProfileTab) -> PagedList<Note>,
 ) {
-    val screenWidthDp = LocalConfiguration.current.screenWidthDp.toFloat()
-    val widgetCardWidth = Waterfall.entryCardWidth(screenWidthDp).dp
-
     // 三个 Tab 各持一个滚动状态：切页签互不影响
     val notesGrid = rememberLazyStaggeredGridState()
     val collectedGrid = rememberLazyStaggeredGridState()
@@ -103,34 +94,6 @@ internal fun MyProfileScreen(
             onEditProfile = onEditProfile,
             onBioClick = onBioClick,
         )
-
-        // 小组件行（线框 F1：两卡 131.4×64；副文 = 我收藏/赞过的**笔记数**，见契约 §0 语义说明）
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = Dimens.pagePadding, top = Dimens.s12),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.s8),
-        ) {
-            ProfileWidgetCard(
-                iconRes = R.drawable.ic_star,
-                label = "收藏",
-                subCopy = statText(state.user.collectedPostCount),
-                onClick = { onTabSelect(ProfileTab.COLLECTED) },
-                width = widgetCardWidth,
-            )
-            ProfileWidgetCard(
-                iconRes = R.drawable.ic_heart,
-                label = "赞过",
-                subCopy = statText(state.user.likedPostCount),
-                onClick = { onTabSelect(ProfileTab.LIKED) },
-                width = widgetCardWidth,
-            )
-        }
-
-        if (state.publishBannerVisible) {
-            Spacer(modifier = Modifier.height(Dimens.s12))
-            PublishBanner(onPublish = onPublish, onClose = onBannerClose)
-        }
 
         Spacer(modifier = Modifier.height(Dimens.s12))
 
