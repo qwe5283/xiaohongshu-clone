@@ -28,7 +28,8 @@ object XhsType {
 
     // ---- 12sp：卡片脚栏昵称/日期、IP、消息入口标签、详情底栏计数、点点 AI 声明 ----
     val cardFooter = s(12)
-    val meta = s(12)
+    val meta = s(13)
+    val metaBold = s(13, emphasis = true)
     val aiDisclaimer = s(12)
 
     // ---- 14sp：Tab、正文、评论内容、话题标签、顶栏昵称、输入占位 ----

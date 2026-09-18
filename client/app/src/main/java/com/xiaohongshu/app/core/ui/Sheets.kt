@@ -394,8 +394,8 @@ fun XhsExpandRepliesRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Dimens.s8),
     ) {
-        Text(text = "——", style = XhsType.s(12), color = XhsColor.Text2)
-        Text(text = label, style = XhsType.s(12), color = XhsColor.Text2)
+        Text(text = "——", style = XhsType.meta, color = XhsColor.Divider)
+        Text(text = label, style = XhsType.metaBold, color = XhsColor.Text2)
     }
 }
 

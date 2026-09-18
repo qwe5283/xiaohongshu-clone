@@ -56,10 +56,12 @@ import com.xiaohongshu.app.domain.model.ReplyGroupState
 private val CommentAvatarStart = 15.dp
 internal val CommentContentStart = 61.dp
 internal val ReplyAvatarStart = 90.dp
-internal val ReplyContentStart = 124.dp
 
 /** 头像与正文列间距 10（61 − 15 − 36 = 10，回复组同理）。 */
 private val CommentAvatarGap = 10.dp
+
+/** 用户名与评论正文列间距 4。 */
+private val CommentInlineRowGap = 4.dp
 
 /** C3-1 实测：评论 meta 行高 20。 */
 private val CommentMetaRowHeight = 20.dp
@@ -72,6 +74,9 @@ internal val DetailContentPadding = 15.1.dp
 
 /** 「共 n 条评论」所在行：正文与评论区之间的分隔线下方。 */
 private val CommentsHeaderTopPadding = 12.dp
+
+/** 二级回复缩进动态计算。 */
+internal val ReplyContentStart = Dimens.avatarDetailAuthor + DetailContentPadding + CommentAvatarGap//124.dp
 
 /**
  * 一条评论（一级或二级）。
@@ -96,7 +101,7 @@ internal fun CommentRow(
             .fillMaxWidth()
             .then(if (isReply) Modifier else Modifier.heightIn(min = Dimens.rowCommentMin))
             .padding(
-                start = if (isReply) ReplyAvatarStart else CommentAvatarStart,
+                start = if (isReply) ReplyContentStart else CommentAvatarStart,
                 end = Dimens.s16,
                 top = Dimens.s8,
                 bottom = Dimens.s8,
@@ -123,11 +128,13 @@ internal fun CommentRow(
                     AuthorBadge()
                 }
             }
+            Spacer(modifier = Modifier.height(CommentInlineRowGap))
             Text(
                 text = comment.displayContent,
                 style = XhsType.comment,
                 color = XhsColor.Text1,
             )
+            Spacer(modifier = Modifier.height(CommentInlineRowGap))
             CommentMetaRow(
                 comment = comment,
                 topLevel = topLevel,
@@ -158,10 +165,10 @@ private fun CommentMetaRow(
             color = XhsColor.Text2,
             maxLines = 1,
         )
-        Spacer(modifier = Modifier.width(Dimens.s16))
+        Spacer(modifier = Modifier.width(Dimens.s8))
         Text(
             text = "回复",
-            style = XhsType.meta,
+            style = XhsType.metaBold,
             color = XhsColor.Text2,
             modifier = Modifier
                 .clickable { onReplyClick(topLevel, comment) }

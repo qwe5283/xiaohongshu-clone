@@ -332,6 +332,7 @@ private fun NoteTopBar(
                 )
             }
         }
+        XhsDivider()
     }
 }
 
