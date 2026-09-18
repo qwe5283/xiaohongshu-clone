@@ -10,6 +10,7 @@ object XhsColor {
 
     /** 品牌主红：＋按钮、关注/发布主操作、点赞收藏激活、徽标。原样保留实测值。 */
     val Red = Color(0xFFEA3F4A)
+    val RedBg = Color(0xFFFFEDF0)
 
     /** 文字主色：标题/正文/选中态。 */
     val Text1 = Color(0xFF333333)

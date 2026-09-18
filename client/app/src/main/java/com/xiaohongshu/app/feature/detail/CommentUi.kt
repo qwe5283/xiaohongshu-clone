@@ -208,12 +208,11 @@ private fun CommentMetaRow(
 private fun AuthorBadge(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(BadgeRadius))
-            .background(XhsColor.BgGray)
-            .border(Dimens.hairline, XhsColor.Text3, RoundedCornerShape(BadgeRadius))
-            .padding(horizontal = 3.dp),
+            .clip(RoundedCornerShape(Dimens.radiusPill))
+            .background(XhsColor.RedBg)
+            .padding(horizontal = 6.dp, vertical = 2.dp),
     ) {
-        Text(text = "作者", style = XhsType.s(11), color = XhsColor.Text2)
+        Text(text = "作者", style = XhsType.s(10, emphasis = true), color = XhsColor.Red)
     }
 }
 
