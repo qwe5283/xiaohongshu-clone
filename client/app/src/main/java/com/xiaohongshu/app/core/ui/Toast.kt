@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -44,8 +45,8 @@ class ToastController {
     }
 }
 
-/** Toast 展示时长 2.5s（线框全局规范）。 */
-private const val TOAST_DURATION_MS = 2500L
+/** Toast 展示时长。 */
+private const val TOAST_DURATION_MS = 2000L
 
 /**
  * 把 [ToastController] 的流渲染为屏幕中心黑底圆角条。挂在根布局最上层，覆盖所有页面。
@@ -56,36 +57,42 @@ fun XhsToastHost(
     controller: ToastController,
     modifier: Modifier = Modifier,
 ) {
-    var current by remember { mutableStateOf<String?>(null) }
+    var message by remember { mutableStateOf<String?>(null) }
+    var visible by remember { mutableStateOf(false) }
+    // 每条消息递增，作为计时 key：相同文案连续触发也能重新计时。
+    var showCount by remember { mutableStateOf(0) }
 
     LaunchedEffect(controller) {
-        controller.messages.collect { message ->
-            current = message
+        controller.messages.collect { incoming ->
+            message = incoming
+            visible = true
+            showCount++
         }
     }
 
-    LaunchedEffect(current) {
-        if (current != null) {
+    LaunchedEffect(showCount) {
+        if (showCount > 0) {
             delay(TOAST_DURATION_MS)
-            current = null
+            // 只收起可见性、保留文本，淡出动画期间才不会渲染成空胶囊。
+            visible = false
         }
     }
 
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         AnimatedVisibility(
-            visible = current != null,
+            visible = visible,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
             Box(
                 modifier = Modifier
                     .widthIn(min = 80.dp, max = 280.dp)
-                    .background(Color(0xE6000000), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                    .background(Color(0xE6000000), RoundedCornerShape(Dimens.radiusPill))
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
                 Text(
-                    text = current.orEmpty(),
-                    style = XhsType.body,
+                    text = message.orEmpty(),
+                    style = XhsType.meta,
                     color = Color.White,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.align(Alignment.Center),

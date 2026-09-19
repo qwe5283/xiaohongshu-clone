@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         AppNavHost(container)
                     }
-                    // Toast 挂在最上层，覆盖所有页面（屏幕中心，2.5s）
+                    // Toast 挂在最上层，覆盖所有页面（屏幕中心）
                     XhsToastHost(controller = container.toastController)
                 }
             }
