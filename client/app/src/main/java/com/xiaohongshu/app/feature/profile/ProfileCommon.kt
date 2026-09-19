@@ -314,6 +314,7 @@ internal fun ProfileLogoutSheet(
 
     XhsConfirmSheet(
         visible = visible,
+        message = "确认退出当前账号吗？",
         confirmText = "退出登录",
         cancelText = "取消",
         onDismiss = onDismiss,

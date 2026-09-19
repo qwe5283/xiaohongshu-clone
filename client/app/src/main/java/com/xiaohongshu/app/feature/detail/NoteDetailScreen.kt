@@ -27,12 +27,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,14 +37,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.xiaohongshu.app.R
@@ -66,6 +57,7 @@ import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsInlineLoading
 import com.xiaohongshu.app.core.ui.XhsInteractionAction
 import com.xiaohongshu.app.core.ui.XhsListFooter
+import com.xiaohongshu.app.core.ui.XhsOverlayInputBar
 import com.xiaohongshu.app.core.ui.XhsSkeletonBar
 import com.xiaohongshu.app.core.ui.XhsSpinner
 import com.xiaohongshu.app.core.util.Formatters
@@ -107,9 +99,8 @@ internal fun NoteDetailScreen(
     onReplyClick: (Comment, Comment) -> Unit,
     onExpandGroup: (Comment) -> Unit,
     onComposeStart: () -> Unit,
-    onCancelCompose: () -> Unit,
-    onDraftChange: (String) -> Unit,
-    onSend: () -> Unit,
+    onOverlayDismiss: () -> Unit,
+    onOverlaySend: (String) -> Unit,
     onLoadMore: () -> Unit,
     onRetryComments: () -> Unit,
 ) {
@@ -119,32 +110,16 @@ internal fun NoteDetailScreen(
         if (nearBottom) onLoadMore()
     }
 
-    // 输入态下收起键盘（返回手势）→ 输入栏复位为胶囊；有草稿则保留（不丢已输入内容）
-    val imeVisible = rememberImeVisible()
-    var imeWasVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(state.composing, imeVisible, state.draft) {
-        if (!state.composing) {
-            imeWasVisible = false
-            return@LaunchedEffect
-        }
-        if (imeVisible) {
-            imeWasVisible = true
-        } else if (imeWasVisible) {
-            imeWasVisible = false
-            if (state.draft.isBlank()) onCancelCompose()
-        }
-    }
+    // 占位文案随机一条并缓存：评论区行内胶囊与底栏胶囊共用同一条（输入在遮罩层，另有自己的占位）
+    val inputPlaceholder = rememberInputPlaceholder(null)
 
-    // 占位文案随机一条并缓存：IME 开合动画压缩视口时每帧重组不再跳变，行内与底栏共用同一条
-    val inputPlaceholder = rememberInputPlaceholder(state.replyTarget?.nickname)
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(XhsColor.Bg)
-            // 手势条与输入法取较大者（底部输入栏随键盘上移）
-            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)),
-    ) {
+    Box(modifier = Modifier.fillMaxSize().background(XhsColor.Bg)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                // 手势条与输入法取较大者
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)),
+        ) {
         // C1-2：加载中作者栏不渲染，只有 ← 可点
         NoteTopBar(
             note = state.note,
@@ -255,18 +230,25 @@ internal fun NoteDetailScreen(
                     note = note,
                     commentTotal = state.commentTotal,
                     placeholder = inputPlaceholder,
-                    composing = state.composing,
-                    draft = state.draft,
-                    sending = state.sending,
-                    onDraftChange = onDraftChange,
                     onComposeStart = onComposeStart,
-                    onSend = onSend,
                     onLikeClick = onLikeClick,
                     onCollectClick = onCollectClick,
                     onCommentClick = onCommentCountClick,
                 )
             }
         }
+        }
+
+        // C1-5 遮罩式输入（与视频 C2-4/C3-3 同款）：点遮罩 / 系统返回 / 收起键盘取消
+        XhsOverlayInputBar(
+            visible = state.overlay.visible,
+            placeholder = state.overlay.placeholder,
+            initialText = state.overlay.initialText,
+            onSend = onOverlaySend,
+            onDismiss = onOverlayDismiss,
+            sendDisabledOverride = state.overlay.sending,
+            dismissOnKeyboardHide = true,
+        )
     }
 }
 
@@ -454,18 +436,13 @@ private fun InlineCommentInputRow(
     }
 }
 
-/** C1-1 底栏 h 56：说点什么胶囊 h 40 + ♥/★/💬（计数 0 → 文字标签）。 */
+/** C1-1 底栏 h 56：说点什么胶囊 h 40 + ♥/★/💬（计数 0 → 文字标签）。输入在遮罩层（C1-5）。 */
 @Composable
 private fun NoteBottomBar(
     note: Note,
     commentTotal: Int,
     placeholder: String,
-    composing: Boolean,
-    draft: String,
-    sending: Boolean,
-    onDraftChange: (String) -> Unit,
     onComposeStart: () -> Unit,
-    onSend: () -> Unit,
     onLikeClick: () -> Unit,
     onCollectClick: () -> Unit,
     onCommentClick: () -> Unit,
@@ -479,109 +456,37 @@ private fun NoteBottomBar(
                 .padding(horizontal = Dimens.s16),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (composing) {
-                // 输入态：胶囊变输入框 + 发送（空输入不可发送，D3）
-                CommentDraftField(
-                    draft = draft,
-                    placeholder = placeholder,
-                    onDraftChange = onDraftChange,
-                    onSend = onSend,
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(modifier = Modifier.width(Dimens.s8))
-                CommentSendButton(
-                    enabled = draft.isNotBlank(),
-                    sending = sending,
-                    onClick = onSend,
-                )
-            } else {
-                CommentInputPill(
-                    placeholder = placeholder,
-                    onClick = onComposeStart,
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(modifier = Modifier.width(Dimens.s12))
-                XhsInteractionAction(
-                    iconRes = R.drawable.ic_heart,
-                    activeIconRes = R.drawable.ic_heart_filled,
-                    active = note.liked,
-                    count = note.likeCount,
-                    zeroLabel = NoteTexts.Like,
-                    onClick = onLikeClick,
-                )
-                XhsInteractionAction(
-                    iconRes = R.drawable.ic_star,
-                    activeIconRes = R.drawable.ic_star_filled,
-                    active = note.collected,
-                    count = note.collectCount,
-                    zeroLabel = NoteTexts.Collect,
-                    onClick = onCollectClick,
-                    activeTint = XhsColor.Yellow,
-                )
-                XhsInteractionAction(
-                    iconRes = R.drawable.ic_comment,
-                    active = false,
-                    count = commentTotal,
-                    zeroLabel = NoteTexts.Comment,
-                    onClick = onCommentClick,
-                )
-            }
-        }
-    }
-}
-
-/** 底栏激活态输入框（composing 时替换胶囊，进入即聚焦并呼出键盘）。 */
-@Composable
-private fun CommentDraftField(
-    draft: String,
-    placeholder: String,
-    onDraftChange: (String) -> Unit,
-    onSend: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val focusRequester = remember { FocusRequester() }
-    val keyboard = LocalSoftwareKeyboardController.current
-
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-        keyboard?.show()
-    }
-    DisposableEffect(Unit) {
-        onDispose { keyboard?.hide() }
-    }
-
-    Box(
-        modifier = modifier
-            .height(Dimens.inputPillDetail)
-            .clip(RoundedCornerShape(Dimens.radiusPill))
-            .background(XhsColor.BgGray)
-            .padding(horizontal = Dimens.s16),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        if (draft.isEmpty()) {
-            Text(
-                text = placeholder,
-                style = XhsType.inputPlaceholder,
-                color = XhsColor.Text3,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            CommentInputPill(
+                placeholder = placeholder,
+                onClick = onComposeStart,
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(modifier = Modifier.width(Dimens.s12))
+            XhsInteractionAction(
+                iconRes = R.drawable.ic_heart,
+                activeIconRes = R.drawable.ic_heart_filled,
+                active = note.liked,
+                count = note.likeCount,
+                zeroLabel = NoteTexts.Like,
+                onClick = onLikeClick,
+            )
+            XhsInteractionAction(
+                iconRes = R.drawable.ic_star,
+                activeIconRes = R.drawable.ic_star_filled,
+                active = note.collected,
+                count = note.collectCount,
+                zeroLabel = NoteTexts.Collect,
+                onClick = onCollectClick,
+                activeTint = XhsColor.Yellow,
+            )
+            XhsInteractionAction(
+                iconRes = R.drawable.ic_comment,
+                active = false,
+                count = commentTotal,
+                zeroLabel = NoteTexts.Comment,
+                onClick = onCommentClick,
             )
         }
-        BasicTextField(
-            value = draft,
-            onValueChange = onDraftChange,
-            singleLine = true,
-            textStyle = TextStyle(
-                color = XhsColor.Text1,
-                fontSize = XhsType.inputPlaceholder.fontSize,
-            ),
-            cursorBrush = SolidColor(XhsColor.Text1),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-            keyboardActions = KeyboardActions(onSend = { onSend() }),
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
-        )
     }
 }
 

@@ -60,14 +60,15 @@ fun NoteDetailRoute(
             scope.launch { listState.animateScrollToItem(COMMENT_HEADER_INDEX) }
         },
         onCommentLike = { id -> if (!gate.runOrDefer { vm.toggleCommentLike(id) }) navigator.toLogin() },
-        // C1-5：点「回复」只改底部输入栏（页面流内，不弹遮罩面板）
-        onReplyClick = vm::toggleReply,
+        // C1-5：点「回复」弹遮罩输入（与视频 C3-3 同款）
+        onReplyClick = { parent, target ->
+            if (!gate.runOrDefer { vm.openReplyInput(parent, target) }) navigator.toLogin()
+        },
         onExpandGroup = vm::expandReplies,
-        // D3：点输入胶囊聚焦底部输入栏（游客先拦截）
-        onComposeStart = { if (!gate.runOrDefer { vm.startComposing() }) navigator.toLogin() },
-        onCancelCompose = vm::cancelComposing,
-        onDraftChange = vm::onDraftChange,
-        onSend = vm::send,
+        // C1-5：点输入胶囊弹遮罩输入（游客先拦截）
+        onComposeStart = { if (!gate.runOrDefer { vm.openCommentInput() }) navigator.toLogin() },
+        onOverlayDismiss = vm::dismissOverlay,
+        onOverlaySend = vm::sendOverlay,
         onLoadMore = vm::loadMoreComments,
         onRetryComments = vm::retryComments,
     )
@@ -107,15 +108,13 @@ fun VideoDetailRoute(
             onFollowClick = { if (!gate.runOrDefer { vm.toggleFollow() }) navigator.toLogin() },
             onLikeClick = { if (!gate.runOrDefer { vm.toggleLike() }) navigator.toLogin() },
             onCollectClick = { if (!gate.runOrDefer { vm.toggleCollect() }) navigator.toLogin() },
-            // C2-4：点「说点什么」直接弹遮罩输入（游客先拦截）
+            // C2-4 / 面板输入胶囊：弹遮罩输入发一级评论（游客先拦截）
             onOpenCommentInput = { if (!gate.runOrDefer { vm.openCommentInput() }) navigator.toLogin() },
             // C3-1：点「💬」打开评论面板（只读浏览，不需要登录）
             onOpenComments = vm::openComments,
             onCloseComments = vm::closeComments,
             onOverlayDismiss = vm::dismissOverlay,
             onOverlaySend = vm::sendOverlay,
-            onPanelDraftChange = vm::onPanelDraftChange,
-            onPanelSend = vm::sendPanelComment,
             onCommentLike = { id -> if (!gate.runOrDefer { vm.toggleCommentLike(id) }) navigator.toLogin() },
             // C3-3：面板里点「回复」→ 遮罩式回复输入
             onReplyClick = { parent, target ->

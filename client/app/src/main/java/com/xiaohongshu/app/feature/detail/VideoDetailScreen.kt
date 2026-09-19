@@ -34,10 +34,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -113,8 +113,6 @@ internal fun VideoDetailScreen(
     onCloseComments: () -> Unit,
     onOverlayDismiss: () -> Unit,
     onOverlaySend: (String) -> Unit,
-    onPanelDraftChange: (String) -> Unit,
-    onPanelSend: () -> Unit,
     onCommentLike: (Long) -> Unit,
     onReplyClick: (Comment, Comment) -> Unit,
     onExpandGroup: (Comment) -> Unit,
@@ -122,23 +120,6 @@ internal fun VideoDetailScreen(
     onRetryComments: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize().background(XhsColor.Black)) {
-        // C2-4 / C3-3：收起键盘即取消遮罩输入（点击遮罩的取消由公共组件负责）
-        val imeVisible = rememberImeVisible()
-        var imeWasVisible by remember { mutableStateOf(false) }
-        LaunchedEffect(state.overlay.visible, imeVisible) {
-            if (!state.overlay.visible) {
-                imeWasVisible = false
-                return@LaunchedEffect
-            }
-            if (imeVisible) {
-                imeWasVisible = true
-            } else if (imeWasVisible) {
-                // 键盘被收起（返回手势等）→ 取消输入，回到 C2-1 / C3-1
-                imeWasVisible = false
-                onOverlayDismiss()
-            }
-        }
-
         Column(modifier = Modifier.fillMaxSize()) {
             // 状态栏区保持黑色，视频不侵入
             Spacer(modifier = Modifier.statusBarsPadding())
@@ -175,8 +156,7 @@ internal fun VideoDetailScreen(
                     onReplyClick = onReplyClick,
                     onAvatarClick = onAuthorClick,
                     onExpandGroup = onExpandGroup,
-                    onDraftChange = onPanelDraftChange,
-                    onSend = onPanelSend,
+                    onOpenInput = onOpenCommentInput,
                     onLoadMore = onLoadMore,
                     onRetry = onRetryComments,
                     modifier = Modifier.fillMaxHeight(PanelHeightFraction),
@@ -199,7 +179,7 @@ internal fun VideoDetailScreen(
             }
         }
 
-        // C2-4 / C3-3 遮罩式输入（与 F3-1 共用公共组件），覆盖全屏
+        // C2-4 / C3-3 / 面板输入遮罩式输入（公共组件）：点遮罩 / 系统返回 / 收起键盘取消
         XhsOverlayInputBar(
             visible = state.overlay.visible,
             placeholder = state.overlay.placeholder,
@@ -207,6 +187,7 @@ internal fun VideoDetailScreen(
             onSend = onOverlaySend,
             onDismiss = onOverlayDismiss,
             sendDisabledOverride = state.overlay.sending,
+            dismissOnKeyboardHide = true,
         )
     }
 }

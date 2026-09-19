@@ -1,5 +1,6 @@
 package com.xiaohongshu.app.feature.profile
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -161,7 +162,8 @@ internal fun MyProfileScreen(
  * F4 抽屉（线框：宽 308、项 284×52 @12（icon 24 @28、文字 @64）、分组间隔 8、底部三宫格 94.6×72）。
  *
  * 「设置」→ F5；「社区公约」「关于我们」为**视觉占位**（线框 #9 未定义行为，故点击不做任何事）；
- * 「退出登录」→ F6。点遮罩关闭。仅登录态可达（由调用方保证）。
+ * 「退出登录」→ F6。点遮罩或系统返回关闭。仅登录态可达（由调用方保证）。
+ * 挂载在宿主最外层（MainScaffold），遮罩才能盖住底部 Tab。
  */
 @Composable
 internal fun ProfileDrawer(
@@ -172,6 +174,7 @@ internal fun ProfileDrawer(
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    BackHandler(enabled = visible) { onDismiss() }
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
             visible = visible,

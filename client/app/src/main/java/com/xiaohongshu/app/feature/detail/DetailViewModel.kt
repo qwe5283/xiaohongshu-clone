@@ -65,18 +65,11 @@ internal data class CommentsUiState(
     val hasContent: Boolean get() = items.isNotEmpty()
 }
 
-/** 图文详情页面本地状态：D3 计数增量 + 底部输入栏草稿 / 回复目标（C1-5）。 */
+/** 图文详情页面本地状态：D3 计数增量 / 遮罩输入（C1-5，与视频 C2-4/C3-3 同一状态形状）。 */
 internal data class NoteLocalState(
     /** 本次会话新增的一级评论 / 回复数（「共 n 条评论」与底栏 💬 同步 +1）。 */
     val addedCount: Int = 0,
-    /** 底部输入栏是否处于输入态（点胶囊聚焦，D3）。 */
-    val composing: Boolean = false,
-    val draft: String = "",
-    /** C1-5 的被回复对象（null = 发一级评论）。 */
-    val replyTarget: Comment? = null,
-    /** 回复目标所属的一级评论（嵌套回复时 parentId 必须指向一级评论）。 */
-    val replyParent: Comment? = null,
-    val sending: Boolean = false,
+    val overlay: OverlayInputState = OverlayInputState(),
 )
 
 internal data class NoteDetailUiState(
@@ -90,10 +83,8 @@ internal data class NoteDetailUiState(
     val commentTotal: Int = 0,
     val comments: CommentsUiState = CommentsUiState(),
     val replyGroups: Map<Long, ReplyGroupState> = emptyMap(),
-    val composing: Boolean = false,
-    val draft: String = "",
-    val replyTarget: Comment? = null,
-    val sending: Boolean = false,
+    /** C1-5 遮罩式输入（一级评论与回复共用，点胶囊 / 点「回复」弹出）。 */
+    val overlay: OverlayInputState = OverlayInputState(),
 )
 
 /** 遮罩式输入（C2-4 / C3-3）状态。 */
@@ -111,8 +102,7 @@ internal data class OverlayInputState(
 internal data class VideoLocalState(
     val addedCount: Int = 0,
     val panelOpen: Boolean = false,
-    val panelDraft: String = "",
-    val panelSending: Boolean = false,
+    /** C2-4 / C3-3 / 面板输入行共用同一遮罩输入（一级评论与回复不分状态）。 */
     val overlay: OverlayInputState = OverlayInputState(),
 )
 
@@ -127,8 +117,6 @@ internal data class VideoDetailUiState(
     val replyGroups: Map<Long, ReplyGroupState> = emptyMap(),
     /** C3-1 面板是否打开（打开时媒体区上移缩小、底栏由面板接管）。 */
     val panelOpen: Boolean = false,
-    val panelDraft: String = "",
-    val panelSending: Boolean = false,
     val overlay: OverlayInputState = OverlayInputState(),
 )
 
@@ -446,10 +434,7 @@ internal class NoteDetailViewModel(
                 commentTotal = (d.load.raw?.commentCount ?: 0) + l.addedCount,
                 comments = cs,
                 replyGroups = groups,
-                composing = l.composing,
-                draft = l.draft,
-                replyTarget = l.replyTarget,
-                sending = l.sending,
+                overlay = l.overlay,
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, NoteDetailUiState())
 
@@ -466,43 +451,43 @@ internal class NoteDetailViewModel(
         viewModelScope.launch { comments.retry() }
     }
 
-    /** D3：点底部 / 评论区胶囊 → 聚焦底部输入栏发一级评论（作答回复态一并复位）。 */
-    fun startComposing() {
-        local.value = local.value.copy(composing = true, replyTarget = null, replyParent = null)
+    /** C1-5：点底栏 / 评论区胶囊 → 弹遮罩输入发一级评论（原内联底栏输入已统一为遮罩式）。 */
+    fun openCommentInput() {
+        local.value = local.value.copy(
+            overlay = OverlayInputState(
+                visible = true,
+                placeholder = NoteTexts.inputPlaceholder(null),
+            ),
+        )
     }
 
-    fun cancelComposing() {
-        local.value = local.value.copy(composing = false, replyTarget = null, replyParent = null)
+    /** C1-5：点评论「回复」→ 遮罩输入，占位预填「回复 @昵称：」。 */
+    fun openReplyInput(parent: Comment, target: Comment) {
+        local.value = local.value.copy(
+            overlay = OverlayInputState(
+                visible = true,
+                placeholder = "回复 @${target.nickname}：",
+                replyParent = parent,
+                replyTarget = target,
+            ),
+        )
     }
 
-    fun onDraftChange(text: String) {
-        local.value = local.value.copy(draft = text)
+    fun dismissOverlay() {
+        local.value = local.value.copy(overlay = OverlayInputState())
     }
 
-    /**
-     * C1-5：点评论「回复」→ 底部输入栏占位变「回复 @昵称：」；
-     * 再次点同一条「回复」→ 取消并恢复「说点什么...」。
-     * 图文回复**不弹遮罩面板**（与视频 C2-4/C3-3 刻意区分）。
-     */
-    fun toggleReply(parent: Comment, target: Comment) {
+    /** C1-5 发送：一级评论或回复（D3）。 */
+    fun sendOverlay(text: String) {
         val current = local.value
-        local.value = if (current.replyTarget?.id == target.id) {
-            current.copy(replyTarget = null, replyParent = null, composing = false)
-        } else {
-            current.copy(replyTarget = target, replyParent = parent, composing = true)
-        }
-    }
+        val content = text.trim()
+        val overlay = current.overlay
+        if (content.isEmpty() || overlay.sending) return
 
-    /** D3：发送一级评论或回复。成功清空输入；失败保留内容（错误由全局 Toast 呈现）。 */
-    fun send() {
-        val current = local.value
-        val content = current.draft.trim()
-        if (content.isEmpty() || current.sending) return
-
-        local.value = current.copy(sending = true)
+        local.value = current.copy(overlay = overlay.copy(sending = true))
         viewModelScope.launch {
-            val parent = current.replyParent
-            val target = current.replyTarget
+            val parent = overlay.replyParent
+            val target = overlay.replyTarget
             val ok = if (parent != null && target != null) {
                 val done = comments.sendReply(parent, target.userId, target.nickname, content)
                 if (done) toasts.show("回复成功")
@@ -512,9 +497,9 @@ internal class NoteDetailViewModel(
             }
             val latest = local.value
             local.value = latest.copy(
-                sending = false,
                 addedCount = if (ok) latest.addedCount + 1 else latest.addedCount,
-                draft = if (ok) "" else latest.draft,
+                // 成功 → 收起遮罩；失败 → 遮罩保持打开并回填已输入内容（D3 内容保留）
+                overlay = if (ok) OverlayInputState() else overlay.copy(sending = false, initialText = content),
             )
         }
     }
@@ -547,8 +532,6 @@ internal class VideoDetailViewModel(
                 comments = cs,
                 replyGroups = groups,
                 panelOpen = l.panelOpen,
-                panelDraft = l.panelDraft,
-                panelSending = l.panelSending,
                 overlay = l.overlay,
             )
         }.stateIn(viewModelScope, SharingStarted.Eagerly, VideoDetailUiState())
@@ -567,11 +550,7 @@ internal class VideoDetailViewModel(
     }
 
     fun closeComments() {
-        local.value = local.value.copy(
-            panelOpen = false,
-            panelDraft = "",
-            overlay = OverlayInputState(),
-        )
+        local.value = local.value.copy(panelOpen = false, overlay = OverlayInputState())
         comments.resetGroups()
     }
 
@@ -579,32 +558,16 @@ internal class VideoDetailViewModel(
         viewModelScope.launch { comments.retry() }
     }
 
-    fun onPanelDraftChange(text: String) {
-        local.value = local.value.copy(panelDraft = text)
-    }
-
-    /** C3-1 输入行发送 → 一级评论（D3，插列表顶部）。 */
-    fun sendPanelComment() {
-        val current = local.value
-        val content = current.panelDraft.trim()
-        if (content.isEmpty() || current.panelSending) return
-
-        local.value = current.copy(panelSending = true)
-        viewModelScope.launch {
-            val ok = comments.sendFirstLevel(content)
-            val latest = local.value
-            local.value = latest.copy(
-                panelSending = false,
-                addedCount = if (ok) latest.addedCount + 1 else latest.addedCount,
-                panelDraft = if (ok) "" else latest.panelDraft,
-            )
-        }
-    }
-
-    /** C2-4：点「说点什么」**直接**弹遮罩输入（不经评论列表面板）。 */
+    /**
+     * C2-4 / C3-3 / 面板输入行共用：弹遮罩输入发一级评论。
+     * 面板底部的输入胶囊与底栏「说点什么」是同一个入口，不再各自维护内联输入。
+     */
     fun openCommentInput() {
         local.value = local.value.copy(
-            overlay = OverlayInputState(visible = true, placeholder = "爱评论的人运气都不差"),
+            overlay = OverlayInputState(
+                visible = true,
+                placeholder = "爱评论的人运气都不差",
+            ),
         )
     }
 

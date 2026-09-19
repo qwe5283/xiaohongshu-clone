@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -23,8 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -306,32 +302,6 @@ internal fun CommentInputPill(
     }
 }
 
-/** 「发送」胶囊 64×40（与 `XhsOverlayInputBar` 内的一致）：空输入禁用。 */
-@Composable
-internal fun CommentSendButton(
-    enabled: Boolean,
-    sending: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val active = enabled && !sending
-    Box(
-        modifier = modifier
-            .width(Dimens.buttonSendWidth)
-            .height(Dimens.buttonSendHeight)
-            .clip(RoundedCornerShape(Dimens.radiusPill))
-            .background(if (active) XhsColor.Red else XhsColor.BtnGray)
-            .clickable(enabled = active, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "发送",
-            style = XhsType.buttonLabelSmall,
-            color = if (active) Color.White else XhsColor.Text2,
-        )
-    }
-}
-
 /** 「共 n 条评论」计数行（C1-1；n 含回复，与底栏 💬 一致）。 */
 @Composable
 internal fun CommentsHeader(count: Int, modifier: Modifier = Modifier) {
@@ -352,16 +322,3 @@ internal fun CommentsUiState.asPagedState(): PagedState<Comment> = PagedState(
     loaded = loaded,
     endReached = endReached,
 )
-
-/**
- * 输入法是否可见。
- *
- * 用于「收起键盘即取消输入」：C1-5 的页面内嵌输入栏与 C2-4/C3-3 的遮罩输入都靠它实现
- * （公共组件 `XhsOverlayInputBar` 不感知键盘收起，故不改它，在页面侧补这一条）。
- * 读不可用时返回 false —— 只会让该行为不生效，不会误关闭输入。
- */
-@Composable
-internal fun rememberImeVisible(): Boolean {
-    val density = LocalDensity.current
-    return WindowInsets.ime.getBottom(density) > 0
-}

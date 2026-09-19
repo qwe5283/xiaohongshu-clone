@@ -21,9 +21,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,10 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.xiaohongshu.app.R
@@ -92,8 +86,7 @@ internal fun CommentPanel(
     onReplyClick: (Comment, Comment) -> Unit,
     onAvatarClick: (Long) -> Unit,
     onExpandGroup: (Comment) -> Unit,
-    onDraftChange: (String) -> Unit,
-    onSend: () -> Unit,
+    onOpenInput: () -> Unit,
     onLoadMore: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
@@ -197,12 +190,10 @@ internal fun CommentPanel(
         }
 
         XhsDivider()
+        // 输入胶囊：点击弹遮罩输入（与 C2-4 同一入口，不再有面板内联输入）
         PanelInputRow(
             myAvatar = myAvatar,
-            draft = state.panelDraft,
-            sending = state.panelSending,
-            onDraftChange = onDraftChange,
-            onSend = onSend,
+            onOpenInput = onOpenInput,
         )
     }
 }
@@ -217,7 +208,7 @@ private fun PanelTab(
     Text(
         text = text,
         style = if (selected) XhsType.s(15, emphasis = true) else XhsType.s(15),
-        color = if (selected) XhsColor.Text1 else XhsColor.Text2,
+        color = if (selected) XhsColor.Red else XhsColor.Text2,
         maxLines = 1,
         modifier = Modifier
             .clip(RoundedCornerShape(Dimens.radiusCard))
@@ -225,14 +216,11 @@ private fun PanelTab(
     )
 }
 
-/** C3-1 输入行 h 52：头像 36 +（表情 / @ + 输入框）+ 发送 64×40。 */
+/** C3-1 输入行 h 52：头像 36 + 输入胶囊，点击弹遮罩输入（一级评论与回复共用）。 */
 @Composable
 private fun PanelInputRow(
     myAvatar: String,
-    draft: String,
-    sending: Boolean,
-    onDraftChange: (String) -> Unit,
-    onSend: () -> Unit,
+    onOpenInput: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -243,60 +231,23 @@ private fun PanelInputRow(
     ) {
         XhsAvatar(url = myAvatar, size = Dimens.avatarComment)
         Spacer(modifier = Modifier.width(Dimens.s8))
-        Row(
+        Box(
             modifier = Modifier
                 .weight(1f)
                 .height(Dimens.inputPillVideo)
                 .clip(RoundedCornerShape(Dimens.radiusPill))
                 .background(XhsColor.BgGray)
-                .padding(start = Dimens.s8, end = Dimens.s12),
-            verticalAlignment = Alignment.CenterVertically,
+                .clickable(onClick = onOpenInput)
+                .padding(horizontal = Dimens.s16),
+            contentAlignment = Alignment.CenterStart,
         ) {
-            // 表情 / @：线框未定义行为 → 统一占位素材、点击 no-op
-            Icon(
-                painter = painterResource(R.drawable.ic_placeholder),
-                contentDescription = null,
-                tint = XhsColor.Text2,
-                modifier = Modifier.size(PanelIconSize),
+            Text(
+                text = PanelTexts.InputPlaceholder,
+                style = XhsType.commentName,
+                color = XhsColor.Text3,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            Spacer(modifier = Modifier.width(Dimens.s4))
-            Icon(
-                painter = painterResource(R.drawable.ic_placeholder),
-                contentDescription = null,
-                tint = XhsColor.Text2,
-                modifier = Modifier.size(PanelIconSize),
-            )
-            Spacer(modifier = Modifier.width(Dimens.s8))
-            Box(modifier = Modifier.weight(1f)) {
-                if (draft.isEmpty()) {
-                    Text(
-                        text = PanelTexts.InputPlaceholder,
-                        style = XhsType.commentName,
-                        color = XhsColor.Text3,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                BasicTextField(
-                    value = draft,
-                    onValueChange = onDraftChange,
-                    singleLine = true,
-                    textStyle = TextStyle(
-                        color = XhsColor.Text1,
-                        fontSize = XhsType.commentName.fontSize,
-                    ),
-                    cursorBrush = SolidColor(XhsColor.Text1),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { if (draft.isNotBlank()) onSend() }),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
         }
-        Spacer(modifier = Modifier.width(Dimens.s8))
-        CommentSendButton(
-            enabled = draft.isNotBlank(),
-            sending = sending,
-            onClick = onSend,
-        )
     }
 }

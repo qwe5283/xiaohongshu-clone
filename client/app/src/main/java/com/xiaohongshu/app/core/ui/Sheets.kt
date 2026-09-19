@@ -1,5 +1,6 @@
 package com.xiaohongshu.app.core.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -71,7 +72,10 @@ fun XhsScrim(
 
 /**
  * 底部弹层容器：顶部圆角 12、白底，从底部滑入。
- * 上层请自行叠加 [XhsScrim]（多数场景用 [XhsSheetHost]）。
+ *
+ * 模态语义由本容器承担：**系统返回 = 点遮罩 = 取消**，均触发 [onDismiss]（BackHandler 内建，
+ * 调用方无需再拦返回）。挂载约定：必须挂在页面根布局（或宿主最外层），`fillMaxSize` 的遮罩
+ * 相对挂载容器——挂进半屏面板只会遮住面板本身。
  */
 @Composable
 fun XhsBottomSheet(
@@ -81,6 +85,7 @@ fun XhsBottomSheet(
     scrim: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    BackHandler(enabled = visible) { onDismiss() }
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
             visible = visible,
@@ -175,36 +180,35 @@ data class SheetAction(
 
 /**
  * 底部确认弹层（F6 退出登录 / G6 一键已读 / E7 放弃发布）：
- * 遮罩 + 底部「确认 / 取消」两行。
+ * 遮罩 + 询问文案 + 底部「确认 / 取消」两行。
+ *
+ * [message] 必填：二次确认必须有明确的问句（编译期防止调用方漏文案）。
  */
 @Composable
 fun XhsConfirmSheet(
     visible: Boolean,
+    message: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     confirmText: String = "确认",
     cancelText: String = "取消",
-    /** 可选说明行（E7「草稿将丢失，确认放弃发布吗？」/ F6 / G6），显示在确认行上方。 */
-    message: String? = null,
     /** 确认行是否用主色强调（默认 true，与线框底部确认/取消的层级一致）。 */
     emphasizeConfirm: Boolean = false,
 ) {
     XhsBottomSheet(visible = visible, onDismiss = onDismiss, modifier = modifier) {
-        if (!message.isNullOrBlank()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.s24, vertical = Dimens.s16),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = message,
-                    style = XhsType.s(14),
-                    color = XhsColor.Text2,
-                    textAlign = TextAlign.Center,
-                )
-            }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.s24, vertical = Dimens.s16),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = message,
+                style = XhsType.s(14),
+                color = XhsColor.Text2,
+                textAlign = TextAlign.Center,
+            )
         }
         XhsSheetRow(
             label = confirmText,
@@ -222,10 +226,11 @@ fun XhsConfirmSheet(
 }
 
 /**
- * 遮罩式弹出输入框 —— **公共组件**，C2-4 / C3-3 / F3-1 三处共用（线框明确要求同款）。
+ * 遮罩式弹出输入框 —— **公共组件**，所有「弹出额外输入框」场景共用（C1-5 / C2-4 / C3-3 / F3-1）。
  *
  * 规格：底部白底条 + 输入框 + 右侧「发送」；[onSend] 为空输入时按钮禁用；
- * 点遮罩或收起键盘取消；弹层打开时自动聚焦并呼出键盘。
+ * 点遮罩、系统返回或（[dismissOnKeyboardHide] 时）收起键盘取消；弹层打开时自动聚焦并呼出键盘。
+ * 挂载约定同 [XhsBottomSheet]：必须挂页面根，遮罩才覆盖全屏。
  *
  * @param initialText 回复场景预填（如 `回复 @昵称：`）
  * @param maxLength 非空时显示剩余计数，且**超限即禁用发送**
@@ -247,6 +252,7 @@ fun XhsOverlayInputBar(
     /** true 时：键盘收起即视为取消（C2-4/C3-3「收起键盘取消」）。 */
     dismissOnKeyboardHide: Boolean = false,
 ) {
+    BackHandler(enabled = visible) { onDismiss() }
     var text by remember(visible, initialText) { mutableStateOf(initialText) }
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current

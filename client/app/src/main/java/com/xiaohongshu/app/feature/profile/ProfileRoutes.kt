@@ -1,16 +1,12 @@
 package com.xiaohongshu.app.feature.profile
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xiaohongshu.app.core.design.XhsColor
@@ -36,13 +32,14 @@ import com.xiaohongshu.app.navigation.AppNavigator
  */
 
 /**
- * F1 我的主页（Tab 根页面）+ F4 抽屉 + F6 退出确认。
+ * F1 我的主页（Tab 根页面）。
  *
- * 线框 F1 的层级：头图（含浮层顶栏/头像/昵称/统计/简介/性别）→ 小组件行 → 「去发布」banner
- * → segment 页签行（固定）→ 瀑布流（`flex:1` 的自滚动区）。底 Tab 由 `MainScaffold` 持有。
+ * 线框 F1 的层级：头图（含浮层顶栏/头像/昵称/统计/简介/性别）→ segment 页签行（固定）→
+ * 瀑布流（`flex:1` 的自滚动区）。底 Tab 由 `MainScaffold` 持有；
+ * F4 抽屉与 F6 退出确认也由 MainScaffold 挂载（要盖住底 Tab，页面内挂不行），经 [onOpenDrawer] 触发。
  */
 @Composable
-fun MyProfileRoute(navigator: AppNavigator) {
+fun MyProfileRoute(navigator: AppNavigator, onOpenDrawer: () -> Unit) {
     val container = LocalAppContainer.current
     val context = LocalContext.current
     val vm: MyProfileViewModel = appViewModel {
@@ -56,66 +53,32 @@ fun MyProfileRoute(navigator: AppNavigator) {
     val state by vm.state.collectAsStateWithLifecycle()
     val session by container.sessionManager.state.collectAsStateWithLifecycle()
 
-    var drawerOpen by remember { mutableStateOf(false) }
-    var logoutVisible by remember { mutableStateOf(false) }
-
-    // 进入 / 返回本页时刷新资料（统计行与小组件卡副文）
+    // 进入 / 返回本页时刷新资料（统计行）
     LaunchedEffect(session.loggedIn) { if (session.loggedIn) vm.refreshUser() }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(XhsColor.Bg),
-    ) {
-        MyProfileScreen(
-            state = state,
-            loggedIn = session.loggedIn,
-            // F1：☰ → F4 抽屉；抽屉仅登录态可达（游客 ☰ → A2 登录页，线框 F4）
-            onLeftAction = { if (session.loggedIn) drawerOpen = true else navigator.toLogin() },
-            onEditProfile = {
-                if (session.loggedIn) navigator.toEditProfile() else navigator.toLogin()
-            },
-            onCopyRedId = { copyToClipboard(context, "小红书号", state.user.displayRedId) },
-            onBioClick = {
-                if (session.loggedIn) navigator.toEditProfile() else navigator.toLogin()
-            },
-            onTabSelect = vm::selectTab,
-            onNoteClick = navigator::toNote,
-            onAuthorClick = navigator::toUserProfile,
-            // 卡片 ♥：入参是渲染值，VM 内部按 id 反查服务端原值再交状态机（§4.3）
-            onLikeClick = { note ->
-                if (!container.loginGate.runOrDefer { vm.toggleLike(note.id) }) navigator.toLogin()
-            },
-            onRetry = vm::retry,
-            onLogin = navigator::toLogin,
-            listFor = vm::listOf,
-        )
-
-        // F4 抽屉（F1 内的浮层，不是路由）
-        ProfileDrawer(
-            visible = drawerOpen,
-            user = state.user,
-            onDismiss = { drawerOpen = false },
-            onSettings = {
-                drawerOpen = false
-                navigator.toSettings()
-            },
-            onLogout = {
-                drawerOpen = false
-                logoutVisible = true
-            },
-        )
-
-        // F6 退出登录确认（F4 / F5 共用的同一弹层）
-        ProfileLogoutSheet(
-            visible = logoutVisible,
-            onDismiss = { logoutVisible = false },
-            onLoggedOut = {
-                logoutVisible = false
-                navigator.toMain()
-            },
-        )
-    }
+    MyProfileScreen(
+        state = state,
+        loggedIn = session.loggedIn,
+        // F1：☰ → F4 抽屉（由 MainScaffold 挂载）；抽屉仅登录态可达（游客 ☰ → A2 登录页，线框 F4）
+        onLeftAction = { if (session.loggedIn) onOpenDrawer() else navigator.toLogin() },
+        onEditProfile = {
+            if (session.loggedIn) navigator.toEditProfile() else navigator.toLogin()
+        },
+        onCopyRedId = { copyToClipboard(context, "小红书号", state.user.displayRedId) },
+        onBioClick = {
+            if (session.loggedIn) navigator.toEditProfile() else navigator.toLogin()
+        },
+        onTabSelect = vm::selectTab,
+        onNoteClick = navigator::toNote,
+        onAuthorClick = navigator::toUserProfile,
+        // 卡片 ♥：入参是渲染值，VM 内部按 id 反查服务端原值再交状态机（§4.3）
+        onLikeClick = { note ->
+            if (!container.loginGate.runOrDefer { vm.toggleLike(note.id) }) navigator.toLogin()
+        },
+        onRetry = vm::retry,
+        onLogin = navigator::toLogin,
+        listFor = vm::listOf,
+    )
 }
 
 /**

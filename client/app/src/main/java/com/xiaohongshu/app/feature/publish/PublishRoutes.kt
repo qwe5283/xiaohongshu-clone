@@ -329,6 +329,7 @@ private fun PublishFormScreen(
         // E7：遮罩 + 底部确认/取消（与 F6/G6 同款结构）
         XhsConfirmSheet(
             visible = showDiscardConfirm,
+            message = "草稿将丢失，确认放弃发布吗？",
             confirmText = "放弃",
             cancelText = "取消",
             onConfirm = onDiscardConfirm,

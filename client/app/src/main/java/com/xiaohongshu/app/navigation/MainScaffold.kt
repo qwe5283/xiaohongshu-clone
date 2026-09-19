@@ -18,6 +18,8 @@ import com.xiaohongshu.app.di.LocalAppContainer
 import com.xiaohongshu.app.feature.home.HomeRoute
 import com.xiaohongshu.app.feature.message.MessageRoute
 import com.xiaohongshu.app.feature.profile.MyProfileRoute
+import com.xiaohongshu.app.feature.profile.ProfileDrawer
+import com.xiaohongshu.app.feature.profile.ProfileLogoutSheet
 import com.xiaohongshu.app.feature.publish.PublishEntrySheet
 
 /** 底 Tab 索引（线框固定五栏：首页 / 点点 / ＋ / 消息 / 我）。 */
@@ -45,6 +47,8 @@ fun MainScaffold(navigator: AppNavigator) {
 
     var selectedTab by rememberSaveable { mutableIntStateOf(Tabs.HOME) }
     var showPublishSheet by remember { mutableStateOf(false) }
+    var drawerOpen by remember { mutableStateOf(false) }
+    var logoutVisible by remember { mutableStateOf(false) }
 
     // F6 退出登录 → 回游客首页（A1，带登录悬浮条）。
     // 若停留在「我」Tab，退出后会看到 F1 的游客兜底页而不是首页，与线框的落点不符。
@@ -52,6 +56,8 @@ fun MainScaffold(navigator: AppNavigator) {
         if (!session.loggedIn) {
             selectedTab = Tabs.HOME
             showPublishSheet = false
+            drawerOpen = false
+            logoutVisible = false
         }
     }
 
@@ -60,7 +66,10 @@ fun MainScaffold(navigator: AppNavigator) {
             when (selectedTab) {
                 Tabs.HOME -> HomeRoute(navigator)
                 Tabs.MESSAGE -> MessageRoute(navigator)
-                else -> MyProfileRoute(navigator)
+                else -> MyProfileRoute(
+                    navigator = navigator,
+                    onOpenDrawer = { drawerOpen = true },
+                )
             }
         }
 
@@ -94,5 +103,31 @@ fun MainScaffold(navigator: AppNavigator) {
         visible = showPublishSheet,
         onDismiss = { showPublishSheet = false },
         navigator = navigator,
+    )
+
+    // F4 抽屉与 F6 退出确认挂在 Tab 栏之上（页面内挂载遮罩盖不住底 Tab）。
+    // 渲染顺序即 BackHandler 优先级：退出确认先于抽屉关闭。
+    ProfileDrawer(
+        visible = drawerOpen,
+        user = session.user,
+        onDismiss = { drawerOpen = false },
+        onSettings = {
+            drawerOpen = false
+            navigator.toSettings()
+        },
+        onLogout = {
+            drawerOpen = false
+            logoutVisible = true
+        },
+    )
+
+    // F6 退出登录确认（F4 / F5 共用的同一弹层；F5 推入页上有自己的实例）
+    ProfileLogoutSheet(
+        visible = logoutVisible,
+        onDismiss = { logoutVisible = false },
+        onLoggedOut = {
+            logoutVisible = false
+            navigator.toMain()
+        },
     )
 }
