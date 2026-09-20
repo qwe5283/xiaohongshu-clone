@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
@@ -115,6 +116,7 @@ private fun LoginScreen(
                         text = HelpLabel,
                         onClick = onHelp,
                         enabled = !state.submitting,
+                        color = XhsColor.Text2,
                     )
                 },
             )

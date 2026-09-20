@@ -9,8 +9,6 @@ package com.xiaohongshu.app.feature.auth
  */
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
@@ -29,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -40,11 +36,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
 import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
 import com.xiaohongshu.app.core.ui.XhsCheckCircle
+import com.xiaohongshu.app.core.ui.XhsDivider
 
 // ================================================================ 文案（线框原文为准）
 
@@ -87,10 +85,11 @@ internal const val RegisterSubmitLabel = "注册中..."
 // ================================================================ 控件
 
 /**
- * A3/A4 输入框（线框 `.inp`：白底、1px 描边、圆角）。
+ * A3/A4 输入框（真机密码登录页样式：无边框，仅底部一条 hairline 下边线）。
  *
- * - 高 = [Dimens.minTouchTarget]（44，触控热区一档；线框为低保真示意值，不照抄）；
- * - 描边 = `Dimens.hairline` + `XhsColor.Text3`，圆角 = `Dimens.radiusCard`；
+ * - 行高 = [Dimens.minTouchTarget]（44，触控热区一档；线框为低保真示意值，不照抄）；
+ * - 下边线复用 [XhsDivider]（`Dimens.hairline` + `XhsColor.Divider`，与全项目分隔线同档）；
+ * - 文字与下边线左端对齐（无内边距），页面边距由外层布局控制；
  * - 占位 = `XhsColor.Text3`（§4.1「弱文字/占位」）；
  * - [password] = true 时用 [PasswordVisualTransformation] 掩码（A3 密码框）；
  * - 提交中（A5-2）用 [enabled] = false 锁住内容，避免请求在途时被改写。
@@ -106,38 +105,33 @@ internal fun AuthTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Next,
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(Dimens.minTouchTarget)
-            .clip(RoundedCornerShape(Dimens.radiusCard))
-            .background(XhsColor.Bg)
-            .border(
-                width = Dimens.hairline,
-                color = XhsColor.Text3,
-                shape = RoundedCornerShape(Dimens.radiusCard),
+    Column(modifier = modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(Dimens.minTouchTarget),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (value.isEmpty()) {
+                Text(text = placeholder, style = XhsType.s(16), color = XhsColor.Text3)
+            }
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                enabled = enabled,
+                singleLine = true,
+                textStyle = XhsType.s(16).copy(color = XhsColor.Text1),
+                cursorBrush = SolidColor(XhsColor.Text1),
+                visualTransformation = if (password) {
+                    PasswordVisualTransformation()
+                } else {
+                    VisualTransformation.None
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+                modifier = Modifier.fillMaxWidth(),
             )
-            .padding(horizontal = Dimens.s12),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        if (value.isEmpty()) {
-            Text(text = placeholder, style = XhsType.inputPlaceholder, color = XhsColor.Text3)
         }
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            enabled = enabled,
-            singleLine = true,
-            textStyle = XhsType.inputPlaceholder.copy(color = XhsColor.Text1),
-            cursorBrush = SolidColor(XhsColor.Text1),
-            visualTransformation = if (password) {
-                PasswordVisualTransformation()
-            } else {
-                VisualTransformation.None
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
-            modifier = Modifier.fillMaxWidth(),
-        )
+        XhsDivider(thickness = 0.8.dp)
     }
 }
 
