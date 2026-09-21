@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
@@ -123,7 +122,7 @@ internal fun NotificationRow(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = item.typeText.ifBlank { NotificationType.fallbackText(item.type) },
-                            style = XhsType.s(13),
+                            style = XhsType.meta,
                             color = XhsColor.Text2,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -133,7 +132,7 @@ internal fun NotificationRow(
                         // 通知时间用 formatRelative（§4.6：3分钟前 / 2小时前 / 昨天 / 09-14）
                         Text(
                             text = Formatters.formatRelative(item.createdAt),
-                            style = XhsType.s(13),
+                            style = XhsType.meta,
                             color = XhsColor.Text2,
                             maxLines = 1,
                         )
@@ -314,7 +313,7 @@ private fun InlineReplyBar(
             if (text.isEmpty()) {
                 Text(
                     text = "回复 @$nickname：",
-                    style = XhsType.body,
+                    style = XhsType.inputPlaceholder,
                     color = XhsColor.Text3,
                     maxLines = 1,
                 )

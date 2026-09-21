@@ -47,7 +47,7 @@ import com.xiaohongshu.app.core.ui.XhsIconButton
  * B1/A1 首页顶栏：高 44（含状态栏 inset）。
  *
  * - 左：登录态＝点点气泡（→ H1）；游客＝☰（→ 登录页，A1 note：游客无抽屉）；
- * - 中：「关注 / 发现」两页签 20sp，选中加粗 + 2dp 下划线（B1）；
+ * - 中：「关注 / 发现」两页签（字号与下划线取 `XhsType.topBarTabSelected / topBarTabUnselected` 与 `Dimens.topBarTabUnderlineWidth`）；
  * - 右：搜索图标（→ B2）。
  */
 @Composable
@@ -207,8 +207,8 @@ internal fun ChannelBar(
 /**
  * A1 底部登录悬浮条：「🔒 登录后体验更多功能 [登录]」。
  *
- * 悬浮在瀑布流之上、底 Tab 之上（left/right 8、bottom 44、圆角 14、深底白字）。
- * 🔒 与「登录」同款描边 pill 均取自定稿原文（该图标以字符表示，故按文本渲染）。
+ * 悬浮在瀑布流之上、底 Tab 之上（左右/下边距与圆角均取 `Dimens.s8`，深底白字）。
+ * 🔒 以字符表示，故按文本渲染。
  */
 @Composable
 internal fun GuestLoginBar(
@@ -229,7 +229,7 @@ internal fun GuestLoginBar(
     ) {
         Text(
             text = "🔒 登录后体验更多功能",
-            style = XhsType.s(14),
+            style = XhsType.body,
             color = Color.White,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -243,7 +243,7 @@ internal fun GuestLoginBar(
                 .padding(horizontal = Dimens.s12),
             contentAlignment = Alignment.Center,
         ) {
-            Text(text = "去登录", style = XhsType.body, color = Color.Red)
+            Text(text = "去登录", style = XhsType.body, color = XhsColor.Red)
         }
     }
 }
@@ -302,4 +302,4 @@ internal val HomeGuestBarHeight = 40.dp
 internal val HomeGuestBarReserved = HomeGuestBarHeight + Dimens.s16
 
 private val TabUnderlineHeight = 2.dp
-private val TabUnderlineGap = 4.dp
+private val TabUnderlineGap = Dimens.s4

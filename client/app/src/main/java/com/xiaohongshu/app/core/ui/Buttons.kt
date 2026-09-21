@@ -116,7 +116,7 @@ fun XhsFollowPill(
             )
             // 触控热区扩到 ≥44（小图标 24 视觉 + 透明扩边）
             .clickable(onClick = onToggle)
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = Dimens.s12),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -176,7 +176,7 @@ fun XhsFilterChip(
                 shape = RoundedCornerShape(Dimens.radiusPill),
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = Dimens.s12),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -206,7 +206,7 @@ fun XhsTextChip(
             .clip(RoundedCornerShape(Dimens.radiusPill))
             .background(backgroundColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = Dimens.s16),
         contentAlignment = Alignment.Center,
     ) {
         Text(text = text, style = XhsType.searchEntry, color = contentColor)
@@ -227,7 +227,7 @@ fun XhsCountBadge(
             .defaultMinSize(minWidth = Dimens.badgeMinWidth, minHeight = Dimens.badgeHeight)
             .clip(RoundedCornerShape(Dimens.radiusPill))
             .background(XhsColor.Red)
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = Dimens.s4),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -296,9 +296,9 @@ fun XhsInteractionAction(
             .defaultMinSize(minWidth = Dimens.minTouchTarget, minHeight = Dimens.minTouchTarget)
             .clip(RoundedCornerShape(Dimens.radiusPill))
             .clickable(onClick = onClick)
-            .padding(horizontal = 4.dp),
+            .padding(horizontal = Dimens.s4),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.s4),
     ) {
         Icon(
             painter = painterResource(if (active) activeIconRes else iconRes),
@@ -357,7 +357,7 @@ fun XhsTextAction(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(horizontal = Dimens.s8, vertical = 6.dp),
     )
 }
 

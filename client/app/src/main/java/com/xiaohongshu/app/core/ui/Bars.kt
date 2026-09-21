@@ -68,7 +68,7 @@ fun XhsTopBar(
             Row(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 4.dp),
+                    .padding(start = Dimens.s4),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 when {
@@ -103,7 +103,7 @@ fun XhsTopBar(
                 Row(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .padding(end = 4.dp),
+                        .padding(end = Dimens.s4),
                     verticalAlignment = Alignment.CenterVertically,
                 ) { actions() }
             }
@@ -115,7 +115,7 @@ fun XhsTopBar(
 }
 
 /**
- * 底部 Tab 栏（高 48，5 等分；＋钮 56×48 圆角 12 满高红块）。
+ * 底部 Tab 栏（尺寸全部取 [Dimens]：栏高 bottomBar、5 等分；＋钮 plusButtonWidth × plusButtonHeight 圆角 plusButtonRadius）。
  *
  * 固定五栏：首页 / 点点 / ＋ / 消息 / 我（本复刻以「点点」替换原版「市集」，见章节 H）。
  * [selectedIndex] 取值 0（首页）、1（点点）、3（消息）、4（我）；2 为 ＋，不是选中态。
@@ -240,7 +240,7 @@ private fun BottomTabItem(
                     count = badgeCount,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .offset(x = 4.dp, y = (-10).dp),
+                        .offset(x = Dimens.s4, y = (-10).dp),
                 )
             }
         }

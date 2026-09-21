@@ -199,7 +199,7 @@ private fun CommentMetaRow(
     }
 }
 
-/** 「作者」徽标（细边框 + 浅灰底）。 */
+/** 「作者」徽标（主红胶囊底 + 主红字）。 */
 @Composable
 private fun AuthorBadge(modifier: Modifier = Modifier) {
     Box(

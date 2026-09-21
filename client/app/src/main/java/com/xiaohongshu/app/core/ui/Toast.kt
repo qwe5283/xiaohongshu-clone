@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 /**
  * 全局 Toast 中心（I2）。
  *
- * 规范：**屏幕中心**显示 2.5s 后自动消失；黑底白字圆角条。
+ * 规范：**屏幕中心**显示 2s 后自动消失（时长见 `TOAST_DURATION_MS`）；黑底白字圆角条。
  * 三类反馈分工（I2）：Toast（本类）/ 列表错误态+重试（B4-2）/ 表单错误条（A5-1、E4）。
  */
 class ToastController {
@@ -88,7 +88,7 @@ fun XhsToastHost(
                 modifier = Modifier
                     .widthIn(min = 80.dp, max = 280.dp)
                     .background(Color(0xE6000000), RoundedCornerShape(Dimens.radiusPill))
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = Dimens.pagePadding, vertical = Dimens.s12),
             ) {
                 Text(
                     text = message.orEmpty(),

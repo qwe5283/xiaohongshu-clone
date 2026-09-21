@@ -215,7 +215,7 @@ private fun EntryColumn(
             Spacer(modifier = Modifier.height(Dimens.s12))
             Text(
                 text = label,
-                style = XhsType.s(13),
+                style = XhsType.meta,
                 color = XhsColor.Text1,
                 maxLines = 1,
             )
@@ -271,7 +271,7 @@ private fun ConversationRow(
             )
             Text(
                 text = preview,
-                style = XhsType.s(13),
+                style = XhsType.meta,
                 color = XhsColor.Text2,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

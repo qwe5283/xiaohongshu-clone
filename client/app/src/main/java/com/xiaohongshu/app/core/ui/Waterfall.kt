@@ -38,7 +38,7 @@ import com.xiaohongshu.app.domain.model.Note
 /**
  * 瀑布流卡片（B1）。
  *
- * 结构：封面（按真实宽高比 4:3 或 3:4）→ 标题（最多两行）→ 脚栏（头像 24 + 昵称 12sp + ♥ + 计数 12sp）。
+ * 结构：封面（按真实宽高比 4:3 或 3:4）→ 标题（最多两行）→ 脚栏（头像 18 + 昵称 12sp + ♥ 16 + 计数 12sp）。
  *
  * 脚栏 ♥ 取 16dp 档而非 30dp：30dp 图标会压过 12sp 计数（原版小红书卡片脚栏的心形
  * 约与文字同高）；30dp 留给详情/视频底栏的互动图标。
@@ -80,14 +80,14 @@ fun WaterfallCard(
                         .padding(Dimens.videoBadgeInset)
                         .size(Dimens.videoBadge)
                         .clip(RoundedCornerShape(Dimens.radiusPill))
-                        .background(androidx.compose.ui.graphics.Color(0x66000000)),
+                        .background(XhsColor.ScrimGray),
                     contentAlignment = Alignment.Center,
                 ) {
                     // ▶ 圆角实心三角；ic_play 按原 Canvas 字形的占位比例归一化，故尺寸不变
                     Icon(
                         painter = painterResource(R.drawable.ic_play),
                         contentDescription = null,
-                        tint = androidx.compose.ui.graphics.Color.White,
+                        tint = XhsColor.OnBadge,
                         modifier = Modifier.size(10.dp),
                     )
                 }
@@ -110,7 +110,7 @@ fun WaterfallCard(
             )
         }
 
-        // 脚栏：高 40 = 上下 6 + 头像 24
+        // 脚栏：高 40，头像 18（Dimens.avatarCard）
         Row(
             modifier = Modifier
                 .fillMaxWidth()

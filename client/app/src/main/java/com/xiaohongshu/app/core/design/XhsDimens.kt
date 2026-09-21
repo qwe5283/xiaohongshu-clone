@@ -59,7 +59,7 @@ object Dimens {
     val channelFadeArrow = 16.dp
 
     // ---- 底部 Tab ----
-    /** ＋按钮 52×36 圆角 12 满高红块。 */
+    /** ＋按钮 52×36 圆角 12（在栏高内居中，非满高）。 */
     val plusButtonWidth = 52.dp
     val plusButtonHeight = 36.dp
     val plusButtonRadius = 12.dp
@@ -79,7 +79,7 @@ object Dimens {
     /** chip·胶囊·按钮·徽标 pill（用 50% 或大值兜底）。 */
     val radiusPill = 999.dp
 
-    // ---- 头像 5 档 18 / 36 / 48 / 60 / 108 ----
+    // ---- 头像档 18 / 24 / 36 / 48 / 108 ----
     val avatarCard = 18.dp   // 卡片脚栏
     val avatarComment = 36.dp
     val avatarDetailAuthor = 36.dp

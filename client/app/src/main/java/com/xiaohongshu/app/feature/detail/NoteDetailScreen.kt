@@ -358,7 +358,7 @@ private fun NoteMedia(images: List<NoteImage>, ratio: Float) {
                 Text(
                     text = "${pagerState.currentPage + 1}/${images.size}",
                     style = XhsType.pageIndicator,
-                    color = Color.White,
+                    color = XhsColor.OnBadge,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(PageBadgeInset)

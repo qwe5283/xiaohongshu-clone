@@ -205,7 +205,7 @@ fun XhsConfirmSheet(
         ) {
             Text(
                 text = message,
-                style = XhsType.s(14),
+                style = XhsType.body,
                 color = XhsColor.Text2,
                 textAlign = TextAlign.Center,
             )
@@ -317,7 +317,7 @@ fun XhsOverlayInputBar(
                             .weight(1f)
                             .clip(RoundedCornerShape(Dimens.radiusPill))
                             .background(XhsColor.BgGray)
-                            .padding(horizontal = Dimens.s16, vertical = if (singleLine) 10.dp else 8.dp),
+                            .padding(horizontal = Dimens.s16, vertical = if (singleLine) 10.dp else Dimens.s8),
                     ) {
                         if (text.isEmpty()) {
                             Text(

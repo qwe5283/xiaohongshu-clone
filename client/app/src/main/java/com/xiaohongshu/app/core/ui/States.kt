@@ -77,7 +77,7 @@ fun XhsInlineLoading(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = Dimens.s12),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -111,7 +111,7 @@ fun XhsEmptyState(
         }
         Text(
             text = text,
-            style = XhsType.s(13),
+            style = XhsType.meta,
             color = XhsColor.Text2,
             textAlign = TextAlign.Center,
         )
@@ -140,7 +140,7 @@ fun XhsErrorState(
     ) {
         Text(
             text = message,
-            style = XhsType.s(13),
+            style = XhsType.meta,
             color = messageColor,
             textAlign = TextAlign.Center,
         )
@@ -150,7 +150,7 @@ fun XhsErrorState(
                 .clip(RoundedCornerShape(Dimens.radiusPill))
                 .background(XhsColor.Text1)
                 .clickable(onClick = onRetry)
-                .padding(horizontal = 24.dp, vertical = 8.dp),
+                .padding(horizontal = Dimens.s24, vertical = Dimens.s8),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -162,7 +162,7 @@ fun XhsErrorState(
     }
 }
 
-/** 表单错误条（A5-1 / A4 / E4）：表单上方，浅灰底细边框。 */
+/** 表单错误条（A5-1 / A4 / E4）：表单上方，浅灰底深字；与 H3-2 的红色 Error 气泡分工不同。 */
 @Composable
 fun XhsFormErrorBar(
     message: String,
@@ -248,7 +248,7 @@ fun XhsListFooter(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = Dimens.s12),
         contentAlignment = Alignment.Center,
     ) {
         when {

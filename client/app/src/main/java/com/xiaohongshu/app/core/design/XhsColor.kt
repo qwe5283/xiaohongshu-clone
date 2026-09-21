@@ -46,7 +46,7 @@ object XhsColor {
     val Scrim = Color(0x99000000)
     val ScrimGray = Color(0x66000000)
 
-    /** 轮播圆点未选中 / 进度轨道 / 骨架条底色。 */
+    /** 轮播圆点未选中 / 进度轨道（骨架条底色另见 [Skeleton]）。 */
     val DotInactive = Color(0xFFD9D9D9)
 
     /** 次级按钮底（如「已关注」态、灰按钮）。 */

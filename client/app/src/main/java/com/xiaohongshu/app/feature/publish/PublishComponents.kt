@@ -314,7 +314,7 @@ internal fun PublishField(
             .padding(horizontal = Dimens.s12, vertical = Dimens.s12),
     ) {
         if (value.isEmpty()) {
-            Text(text = placeholder, style = XhsType.body, color = XhsColor.Text3)
+            Text(text = placeholder, style = XhsType.inputPlaceholder, color = XhsColor.Text3)
         }
         BasicTextField(
             value = value,
