@@ -59,9 +59,6 @@ internal const val PanelHeightFraction = 0.66f
 /** C3-1 实测：输入行 52（`Dimens` 无该档位，就地声明并标注来源）。 */
 private val PanelInputRowHeight = 52.dp
 
-/** C3-1：表情 / @ 图标 24（行为未定义 → 统一占位素材、点击 no-op）。 */
-private val PanelIconSize = Dimens.icon24
-
 /** C3 文案（定稿）。 */
 private object PanelTexts {
     const val CommentsEmpty = "还没有评论哦"

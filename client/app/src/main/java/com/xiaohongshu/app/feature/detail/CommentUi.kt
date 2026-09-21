@@ -1,7 +1,6 @@
 package com.xiaohongshu.app.feature.detail
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,15 +42,10 @@ import com.xiaohongshu.app.domain.model.ReplyGroupState
  */
 
 /**
- * C3-1 实测几何：头像 36 @x=15 → 正文列 @x=61；
- * 二级回复缩进 @x=90、头像 24 → 正文列 @x=124。
- *
- * 这几个值取自真机实测，但 `Dimens` 里没有对应档位（不能改公共组件），
- * 故就地声明并标注来源；建议架构侧后续收进 `Dimens`。
+ * C3-1 实测几何：头像 36 @x=15 → 正文列 @x=61（= `CommentAvatarStart` + 头像 + `CommentAvatarGap`）；
+ * 二级回复整体缩进到 `ReplyContentStart`。
  */
 private val CommentAvatarStart = 15.dp
-internal val CommentContentStart = 61.dp
-internal val ReplyAvatarStart = 90.dp
 
 /** 头像与正文列间距 10（61 − 15 − 36 = 10，回复组同理）。 */
 private val CommentAvatarGap = 10.dp
@@ -61,9 +55,6 @@ private val CommentInlineRowGap = 4.dp
 
 /** C3-1 实测：评论 meta 行高 20。 */
 private val CommentMetaRowHeight = 20.dp
-
-/** 「作者」徽标圆角 2。 */
-private val BadgeRadius = 2.dp
 
 /** C1-1 实测：标题/正文/评论区左右边距 15.1。 */
 internal val DetailContentPadding = 15.1.dp

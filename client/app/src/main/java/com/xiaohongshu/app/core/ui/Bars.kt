@@ -120,7 +120,7 @@ fun XhsTopBar(
  * 固定五栏：首页 / 点点 / ＋ / 消息 / 我（本复刻以「点点」替换原版「市集」，见章节 H）。
  * [selectedIndex] 取值 0（首页）、1（点点）、3（消息）、4（我）；2 为 ＋，不是选中态。
  * [unreadCount] 仅作用于「消息」栏，>0 时在文字右上角显示红底数字角标（>99 显示 99+）。
- * [guestMode] = true 时（A1 游客态）＋ 按钮渲染为灰块而非品牌红。
+ * ＋ 恒为品牌红块：游客态不做灰块降级，点按由调用方的 `onPublish` 决定去登录页。
  */
 @Composable
 fun XhsBottomTabBar(
@@ -129,7 +129,6 @@ fun XhsBottomTabBar(
     onSelect: (Int) -> Unit,
     onPublish: () -> Unit,
     modifier: Modifier = Modifier,
-    guestMode: Boolean = false,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -167,13 +166,13 @@ fun XhsBottomTabBar(
                         .width(Dimens.plusButtonWidth)
                         .height(Dimens.plusButtonHeight)
                         .clip(RoundedCornerShape(Dimens.plusButtonRadius))
-                        .background(if (guestMode) XhsColor.BtnGray else XhsColor.Red)
+                        .background(XhsColor.Red)
                         .clickable(onClick = onPublish),
                     contentAlignment = Alignment.Center,
                 ) {
                     XhsPlusGlyph(
                         size = 22.dp,
-                        color = if (guestMode) XhsColor.Text2 else Color.White,
+                        color = Color.White,
                     )
                 }
             }
