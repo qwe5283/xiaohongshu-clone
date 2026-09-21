@@ -33,8 +33,8 @@ import com.xiaohongshu.app.navigation.AppNavigator
 /**
  * A1/B1/B4/B5 首页：顶栏 + 频道栏 + 双列瀑布流（关注 / 发现两页签）。
  *
- * 底 Tab 与 ＋ 按钮由 `MainScaffold` 持有，本页不渲染（线框 A1/B1 的 tabbar 不在本组件内）；
- * 游客态的登录悬浮条则由本页渲染（线框 A1 `.floatbar` 悬浮在瀑布流之上、底 Tab 之上）。
+ * 底 Tab 与 ＋ 按钮由 `MainScaffold` 持有，本页不渲染（A1/B1 的 tabbar 不在本组件内）；
+ * 游客态的登录悬浮条则由本页渲染（A1：悬浮在瀑布流之上、底 Tab 之上）。
  */
 @Composable
 fun HomeRoute(navigator: AppNavigator) {
@@ -175,7 +175,7 @@ private fun HomeScreen(
 }
 
 /**
- * 瀑布流的「近底部」预加载（B4-4）。线框要求滚动距底约 6 项触发 `loadMore()`。
+ * 瀑布流的「近底部」预加载（B4-4）：滚动距底约 6 项触发 `loadMore()`。
  *
  * 说明：`core/list/PagedList.kt` 的 `PagedListEffect`/`rememberNearBottom` 只适配
  * `LazyListState`，瀑布流用的是 `LazyStaggeredGridState`，故此处就近实现（已列入
@@ -201,7 +201,7 @@ private fun StaggeredLoadMoreEffect(
     }
 }
 
-/** 距底预加载项数（线框 B4-4：滚动距底约 600px，本项目按项数近似为 6 项）。 */
+/** 距底预加载项数（B4-4：滚动距底约 600px，本项目按项数近似为 6 项）。 */
 private const val PRELOAD_ITEM_COUNT = 6
 
 /**

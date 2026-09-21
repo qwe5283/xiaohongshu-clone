@@ -47,7 +47,7 @@ import com.xiaohongshu.app.core.ui.XhsIconButton
  * B1/A1 首页顶栏：高 44（含状态栏 inset）。
  *
  * - 左：登录态＝点点气泡（→ H1）；游客＝☰（→ 登录页，A1 note：游客无抽屉）；
- * - 中：「关注 / 发现」两页签 20sp，选中加粗 + 2dp 下划线（线框 B1 navtop）；
+ * - 中：「关注 / 发现」两页签 20sp，选中加粗 + 2dp 下划线（B1）；
  * - 右：搜索图标（→ B2）。
  */
 @Composable
@@ -145,7 +145,7 @@ private fun MenuEntryButton(onClick: () -> Unit, modifier: Modifier = Modifier) 
 }
 
 /**
- * B1 频道栏：高 40，横向滚动，点击仅高亮（线框注 #3）。
+ * B1 频道栏：高 40，横向滚动，点击仅高亮。
  * 右端固定 60dp 渐隐 + 16dp 箭头，暗示「横向滑动查看更多」。
  */
 @Composable
@@ -207,8 +207,8 @@ internal fun ChannelBar(
 /**
  * A1 底部登录悬浮条：「🔒 登录后体验更多功能 [登录]」。
  *
- * 悬浮在瀑布流之上、底 Tab 之上（线框 `.floatbar`：left/right 8、bottom 44、圆角 14、深底白字）。
- * 🔒 与「登录」同款描边 pill 均取自线框原文（线框本身用字符表示该图标，故按文本渲染）。
+ * 悬浮在瀑布流之上、底 Tab 之上（left/right 8、bottom 44、圆角 14、深底白字）。
+ * 🔒 与「登录」同款描边 pill 均取自定稿原文（该图标以字符表示，故按文本渲染）。
  */
 @Composable
 internal fun GuestLoginBar(
@@ -295,7 +295,7 @@ private fun UnderlineLabel(
     }
 }
 
-/** A1 悬浮条高度：线框 `.floatbar`（5px 内边距 + 9.5px 文字）归一化后约 40dp，Dimens 无对应档位。 */
+/** A1 悬浮条高度：按 5px 内边距 + 9.5px 文字归一化后约 40dp，Dimens 无对应档位。 */
 internal val HomeGuestBarHeight = 40.dp
 
 /** 悬浮条在列表底部需要预留的高度：条高 + 上下各 8 的悬浮间距。 */

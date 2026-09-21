@@ -54,15 +54,15 @@ import com.xiaohongshu.app.navigation.AppNavigator
 
 // ==================================================================== E1 发布入口
 
-/** 发布入口弹层的三个动作 key（线框 E1：从相册选择 / 拍摄 / 写文字）。 */
+/** 发布入口弹层的三个动作 key（从相册选择 / 拍摄 / 写文字）。 */
 private const val ActionGallery = "gallery"
 private const val ActionCamera = "capture"
 private const val ActionText = "text"
 
 /**
- * E1 弹层行（线框 E1，总高 = 72×3 + 间隔 8 + 取消 56 = 280 = `Dimens.publishSheetTotal`）。
+ * E1 弹层行（总高 = 72×3 + 间隔 8 + 取消 56 = 280 = `Dimens.publishSheetTotal`）。
  *
- * 线框中行原文是「相机·拍摄与直播双行」，本复刻**只实现「拍摄」**（无直播能力，§7 E1）。
+ * 本复刻**只实现「拍摄」**（无直播能力，§7 E1）。
  */
 private val PublishEntryActions = listOf(
     SheetAction(label = "从相册选择", key = ActionGallery),
@@ -138,7 +138,7 @@ fun PublishEntrySheet(
 
 // ==================================================================== E2/E4/E5/E7 表单
 
-/** E2 正文输入框最小高度（线框 E2 表单为占位设计，取 32×3 的阶梯值）。 */
+/** E2 正文输入框最小高度（取 32×3 的阶梯值）。 */
 private val BodyFieldMinHeight: Dp = Dimens.s32 * 3
 
 /** E2「＋」的添加媒体弹层（与 E1 同款两行；**无**「写文字」入口 —— 表单里不生成配图）。 */
@@ -151,7 +151,7 @@ private val AddMediaActions = listOf(
  * E2 发布表单（含 E4 错误条 / E5-1 提交中 / E5-2 成功 / E7 放弃确认）。
  *
  * 媒体已在草稿里（E1 相册/拍摄 或 E3 配图），本页只做编辑与提交；
- * **无**话题 / 位置 / 可见范围（线框明确排除）。
+ * **无**话题 / 位置 / 可见范围。
  */
 @Composable
 fun PublishFormRoute(navigator: AppNavigator) {
@@ -242,7 +242,7 @@ private fun PublishFormScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(XhsColor.Bg)) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // 顶栏 44：← + 居中「发布笔记」+ 右上「发布」（线框 E2：发布在顶部右侧）
+            // 顶栏 44：← + 居中「发布笔记」+ 右上「发布」（发布在顶部右侧）
             XhsTopBar(
                 title = "发布笔记",
                 navigationIcon = {
@@ -273,7 +273,7 @@ private fun PublishFormScreen(
             )
 
             // 已选媒体：缩略可 × 删除、＋ 继续添加（图 ≤9、视频 ≤1，可共存）
-            // E5-1 提交中：不可增删（线框 E5-1 的缩略图同样无 × / 无 ＋）
+            // E5-1 提交中：不可增删（E5-1 的缩略图同样无 × / 无 ＋）
             MediaStrip(
                 media = media,
                 onRemove = onRemoveMedia,
@@ -340,7 +340,7 @@ private fun PublishFormScreen(
 
 // ==================================================================== E3 写文字
 
-/** E3 画布描边（线框 mock 1.5px → hairline 的 2 倍）。 */
+/** E3 画布描边（hairline 的 2 倍）。 */
 private val CanvasBorderWidth: Dp = Dimens.hairline * 2
 
 /**
@@ -424,7 +424,7 @@ private fun WriteTextScreen(
                 .padding(bottom = Dimens.s16),
         )
 
-        // 底部「写长文」卡高 98：**纯视觉入口**，点击聚焦画布（线框未定义其它行为）
+        // 底部「写长文」卡高 98：**纯视觉入口**，点击聚焦画布
         WriteLongFormCard(
             onClick = {
                 focusRequester.requestFocus()

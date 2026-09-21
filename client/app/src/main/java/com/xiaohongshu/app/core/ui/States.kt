@@ -30,7 +30,7 @@ import com.xiaohongshu.app.core.design.XhsType
 import com.xiaohongshu.app.core.list.PagedState
 
 /**
- * 加载组件三档（线框 I3）：
+ * 加载组件三档（I3）：
  * - 页面级（[XhsPageLoading]）→ B4-1、C1-2、G5-2；
  * - 局部（[XhsInlineLoading]）→ B4-4 加载更多、C3-4 回复批次；
  * - 按钮级（[XhsPrimaryButton] 的 loading 参数）→ A5-2、E5-1。
@@ -205,7 +205,7 @@ fun XhsSkeletonBar(
 /**
  * 瀑布流列表的统一状态宿主。
  *
- * 把线框 B4 的四态收敛到一处，各列表页只需提供内容与重试回调，避免四态被漏实现：
+ * 把 B4 的四态收敛到一处，各列表页只需提供内容与重试回调，避免四态被漏实现：
  * 加载中 → 错误（整页替换）→ 空 → 内容（含底部「加载更多 / 没有更多了」）。
  */
 @Composable

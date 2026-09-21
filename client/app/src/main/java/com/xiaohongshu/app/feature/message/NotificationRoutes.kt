@@ -115,7 +115,7 @@ private fun NotificationListScreen(
                 title = categoryTitle(state.category),
                 onBack = onBack,
                 actions = {
-                    // 🧹 一键已读（线框 G2/G3/G4 右上）
+                    // 🧹 一键已读（G2/G3/G4 右上）
                     XhsIconButton(
                         iconRes = R.drawable.ic_broom,
                         onClick = { confirmReadAll = true },
@@ -173,7 +173,7 @@ private fun NotificationListScreen(
     }
 }
 
-/** G2/G3/G4 顶栏标题（线框实测文案）。 */
+/** G2/G3/G4 顶栏标题（定稿文案）。 */
 private fun categoryTitle(category: NotificationCategory): String = when (category) {
     NotificationCategory.LIKE_COLLECT -> "收到的赞和收藏"
     NotificationCategory.COMMENT -> "收到的评论和@"

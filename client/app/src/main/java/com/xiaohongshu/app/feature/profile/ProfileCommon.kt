@@ -53,9 +53,9 @@ import java.io.File
 import java.util.UUID
 
 /**
- * F1「我」的三个页签（线框 F1：笔记 / 收藏 / 赞过）。
+ * F1「我」的三个页签（笔记 / 收藏 / 赞过）。
  *
- * 「赞过」仅自己可见（线框 F1 注），故 [Public] 供 F2 他人主页复用前两个。
+ * 「赞过」仅自己可见，故 [Public] 供 F2 他人主页复用前两个。
  */
 internal enum class ProfileTab(
     val label: String,
@@ -68,19 +68,19 @@ internal enum class ProfileTab(
     LIKED("赞过", R.drawable.ic_heart, "暂无点赞");
 
     companion object {
-        /** 线框 f2：他人主页 Tab 仅「笔记 / 收藏」（无「赞过」）。 */
+        /** F2：他人主页 Tab 仅「笔记 / 收藏」（无「赞过」）。 */
         val Public: List<ProfileTab> = listOf(NOTES, COLLECTED)
     }
 }
 
-/** 统计数字：0 也显示（与列表计数的「0 → 文字标签」规则不同，线框 F1 统计行始终显示数字）。 */
+/** 统计数字：0 也显示（与列表计数的「0 → 文字标签」规则不同，统计行始终显示数字）。 */
 internal fun statText(count: Long): String =
     if (count <= 0) "0" else Formatters.formatCount(count.coerceAtMost(Int.MAX_VALUE.toLong()).toInt())
 
 /**
- * F1/F2 页签行（线框 F1：h 44、条目宽 64/86、icon 18；右侧 44×44 搜索框为**视觉占位**）。
+ * F1/F2 页签行（h 44、条目宽 64/86、icon 18；右侧 44×44 搜索框为**视觉占位**）。
  *
- * 搜索框无线框定义的行为与素材，故按 §4.5 统一用 [PlaceholderIconRes] 占位。
+ * 搜索框无行为定义且素材缺失，故按 §4.5 统一用 [PlaceholderIconRes] 占位。
  */
 @Composable
 internal fun ProfileSegmentRow(
@@ -178,7 +178,7 @@ internal class ProfileImagePicker(
  * 「保存」时该文件由 `UploadRepository.uploadImage` 上传换 URL（契约 §1.5 / §8）。
  *
  * @param onPicked 已落盘的本地路径
- * @param onFailure 落盘失败（自拟兜底文案，线框未定义该异常）
+ * @param onFailure 落盘失败（自拟兜底文案）
  */
 @Composable
 internal fun rememberProfileImagePicker(
@@ -218,7 +218,7 @@ internal fun rememberProfileImagePicker(
     )
 }
 
-/** 自拟兜底文案（线框未定义本地读图失败文案，与 WS-Publish 的同类兜底保持一致口径）。 */
+/** 自拟兜底文案（与 WS-Publish 的同类兜底保持一致口径）。 */
 internal const val ProfileImageReadFailed = "图片读取失败，请重试"
 
 private const val PROFILE_CACHE_DIR = "profile"
@@ -297,7 +297,7 @@ private fun previewOptions(): BitmapFactory.Options = BitmapFactory.Options().ap
 // ---------------------------------------------------------------- F6 退出登录确认（F4 / F5 共用）
 
 /**
- * F6 退出登录确认（线框 F6：遮罩 + 底部确认/取消，与 E7/G6 同款结构 → `XhsConfirmSheet`）。
+ * F6 退出登录确认（遮罩 + 底部确认/取消，与 E7/G6 同款结构 → `XhsConfirmSheet`）。
  *
  * 确认 → 清登录态 + 清角标（并丢弃上个用户的互动覆盖）→ 回游客首页（A1）；
  * 取消 / 点遮罩 → 仅关闭弹层（由 [XhsConfirmSheet] 的 `onDismiss` 承担）。

@@ -2,7 +2,7 @@ package com.xiaohongshu.app.navigation
 
 /**
  * 路由表。字符串路由（配合 navigation-compose），参数用花括号占位。
- * 屏号对应 client/docs/低保真线框图-移动端-v6.html 的屏幕编号。
+ * 注释中的 A1…I4 屏号是历史线框图的页面代号，仅用于指代页面；视觉与行为以代码为准。
  */
 object Routes {
 

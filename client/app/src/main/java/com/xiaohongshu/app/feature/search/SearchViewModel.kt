@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 
 /** B2 搜索页状态。 */
 data class SearchUiState(
-    /** 输入框内容（返回本页时保留，线框 B3-1：「← 返回 B2（保留关键词与历史）」）。 */
+    /** 输入框内容（返回本页时保留关键词与历史）。 */
     val query: String = "",
     /** 本地搜索历史，最新在前；为空时「历史记录」整块隐藏。 */
     val history: List<String> = emptyList(),
@@ -31,7 +31,7 @@ data class SearchUiState(
  * B2 搜索页 ViewModel。
  *
  * 搜索历史是纯本地能力（契约 §11）：点「搜索」或回车 → 记录关键词 → 推入 B3-1。
- * 历史为空时整块隐藏，🗑 清空，「猜你想搜」失败不影响页面（无线框错误态）。
+ * 历史为空时整块隐藏，🗑 清空，「猜你想搜」失败不影响页面（无错误态）。
  */
 class SearchViewModel(
     private val posts: PostRepository,
@@ -147,7 +147,7 @@ class SearchResultViewModel(
         _query.value = value
     }
 
-    /** 结果页内再次提交：原地重查 + 写入历史（线框 B3-1）。 */
+    /** 结果页内再次提交：原地重查 + 写入历史。 */
     fun submit() {
         val keyword = _query.value.trim()
         if (keyword.isEmpty()) return

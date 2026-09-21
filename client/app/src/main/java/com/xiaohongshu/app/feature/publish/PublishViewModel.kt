@@ -17,24 +17,24 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 
-// ---- 文案（线框已定稿的照抄；自拟的注明来源）----
+// ---- 文案（定稿文案照抄；自拟的注明来源）----
 
-/** 线框 E4 原文。 */
+/** E4 定稿原文。 */
 internal const val MsgTitleRequired = "请输入笔记标题"
 
-/** 线框 E4 原文。 */
+/** E4 定稿原文。 */
 internal const val MsgTitleTooLong = "标题不能超过200个字符"
 
 /** §7 E4 / 契约 §9 `2005`（E4 错误条，非 Toast）。 */
 internal const val MsgNeedMedia = "笔记必须包含至少一张图片或一个视频"
 
-/** 线框 E4 / 契约 §9 `2004`（Toast）。 */
+/** E4 / 契约 §9 `2004`（Toast）。 */
 internal const val MsgImageLimit = "最多上传9张图片"
 
 /** 契约只有图片超限文案，视频上限提示为同构自拟（§7 E2「视频 ≤1」）。 */
 internal const val MsgVideoLimit = "最多上传1个视频"
 
-/** 线框 E5-2 原文。 */
+/** E5-2 定稿原文。 */
 internal const val MsgPublishSuccess = "发布成功！"
 
 /** §7 E3 原文。 */
@@ -85,7 +85,7 @@ class PublishViewModel(
         if (draft.error.value.isNotEmpty()) draft.setError("")
     }
 
-    /** 正文 ≤10000：超出直接截断（线框 E4 未定义正文超限错误条）。 */
+    /** 正文 ≤10000：超出直接截断（无正文超限错误条）。 */
     fun onContentChange(value: String) {
         content = value.take(PublishDraft.MAX_CONTENT)
     }
@@ -218,7 +218,7 @@ class PublishViewModel(
         }
     }
 
-    /** 上传/创建失败的文案：`2005` 用线框定稿的「至少一图或一视频」，其余透传（I2）。 */
+    /** 上传/创建失败的文案：`2005` 用定稿的「至少一图或一视频」，其余透传（I2）。 */
     private fun publishErrorMessage(result: ApiResult<*>): String = when (result) {
         is ApiResult.Biz -> when (result.code) {
             Code.NEED_MEDIA -> MsgNeedMedia

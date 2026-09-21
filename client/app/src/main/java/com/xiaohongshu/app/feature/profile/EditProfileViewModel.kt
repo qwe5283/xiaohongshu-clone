@@ -17,29 +17,29 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
 
-/** 名字长度上限（线框 F3-1：名字 ≤20）。 */
+/** 名字长度上限（≤20）。 */
 internal const val NAME_MAX = 20
 
-/** 简介长度上限（线框 F3-1：简介 ≤200）。 */
+/** 简介长度上限（≤200）。 */
 internal const val BIO_MAX = 200
 
-/** 「没有修改任何信息」——线框 F3 定稿文案。 */
+/** 「没有修改任何信息」——定稿文案。 */
 internal const val NoChangeToast = "没有修改任何信息"
 
-/** 「保存成功」——线框 F3 定稿文案。 */
+/** 「保存成功」——定稿文案。 */
 internal const val SaveSuccessToast = "保存成功"
 
 /**
- * F3 编辑资料走 **F3-1 遮罩输入**的文本字段（线框 F3-1：名字 / 简介 / 邮箱 / 手机号）。
+ * F3 编辑资料走 **F3-1 遮罩输入**的文本字段（名字 / 简介 / 邮箱 / 手机号）。
  *
  * 说明：本版按任务给定的 F3 行序（名字 / 小红书号 / 背景图 / 简介 / 性别 / 生日 / 地区 / 职业 / 学校）
  * 实现，其中文本行只有名字 / 简介 / 生日 / 地区 / 职业 / 学校；**没有**邮箱 / 手机号行，
  * 故 `1[3-9]\d{9}` 的手机号格式校验未接入（`UpdateUserRequest` 也没有 phone 字段）。
  */
 internal enum class EditField(
-    /** 遮罩内输入框占位（线框 F3-1：占位随字段变化）。 */
+    /** 遮罩内输入框占位（随字段变化）。 */
     val placeholder: String,
-    /** 非空时显示剩余字数（线框 F3-1：名字 / 简介有计数，其余无）。 */
+    /** 非空时显示剩余字数（名字 / 简介有计数，其余无）。 */
     val maxLength: Int?,
 ) {
     NAME("填写名字", NAME_MAX),
@@ -55,7 +55,7 @@ private val BirthdayPattern = Regex("\\d{4}-\\d{2}-\\d{2}")
 
 /**
  * F3-1 发送前校验：返回非空字符串表示**不通过**，调用方停留遮罩并 Toast 该文案
- * （线框 F3-1 定稿文案：「名字最多20个字符」「手机号格式不正确」）。
+ * （定稿文案：「名字最多20个字符」「手机号格式不正确」）。
  */
 internal fun validateField(field: EditField, text: String): String? = when (field) {
     EditField.NAME -> if (text.length > NAME_MAX) "名字最多20个字符" else null
@@ -117,12 +117,12 @@ internal data class ProfileDraft(
 internal data class EditProfileUiState(
     val user: User = User.Empty,
     val draft: ProfileDraft = ProfileDraft.Empty,
-    /** 提交中：右上「保存中...」禁用，且 ← 不可返回（线框 F3）。 */
+    /** 提交中：右上「保存中...」禁用，且 ← 不可返回。 */
     val saving: Boolean = false,
 )
 
 /**
- * F3 编辑资料（线框 F3 / F3-1 / F3-2）。
+ * F3 编辑资料（F3-1 遮罩输入 / F3-2 性别选项）。
  *
  * - 字段修改**先落本页草稿**（[ProfileDraft]），不逐字段提交；
  * - 右上「保存」→ 只提交**有变化的字段**（`UpdateUserRequest` 的空值即「未变化」，
@@ -156,7 +156,7 @@ internal class EditProfileViewModel(
     )
 
     init {
-        // 进入本页时以当前资料预填（线框 F3：字段预填当前资料）
+        // 进入本页时以当前资料预填
         _draft.value = ProfileDraft.of(session.state.value.user)
     }
 
@@ -199,7 +199,7 @@ internal class EditProfileViewModel(
         val backgroundPath = draft.backgroundLocalPath
 
         if (body == null && avatarPath == null && backgroundPath == null) {
-            // 线框 F3：全未变 → Toast 后直接返回
+            // F3：全未变 → Toast 后直接返回
             toasts.show(NoChangeToast)
             onSuccess()
             return

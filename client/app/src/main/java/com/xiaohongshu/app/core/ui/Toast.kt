@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 /**
- * 全局 Toast 中心（线框 I2）。
+ * 全局 Toast 中心（I2）。
  *
  * 规范：**屏幕中心**显示 2.5s 后自动消失；黑底白字圆角条。
  * 三类反馈分工（I2）：Toast（本类）/ 列表错误态+重试（B4-2）/ 表单错误条（A5-1、E4）。

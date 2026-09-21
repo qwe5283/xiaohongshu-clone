@@ -1,6 +1,6 @@
 package com.xiaohongshu.app.feature.message
 
-// TODO(公共组件变更)：G1 会话行的缩略图/会话行本身没有专门的 Dimens token，本文件按线框实测
+// TODO(公共组件变更)：G1 会话行的缩略图/会话行本身没有专门的 Dimens token，本文件按实测
 //   复用已有档位（`avatarConversation`=48、`radiusCard`=8）。若需要更贴合的 token，请由架构负责人
 //   在 Dimens 增加（见交付说明「需要改公共组件」）。
 
@@ -52,7 +52,7 @@ import com.xiaohongshu.app.navigation.AppNavigator
 /**
  * G1 消息页（Tab 根页面）。
  *
- * 页面本身没有任何服务端列表：三入口是固定结构、会话列表按线框只有「点点」一个入口，
+ * 页面本身没有任何服务端列表：三入口是固定结构、会话列表只有「点点」一个入口，
  * 因此本页**不需要 ViewModel**，唯一的动态数据是三个入口的未读角标，直接读
  * [com.xiaohongshu.app.core.notify.UnreadCountCenter.counts]（15s 轮询已在 core 里跑）。
  *
@@ -67,13 +67,13 @@ fun MessageRoute(navigator: AppNavigator) {
         counts = unread,
         onEntryClick = navigator::toNotifications,
         onConversationClick = navigator::toAi,
-        // 线框 G1 顶栏右上「创建」没有定义任何行为（点按目标 ≥44 由 XhsIconButton 保证），
+        // G1 顶栏右上「创建」没有定义任何行为（点按目标 ≥44 由 XhsIconButton 保证），
         // 故此处为**有意的空实现**，仅渲染 ic_placeholder 占位素材。
         onCreateClick = {},
     )
 }
 
-/** 无状态内容层：状态全部来自入参，方便 Preview 与逐条对照线框。 */
+/** 无状态内容层：状态全部来自入参，方便 Preview。 */
 @Composable
 private fun MessageScreen(
     counts: UnreadCounts,
@@ -154,7 +154,7 @@ private fun MessageScreen(
 
         XhsDivider()
 
-        // ---- 会话列表：线框只有「点点」一个入口 ----
+        // ---- 会话列表：只有「点点」一个入口 ----
         ConversationRow(
             title = "点点",
             preview = ConversationPreview,
@@ -169,7 +169,7 @@ private fun MessageScreen(
 /**
  * 三入口卡列（G1）。
  *
- * 关键点（线框注）：**点击区＝整卡列**（宽 `(W−32)/3` × 高 104，含图标与标签整块可点）；
+ * 关键点：**点击区＝整卡列**（宽 `(W−32)/3` × 高 104，含图标与标签整块可点）；
  * 48×48 圆角 14 的浅色方块只是**视觉图标范围**，不是点击边界；未读为 0 时角标隐藏
  * （[XhsCountBadge] 在 `count <= 0` 时直接不渲染）。
  */
@@ -198,7 +198,7 @@ private fun EntryColumn(
                     modifier = Modifier
                         .size(Dimens.entryIconBox)
                         .clip(RoundedCornerShape(Dimens.entryIconRadius))
-                        // 浅色底、无边框（线框实测）
+                        // 浅色底、无边框
                         .background(XhsColor.BgGray),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -226,10 +226,10 @@ private fun EntryColumn(
 /**
  * 会话行（G1，高 72）。
  *
- * 线框实测：头像位 48 @16、标题 15sp @76（= 16 + 48 + 12）、预览 13sp、时间右侧；
+ * 实测：头像位 48 @16、标题 15sp @76（= 16 + 48 + 12）、预览 13sp、时间右侧；
  * 未读 8dp 红点 / 置顶 12dp 图标「按需显示」。
  *
- * 「行首 ai 小标」：线框该行最左侧是一个 24×24 圆角小标（浅色底 + `ai` 字样）。本实现把它
+ * 「行首 ai 小标」：设计上该行最左侧是一个 24×24 圆角小标（浅色底 + `ai` 字样）。本实现把它
  * 放大到 48dp 的**头像位**（同一格既承担实测的「头像 48 @16」，又是行首标识），
  * 否则「小标在最左」与「头像 @16 / 标题 @76」两条实测无法同时成立。
  */
@@ -299,8 +299,8 @@ private fun ConversationRow(
     }
 }
 
-/** 「点点」会话的预览文案（线框 G1 行内文案）。 */
+/** 「点点」会话的预览文案（G1 定稿文案）。 */
 private const val ConversationPreview = "想继续之前的话题，还是开启全新的聊天都可以"
 
-/** 会话行首的 ai 小标文案（线框 G1：灰底小方块内的 `ai`）。 */
+/** 会话行首的 ai 小标文案（G1：灰底小方块内的 `ai`）。 */
 private const val AiMarkerText = "ai"

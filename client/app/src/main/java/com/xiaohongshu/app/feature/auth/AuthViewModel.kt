@@ -35,18 +35,16 @@ internal data class LoginUiState(
  * A3 登录页（含 A5-1 失败态 / A5-2 提交中 / A6 成功）。
  *
  * **协议勾选 vs 登录按钮**（规范 §7 A3 留的取舍项，本实现的选择）：
- * 未勾选时**按钮禁用**（`XhsPrimaryButton(enabled = false)` → 45% 透明，视觉与 A5-2 的 `dis` 同源）。
+ * 未勾选时**按钮禁用**（`XhsPrimaryButton(enabled = false)` → 45% 透明，视觉与 A5-2 提交中置灰同源）。
  * 理由：① 真实 App 是硬门槛，登录接口不该在未同意协议时发出；
  * ② 禁用态在本设计系统里已有定义，**不需要新增任何文案**（若改为「可点但报错」，就必须自创一条
- *    A5-1 错误条文案，而 §4.7 要求文案定稿后不自创）；
- * ③ 线框 A5-2 的禁用态是显式加 `dis` 类并置灰的，而 A3 的按钮沿用 `.btn.rd.blk`——低保真线框里
- *    所有按钮都是同一个黑胶囊类，A3「未勾选 + 按钮可见」不足以作为「可提交」的证据。
+ *    A5-1 错误条文案，而 §4.7 要求文案定稿后不自创）。
  * 另外 [submit] 里仍保留一次 `agreed` 防御判断（正常路径到不了）。
  *
  * 其余行为：客户端先挡空值（不发明知无效的请求）；业务失败（1001 用户不存在 / 1002 密码错误 /
- * 1004 被禁用）把服务端 `message` **原样**写进错误条；网络层失败走全局 Toast（线框 A5-1 附注
- * 「网络层错误走全局 Toast（I2）」）。成功：Toast「登录成功」+ 回调（Route 调 `popLogin()`，
- * 由它补跑被拦截的游客动作并弹回来源页，见 §4.4 / A6）。
+ * 1004 被禁用）把服务端 `message` **原样**写进错误条；网络层失败走全局 Toast（I2）。成功：
+ * Toast「登录成功」+ 回调（Route 调 `popLogin()`，由它补跑被拦截的游客动作并弹回来源页，
+ * 见 §4.4 / A6）。
  */
 internal class LoginViewModel(
     private val session: SessionManager,
@@ -102,7 +100,7 @@ internal class LoginViewModel(
                     _state.value = _state.value.copy(submitting = false, error = result.userMessage())
                 }
 
-                // 网络层失败 → 全局 Toast，停留本页可重试（线框 A5-1 附注）
+                // 网络层失败 → 全局 Toast，停留本页可重试
                 else -> {
                     _state.value = _state.value.copy(submitting = false)
                     toasts.show(result.userMessage())
@@ -141,10 +139,10 @@ private val PhonePattern = Regex("1[3-9]\\d{9}")
  * A4 客户端校验（提交前跑）。
  *
  * 返回非空 = 不通过（文案直接进 A5-1 错误条）。文案来源：
- * - 「用户名长度为3-20个字符」= 线框 A5-1 里给出的失败示例原文；
+ * - 「用户名长度为3-20个字符」= A5-1 失败示例的定稿原文；
  * - 「密码长度为6-20个字符」/「昵称最多20个字符」= 同句式（后者对齐 F3-1 的「名字最多20个字符」）；
  * - 「手机号格式不正确」= F3-1 定稿文案（同一约束 `1[3-9]\d{9}`）；
- * - 「请输入用户名」/「请输入密码」= 线框 A3/A4 的占位原文（未填写时不另造文案）。
+ * - 「请输入用户名」/「请输入密码」= A3/A4 占位的定稿原文（未填写时不另造文案）。
  */
 internal fun validateRegister(state: RegisterUiState): String? = when {
     state.username.isBlank() -> UsernamePlaceholder

@@ -57,8 +57,8 @@ fun AiRoute(navigator: AppNavigator) {
     @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
 
-    // H1 仅登录用户可达（线框：游客点「点点」Tab → A2 推入登录页）。
-    // `MainScaffold` 的 Tabs.AI 分支没有做登录拦截（与线框不符，已列入交付说明），
+    // H1 仅登录用户可达（游客点「点点」Tab → A2 推入登录页）。
+    // `MainScaffold` 的 Tabs.AI 分支没有做登录拦截（已列入交付说明），
     // 故在页面内做等效拦截：只按**进入本页时**的登录态判一次 —— 会话过期由全局 I1 负责推入，
     // 这里再判会推入第二个登录页。
     val loggedInAtEntry = remember { session.loggedIn }

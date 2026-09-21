@@ -101,7 +101,7 @@ class PublishDraft {
     }
 
     companion object {
-        /** 线框约束：图片 ≤9 张，视频 ≤1 个。 */
+        /** 约束：图片 ≤9 张，视频 ≤1 个。 */
         const val MAX_IMAGE = 9
         const val MAX_VIDEO = 1
 

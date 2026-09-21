@@ -38,10 +38,10 @@ import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.domain.model.User
 
 /**
- * F1 / F2 共用的资料头（线框 F1 实测：头图 282、浮层顶栏 44、头像 108 @(2,78)、昵称 24sp、
+ * F1 / F2 共用的资料头（头图 282、浮层顶栏 44、头像 108 @(2,78)、昵称 24sp、
  * 统计行 24、简介行 26、性别 chip 30×20）。
  *
- * 结构说明：头图是**整块 282 的背景图**，顶栏与资料信息浮在它之上（线框 F1/F2 的头部为整块渐变块）；
+ * 结构说明：头图是**整块 282 的背景图**，顶栏与资料信息浮在它之上；
  * 头像用 [Dimens.profileAvatarOffsetX] / [Dimens.profileAvatarOffsetY] 的实测偏移定位，
  * 与顶栏解耦，顶栏高度变化不会把头像带偏。
  *
@@ -71,7 +71,7 @@ internal fun ProfileHeader(
             .fillMaxWidth()
             .height(Dimens.profileHeaderImage),
     ) {
-        // 头图：缺失素材由 XhsAsyncImage 统一占位（线框亦为占位底纹）
+        // 头图：缺失素材由 XhsAsyncImage 统一占位
         XhsAsyncImage(
             url = user.backgroundImage,
             modifier = Modifier.fillMaxSize(),
@@ -160,7 +160,7 @@ internal fun ProfileHeader(
     }
 }
 
-/** 浮层顶栏（线框 F1/F2：高 44，含状态栏内边距，浮在头图上）。 */
+/** 浮层顶栏（高 44，含状态栏内边距，浮在头图上）。 */
 @Composable
 private fun ProfileFloatingTopBar(
     isMe: Boolean,
@@ -221,7 +221,7 @@ private fun ProfileFloatingTopBar(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (isMe) {
-                    // 扫一扫 / 分享：线框明确为**视觉占位**（无行为），但素材已就位
+                    // 扫一扫 / 分享：**视觉占位**（无行为），但素材已就位
                     XhsIconButton(
                         iconRes = R.drawable.ic_scan,
                         onClick = {},
@@ -238,7 +238,7 @@ private fun ProfileFloatingTopBar(
                         contentDescription = "分享",
                     )
                 } else if (onMoreClick != null) {
-                    // F2「⋯」：线框明确为视觉占位
+                    // F2「⋯」：视觉占位
                     XhsIconButton(
                         iconRes = PlaceholderIconRes,
                         onClick = onMoreClick,
@@ -252,7 +252,7 @@ private fun ProfileFloatingTopBar(
     }
 }
 
-/** 「编辑主页」pill（线框 F1：93×26、icon 18）。 */
+/** 「编辑主页」pill（93×26、icon 18）。 */
 @Composable
 private fun EditProfilePill(
     onClick: () -> Unit,
@@ -333,7 +333,7 @@ private fun StatItem(count: Long, label: String) {
 /**
  * 简介行（高 26）+ 性别 chip（30×20，icon 12）。
  *
- * F1：简介为空显示引导文案「点击这里，填写简介」（线框 F1）；
+ * F1：简介为空显示引导文案「点击这里，填写简介」；
  * F2：他人简介为空时整行隐藏（不显示引导文案）；性别未知（`gender == 0`，含「保密」）不显示图标。
  */
 @Composable
@@ -371,7 +371,7 @@ private fun ProfileBioRow(
     }
 }
 
-/** 性别 chip（线框 F1：30×20、icon 12；只显示男/女，「保密」= 未设置故不显示）。 */
+/** 性别 chip（30×20、icon 12；只显示男/女，「保密」= 未设置故不显示）。 */
 @Composable
 private fun GenderChip(gender: Int) {
     Box(

@@ -58,7 +58,7 @@ internal fun EditProfileScreen(
             title = "编辑资料",
             onBack = onBack,
             actions = {
-                // 线框 F3：提交中「保存中...」禁用且不可返回
+                // F3：提交中「保存中...」禁用且不可返回
                 XhsTextAction(
                     text = if (state.saving) "保存中..." else "保存",
                     enabled = !state.saving,
@@ -73,7 +73,7 @@ internal fun EditProfileScreen(
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            // 头像（线框 F3：列表上方的居中头像块；点击走系统相册并即时预览）
+            // 头像（列表上方的居中头像块；点击走系统相册并即时预览）
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -211,7 +211,7 @@ internal fun EditProfileScreen(
 }
 
 /**
- * F3 表单行：行高 48（背景图行 40）、label 宽 89 @32、值 @137（线框 T-3 实测）。
+ * F3 表单行：行高 48（背景图行 40）、label 宽 89 @32、值 @137。
  * 值区右侧为进入箭头；「小红书号」行不可点击且无箭头。
  */
 @Composable

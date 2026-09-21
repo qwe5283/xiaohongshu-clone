@@ -1,7 +1,7 @@
 package com.xiaohongshu.app.feature.auth
 
 /**
- * A4 → A3 的用户名回填交接（线框 A4：「注册成功 → Toast「注册成功，请登录」→ 回 A3 并预填用户名」）。
+ * A4 → A3 的用户名回填交接（注册成功 → Toast「注册成功，请登录」→ 回 A3 并预填用户名）。
  *
  * 为什么用包内单例，而不是导航参数 / `previousBackStackEntry.savedStateHandle`：
  * - 入口签名固定为 `LoginRoute(navigator)` / `RegisterRoute(navigator)`，feature 只依赖

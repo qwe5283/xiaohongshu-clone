@@ -51,7 +51,7 @@ internal data class MyProfileUiState(
 }
 
 /**
- * F1 我的主页（线框 F1）。
+ * F1 我的主页。
  *
  * 关键取舍：
  * - **三个 Tab 各持一个 [PagedList]**：切页签不丢对方已加载的数据；

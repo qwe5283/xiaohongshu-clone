@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 /**
  * 未读消息中心（G1 / 底 Tab 角标）。
  *
- * 线框规范：未读角标每 **15 秒**轮询；>99 显示 `99+`；自己操作自己不产生通知（后端保证）；
+ * 规范：未读角标每 **15 秒**轮询；>99 显示 `99+`；自己操作自己不产生通知（后端保证）；
  * 点条目先标已读再跳转，角标随之递减。
  *
  * 轮询只在「已登录 + App 处于前台」时进行；退出登录立即清零。
@@ -65,7 +65,7 @@ class UnreadCountCenter(
 
     /**
      * 单条已读的本地乐观递减：角标立刻 -1，最终以轮询结果为准。
-     * （标记失败不阻断操作，下次轮询校正——线框 G5-2 异常恢复说明。）
+     * （标记失败不阻断操作，下次轮询校正——G5-2 异常恢复说明。）
      */
     fun decrement(categoryValue: Int) {
         val current = _counts.value
@@ -108,7 +108,7 @@ class UnreadCountCenter(
     }
 
     companion object {
-        /** 轮询间隔（线框「通知」规范：每 15 秒）。 */
+        /** 轮询间隔（「通知」规范：每 15 秒）。 */
         const val POLL_INTERVAL_MS = 15_000L
     }
 }

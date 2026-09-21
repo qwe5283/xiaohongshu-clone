@@ -44,13 +44,13 @@ import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsTextChip
 import com.xiaohongshu.app.core.ui.XhsVerticalDivider
 
-/** B2 输入框占位文案（线框 B2 原文）。 */
+/** B2 输入框占位文案（定稿原文）。 */
 private const val SearchPlaceholder = "搜索你感兴趣的内容"
 
 /**
  * B2 / B3-1 共用的搜索行：高 52。
  *
- * 结构（线框 B2 实测）：返回 22 → 输入框 44（右侧竖分隔 + 相机入口）→「搜索」按钮 56×44。
+ * 结构：返回 22 → 输入框 44（右侧竖分隔 + 相机入口）→「搜索」按钮 56×44。
  * 输入框回车（IME Search）与「搜索」按钮等价：二者都走 [onSubmit]。
  */
 @Composable
@@ -136,7 +136,7 @@ internal fun SearchInputRow(
 
 /**
  * B2「历史记录」区块：标题 16sp + 🗑 清空 + 历史 chip（高 32 全圆角、可换行、间距 8）。
- * **历史为空时整块隐藏**（线框 B2 note）。
+ * **历史为空时整块隐藏**。
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -160,7 +160,7 @@ internal fun SearchHistorySection(
                 maxLines = 1,
                 modifier = Modifier.weight(1f),
             )
-            // 🗑 清空历史（线框用字符表示该图标；素材缺失，按 §4.5 用统一占位）
+            // 🗑 清空历史（素材缺失，按 §4.5 用统一占位）
             XhsIconButton(
                 iconRes = PlaceholderIconRes,
                 onClick = onClear,
@@ -183,7 +183,7 @@ internal fun SearchHistorySection(
 }
 
 /**
- * B2「猜你想搜」：两列，条目行高 22、行距 32（线框实测行距 38，收敛到间距阶梯的 32）。
+ * B2「猜你想搜」：两列，条目行高 22、行距收敛到间距阶梯的 32。
  * 点击直接搜该词（与历史 chip 一致）。
  */
 @Composable
@@ -259,11 +259,11 @@ internal fun StaggeredLoadMoreEffect(
     }
 }
 
-/** 距底预加载项数（线框 B4-4：滚动距底约 600px，按项数近似为 6 项）。 */
+/** 距底预加载项数（B4-4：滚动距底约 600px，按项数近似为 6 项）。 */
 private const val PRELOAD_ITEM_COUNT = 6
 
 /**
- * 线框 B2 实测值，Dimens 无对应档位，故就近声明：
+ * B2 实测值，Dimens 无对应档位，故就近声明：
  * 搜索行 52、返回图标 22、搜索按钮宽 56、猜你想搜条目行高 22。
  */
 private val SearchRowHeight = 52.dp

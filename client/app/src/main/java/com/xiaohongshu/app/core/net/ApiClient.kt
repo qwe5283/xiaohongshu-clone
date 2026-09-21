@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
  */
 object ApiClient {
 
-    /** 统一超时 15s（线框全局规范「反馈」）。 */
+    /** 统一超时 15s。 */
     private const val TIMEOUT_SECONDS = 15L
 
     /** AI 对话超时 70s（契约 §10.1）。 */

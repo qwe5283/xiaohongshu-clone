@@ -35,7 +35,7 @@ import com.xiaohongshu.app.core.design.XhsType
 
 /**
  * 主操作按钮（A3/A4 登录注册、E2 发布、B4-2 重试）。
- * 全圆角胶囊、黑底白字（线框 .btn.rd）；加载中显示「登录中...」并禁用（A5-2）。
+ * 全圆角胶囊、黑底白字；加载中显示「登录中...」并禁用（A5-2）。
  */
 @Composable
 fun XhsPrimaryButton(
@@ -114,7 +114,7 @@ fun XhsFollowPill(
                     Modifier
                 },
             )
-            // 触控热区扩到 ≥44（线框 T-4c：小图标 24 视觉 + 透明扩边）
+            // 触控热区扩到 ≥44（小图标 24 视觉 + 透明扩边）
             .clickable(onClick = onToggle)
             .padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center,
@@ -255,7 +255,7 @@ fun XhsDotBadge(
 /**
  * 计数标签（C1-1/C2-1 底栏 ♥★💬）。
  *
- * 线框规则：计数为 0 时显示**文字标签**（「赞」「收藏」「评论」），>0 显示数字，
+ * 规则：计数为 0 时显示**文字标签**（「赞」「收藏」「评论」），>0 显示数字，
  * ≥10000 收敛为「1.2万」。
  */
 @Composable

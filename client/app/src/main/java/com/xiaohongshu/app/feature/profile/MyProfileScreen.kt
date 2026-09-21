@@ -81,7 +81,7 @@ internal fun MyProfileScreen(
     }
 
     // 懒加载：只有「已展示过」的 Tab 才挂载分页副作用 —— 挂载即首刷一次，
-    // 之后随页面常驻，页签来回切换不会重复请求（线框 F1「三 Tab 懒加载」）。
+    // 之后随页面常驻，页签来回切换不会重复请求（三 Tab 懒加载）。
     // 以 user.id 为 key：换账号后已展示集合与分页副作用一起重置，不会沿用上一个用户的数据。
     var visited by remember(state.user.id) { mutableStateOf(setOf(state.tab)) }
     LaunchedEffect(state.tab) { if (state.tab !in visited) visited = visited + state.tab }
@@ -159,9 +159,9 @@ internal fun MyProfileScreen(
 // ---------------------------------------------------------------- F4 抽屉
 
 /**
- * F4 抽屉（线框：宽 308、项 284×52 @12（icon 24 @28、文字 @64）、分组间隔 8、底部三宫格 94.6×72）。
+ * F4 抽屉（宽 308、项 284×52 @12（icon 24 @28、文字 @64）、分组间隔 8、底部三宫格 94.6×72）。
  *
- * 「设置」→ F5；「社区公约」「关于我们」为**视觉占位**（线框 #9 未定义行为，故点击不做任何事）；
+ * 「设置」→ F5；「社区公约」「关于我们」为**视觉占位**（行为未定义，故点击不做任何事）；
  * 「退出登录」→ F6。点遮罩或系统返回关闭。仅登录态可达（由调用方保证）。
  * 挂载在宿主最外层（MainScaffold），遮罩才能盖住底部 Tab。
  */
@@ -234,7 +234,7 @@ internal fun ProfileDrawer(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // 底部三宫格（线框 T-3：94.6×72；内容线框未定义 → 仅按尺寸 + 占位素材标记待定）
+                // 底部三宫格（94.6×72；内容未定义 → 仅按尺寸 + 占位素材标记待定）
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -264,11 +264,11 @@ internal fun ProfileDrawer(
     }
 }
 
-/** 抽屉底部三宫格格数（线框 T-3）。 */
+/** 抽屉底部三宫格格数。 */
 private const val DRAWER_GRID_CELLS = 3
 
 /**
- * 抽屉项：高 52、icon 24 @28、文字 @64（线框 T-3）。
+ * 抽屉项：高 52、icon 24 @28、文字 @64。
  * 图标在 Dimens 里没有对应素材 → 统一用 [PlaceholderIconRes]（§4.5）。
  */
 @Composable

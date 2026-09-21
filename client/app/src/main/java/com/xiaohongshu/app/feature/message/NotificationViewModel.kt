@@ -115,7 +115,7 @@ class NotificationListViewModel(
      * 点条目（G2/G3/G4）。
      *
      * **先标已读**（本地乐观置已读 + 角标 -1），**再**由 UI 侧跳 C1-1；
-     * 请求本身失败不阻断操作、也不弹错——线框 G5-2「已读标记失败不阻断操作，下次轮询校正」。
+     * 请求本身失败不阻断操作、也不弹错——G5-2「已读标记失败不阻断操作，下次轮询校正」。
      * （`PagedList` 的 errors 只覆盖分页请求，故这里手动忽略返回值。）
      */
     fun onRowClick(item: NotificationItem) {

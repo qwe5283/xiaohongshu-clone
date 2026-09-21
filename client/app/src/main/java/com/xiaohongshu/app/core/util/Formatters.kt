@@ -10,7 +10,7 @@ import java.time.temporal.ChronoUnit
  * 时间与计数的展示格式化。
  *
  * 契约里的时间是 `LocalDateTime` 文本（无时区），形如 `2026-09-14T10:16:00`。
- * 统一解析为本地时区 epoch millis，再由下列函数按线框语义渲染。
+ * 统一解析为本地时区 epoch millis，再由下列函数渲染。
  */
 object Formatters {
 
@@ -54,7 +54,7 @@ object Formatters {
 
     /**
      * 评论/通知的相对时间：`3分钟前` `2小时前` `昨天 13:14` `09-14`。
-     * 线框评论 meta 行与通知条目使用。
+     * 评论 meta 行与通知条目使用。
      */
     fun formatRelative(epochMillis: Long): String {
         if (epochMillis <= 0) return ""
@@ -87,7 +87,7 @@ object Formatters {
 
     /**
      * 计数展示：`0` → 返回 true（调用方渲染文字标签「赞」「收藏」「评论」）；`>0` → 数字。
-     * ≥10000 收敛为 `1.2万`（线框 B1 卡片示例「♥ 1.2万」）。
+     * ≥10000 收敛为 `1.2万`（B1 卡片示例「♥ 1.2万」）。
      */
     fun formatCount(count: Int): String {
         if (count <= 0) return ""
@@ -98,7 +98,7 @@ object Formatters {
         return text.trimEnd('0').trimEnd('.') + "万"
     }
 
-    /** 角标数字：>99 显示 `99+`（线框「通知」与「聊天未读」规范）。 */
+    /** 角标数字：>99 显示 `99+`（「通知」与「聊天未读」规范）。 */
     fun formatBadge(count: Long): String = if (count > 99) "99+" else count.toString()
 
     /**

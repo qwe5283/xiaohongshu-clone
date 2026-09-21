@@ -33,7 +33,7 @@ import com.xiaohongshu.app.navigation.AppNavigator
  * 结构：搜索行 52 →「历史记录」区块（**为空时整块隐藏**）→「猜你想搜」两列 →
  * 空闲区提示「输入关键词并搜索，结果将显示在这里」。
  * 提交（回车或「搜索」）→ 记录历史 → `navigator.toSearchResult(keyword)` 推入 B3-1。
- * 线框中的 AI「按住提问」入口并入 H（点点），本页不实现。
+ * AI「按住提问」入口并入 H（点点），本页不实现。
  */
 @Composable
 fun SearchRoute(navigator: AppNavigator) {
@@ -85,7 +85,7 @@ private fun SearchScreen(
                 .fillMaxWidth()
                 .padding(horizontal = Dimens.pagePadding),
         ) {
-            // 历史为空时内部直接 return，整块不占位（线框 B2 note）
+            // 历史为空时内部直接 return，整块不占位
             SearchHistorySection(
                 history = state.history,
                 onPick = onSubmit,
@@ -97,7 +97,7 @@ private fun SearchScreen(
             )
         }
 
-        // 空闲区提示（线框 B2 末尾居中灰字，位于剩余空间底部）
+        // 空闲区提示（末尾居中灰字，位于剩余空间底部）
         Box(
             modifier = Modifier
                 .fillMaxWidth()

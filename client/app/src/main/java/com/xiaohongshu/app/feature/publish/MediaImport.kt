@@ -31,11 +31,11 @@ import java.util.UUID
  */
 internal const val CameraDeniedToast = "未授权相机，可从相册选择"
 
-/** 本地媒体落盘失败（相册 URI 读取/相机落盘 IO 异常）：线框未定义，属自拟兜底文案。 */
+/** 本地媒体落盘失败（相册 URI 读取/相机落盘 IO 异常）：属自拟兜底文案。 */
 internal const val MediaReadFailedToast = "媒体读取失败，请重试"
 
 /**
- * E1 / E2 共用的媒体获取能力（线框 I4 + §7 E1「从相册选择 / 拍摄」）。
+ * E1 / E2 共用的媒体获取能力（I4 + §7 E1「从相册选择 / 拍摄」）。
  *
  * 两条来源：
  * - [pickFromGallery] 系统照片选择器（`PickMultipleVisualMedia`，**多选、无需运行时权限**）；

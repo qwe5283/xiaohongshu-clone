@@ -20,7 +20,7 @@ import com.xiaohongshu.app.navigation.AppNavigator
 /**
  * WS-Profile 的四个入口（F1–F6），全部由本文件暴露；内容层在同目录的 Screen 文件里。
  *
- * | 入口 | 线框 | 实现文件 |
+ * | 入口 | 屏号 | 实现文件 |
  * |------|------|----------|
  * | [MyProfileRoute] | F1 + F4 + F6 | `MyProfileScreen.kt` / `ProfileDrawer` |
  * | [UserProfileRoute] | F2 | `UserProfileScreen.kt` |
@@ -34,7 +34,7 @@ import com.xiaohongshu.app.navigation.AppNavigator
 /**
  * F1 我的主页（Tab 根页面）。
  *
- * 线框 F1 的层级：头图（含浮层顶栏/头像/昵称/统计/简介/性别）→ segment 页签行（固定）→
+ * F1 的层级：头图（含浮层顶栏/头像/昵称/统计/简介/性别）→ segment 页签行（固定）→
  * 瀑布流（`flex:1` 的自滚动区）。底 Tab 由 `MainScaffold` 持有；
  * F4 抽屉与 F6 退出确认也由 MainScaffold 挂载（要盖住底 Tab，页面内挂不行），经 [onOpenDrawer] 触发。
  */
@@ -59,7 +59,7 @@ fun MyProfileRoute(navigator: AppNavigator, onOpenDrawer: () -> Unit) {
     MyProfileScreen(
         state = state,
         loggedIn = session.loggedIn,
-        // F1：☰ → F4 抽屉（由 MainScaffold 挂载）；抽屉仅登录态可达（游客 ☰ → A2 登录页，线框 F4）
+        // F1：☰ → F4 抽屉（由 MainScaffold 挂载）；抽屉仅登录态可达（游客 ☰ → A2 登录页）
         onLeftAction = { if (session.loggedIn) onOpenDrawer() else navigator.toLogin() },
         onEditProfile = {
             if (session.loggedIn) navigator.toEditProfile() else navigator.toLogin()
@@ -82,7 +82,7 @@ fun MyProfileRoute(navigator: AppNavigator, onOpenDrawer: () -> Unit) {
 }
 
 /**
- * F2 他人主页（推入式，线框 F2）。
+ * F2 他人主页（推入式）。
  *
  * 与 F1 的差异：无小组件行、无「去发布」banner、无「编辑主页」pill（顶栏左为 ←、右为「⋯」视觉占位）、
  * Tab 仅「笔记 / 收藏」、关注为**通栏大按钮**（D2 同一状态机）。
@@ -138,7 +138,7 @@ fun UserProfileRoute(
     )
 }
 
-/** F3-2 性别选项（线框 F3-2：男 / 女 / 保密；保密 = 未设置 → `gender = 0`）。 */
+/** F3-2 性别选项（男 / 女 / 保密；保密 = 未设置 → `gender = 0`）。 */
 private val GenderOptions: List<SheetAction> = listOf(
     SheetAction(label = "男", key = GENDER_MALE.toString()),
     SheetAction(label = "女", key = GENDER_FEMALE.toString()),
@@ -149,10 +149,10 @@ private val GenderOptions: List<SheetAction> = listOf(
 private enum class EditImageTarget { AVATAR, BACKGROUND }
 
 /**
- * F3 编辑资料（推入式，线框 F3）+ F3-1 遮罩输入 + F3-2 性别遮罩选项。
+ * F3 编辑资料（推入式）+ F3-1 遮罩输入 + F3-2 性别遮罩选项。
  *
- * 行序固定（线框 T-3 实测）：名字 / 小红书号(不可编辑) / 背景图 / 简介 / 性别 / 生日 / 地区 / 职业 / 学校；
- * 头像单独置于列表上方（线框 F3 的居中头像块）。
+ * 行序固定：名字 / 小红书号(不可编辑) / 背景图 / 简介 / 性别 / 生日 / 地区 / 职业 / 学校；
+ * 头像单独置于列表上方（居中头像块）。
  */
 @Composable
 fun EditProfileRoute(navigator: AppNavigator) {
@@ -184,7 +184,7 @@ fun EditProfileRoute(navigator: AppNavigator) {
         onFailure = { message -> container.toastController.show(message) },
     )
 
-    // F3：提交中 ← 不可返回（线框）；系统返回同样拦掉
+    // F3：提交中 ← 不可返回；系统返回同样拦掉
     BackHandler(enabled = state.saving) { }
 
     val field = activeField
@@ -216,7 +216,7 @@ fun EditProfileRoute(navigator: AppNavigator) {
         },
         maxLength = field?.maxLength,
         singleLine = true,
-        // 线框 F3-1：点遮罩或**收起键盘**取消（回到 F3）
+        // F3-1：点遮罩或**收起键盘**取消（回到 F3）
         dismissOnKeyboardHide = true,
         onDismiss = {
             activeField = null
@@ -229,7 +229,7 @@ fun EditProfileRoute(navigator: AppNavigator) {
             } else {
                 val error = validateField(target, text)
                 if (error != null) {
-                    // 校验不通过：停留本遮罩 + Toast（线框 F3-1），并把已输入内容回填
+                    // 校验不通过：停留本遮罩 + Toast，并把已输入内容回填
                     container.toastController.show(error)
                     retainedText = text
                 } else {
@@ -253,7 +253,7 @@ fun EditProfileRoute(navigator: AppNavigator) {
     )
 }
 
-/** F5 设置（推入式，线框 F5）；子页均为占位，底部「退出登录」→ F6。 */
+/** F5 设置（推入式）；子页均为占位，底部「退出登录」→ F6。 */
 @Composable
 fun SettingsRoute(navigator: AppNavigator) {
     var logoutVisible by remember { mutableStateOf(false) }

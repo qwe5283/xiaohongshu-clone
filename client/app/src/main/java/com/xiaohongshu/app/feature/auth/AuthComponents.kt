@@ -44,42 +44,41 @@ import com.xiaohongshu.app.core.design.XhsType
 import com.xiaohongshu.app.core.ui.XhsCheckCircle
 import com.xiaohongshu.app.core.ui.XhsDivider
 
-// ================================================================ 文案（线框原文为准）
+// ================================================================ 文案（定稿原文）
 
-/** A3 标语（线框 A3/A5-1/A5-2 原文）。 */
+/** A3 标语（定稿文案）。 */
 internal const val LoginTagline = "登录后，体验更多功能"
 
-/** A3 顶栏右上「帮助」（线框原文）。 */
+/** A3 顶栏右上「帮助」（定稿文案）。 */
 internal const val HelpLabel = "帮助"
 
 /**
- * 「帮助」是线框标记的 `#9` 占位（线框 A3：「协议链接为占位（#9）」，帮助同为占位）——
- * **不自建页面**：点击只弹全局 Toast（I2），不改导航、不做假页面。
+ * 「帮助」是占位入口——**不自建页面**：点击只弹全局 Toast（I2），不改导航、不做假页面。
  */
 internal const val HelpPlaceholderToast = "帮助内容暂未提供"
 
-/** A6 定稿文案（线框 A6 / 规范 §7 A6）。 */
+/** A6 定稿文案（规范 §7 A6）。 */
 internal const val LoginSuccessToast = "登录成功"
 
-/** A4 定稿文案（线框 A4 / 规范 §7 A4）：注册成功**不自动登录**。 */
+/** A4 定稿文案（规范 §7 A4）：注册成功**不自动登录**。 */
 internal const val RegisterSuccessToast = "注册成功，请登录"
 
-/** A3 用户名占位（线框 A3 原文），同时用作「未填写」时的错误条文案。 */
+/** A3 用户名占位（定稿原文），同时用作「未填写」时的错误条文案。 */
 internal const val UsernamePlaceholder = "请输入用户名"
 
-/** A3 密码占位（线框 A3 原文），同时用作「未填写」时的错误条文案。 */
+/** A3 密码占位（定稿原文），同时用作「未填写」时的错误条文案。 */
 internal const val PasswordPlaceholder = "请输入密码"
 
-/** A3 提交按钮文案（线框 A3 原文）。 */
+/** A3 提交按钮文案（定稿原文）。 */
 internal const val LoginLabel = "登录"
 
-/** A5-2 提交中按钮文案（线框 A5-2 原文）。 */
+/** A5-2 提交中按钮文案（定稿原文）。 */
 internal const val LoginSubmitLabel = "登录中..."
 
-/** A4 提交按钮文案（线框 A4 原文）。 */
+/** A4 提交按钮文案（定稿原文）。 */
 internal const val RegisterLabel = "注册"
 
-/** A5-2 注册提交中按钮文案（线框 A5-2 口径：「登录中...」的注册版）。 */
+/** A5-2 注册提交中按钮文案（「登录中...」的注册版）。 */
 internal const val RegisterSubmitLabel = "注册中..."
 
 // ================================================================ 控件
@@ -87,7 +86,7 @@ internal const val RegisterSubmitLabel = "注册中..."
 /**
  * A3/A4 输入框（真机密码登录页样式：无边框，仅底部一条 hairline 下边线）。
  *
- * - 行高 = [Dimens.minTouchTarget]（44，触控热区一档；线框为低保真示意值，不照抄）；
+ * - 行高 = [Dimens.minTouchTarget]（44，触控热区一档）；
  * - 下边线复用 [XhsDivider]（`Dimens.hairline` + `XhsColor.Divider`，与全项目分隔线同档）；
  * - 文字与下边线左端对齐（无内边距），页面边距由外层布局控制；
  * - 占位 = `XhsColor.Text3`（§4.1「弱文字/占位」）；
@@ -136,10 +135,10 @@ internal fun AuthTextField(
 }
 
 /**
- * A3/A4 居中 LOGO + 标语（线框 A3：LOGO 居中，下方「登录后，体验更多功能」）。
+ * A3/A4 居中 LOGO + 标语（LOGO 居中，下方「登录后，体验更多功能」）。
  *
  * LOGO 用真实素材 `R.drawable.ic_logo`（非占位）；高度取 `Dimens.s32`，宽按素材
- * 205×96 等比 ≈ 68dp——线框画的是 72×30 的占位框，两者一致。
+ * 205×96 等比 ≈ 68dp。
  */
 @Composable
 internal fun AuthLogoHeader(modifier: Modifier = Modifier) {
@@ -157,18 +156,18 @@ internal fun AuthLogoHeader(modifier: Modifier = Modifier) {
     }
 }
 
-/** 协议文案里的两个书名号链接（线框 A3/A4 原文，`#9` 占位）。 */
+/** 协议文案里的两个书名号链接（定稿原文，占位）。 */
 private const val AgreementPrefix = "我已阅读并同意"
 private const val AgreementUserDoc = "《用户协议》"
 private const val AgreementConjunction = "和"
 private const val AgreementPrivacyDoc = "《隐私政策》"
 
 /**
- * A3/A4 协议勾选行（线框：小圆圈 + 「我已阅读并同意《用户协议》和《隐私政策》」）。
+ * A3/A4 协议勾选行（小圆圈 + 「我已阅读并同意《用户协议》和《隐私政策》」）。
  *
  * - 圆圈用结构化字形 [XhsCheckCircle]（§4.5：不要用占位素材替代），[checked] 为 true 时红底白勾；
  * - 整行（高 44 = 触控热区下限）可点 = 切换勾选；
- * - 「《用户协议》/《隐私政策》」是线框标记的 `#9` 占位，**不跳转**：只做下划线样式，
+ * - 「《用户协议》/《隐私政策》」是**占位链接，不跳转**：只做下划线样式，
  *   点击行为与整行一致（即切换勾选），全项目不为它们建页面。
  */
 @Composable
@@ -204,9 +203,9 @@ internal fun AuthAgreementRow(
 }
 
 /**
- * A3「没有账号？注册」/ A4「已有账号？前往登录」（线框原文，动作词带下划线加粗）。
+ * A3「没有账号？注册」/ A4「已有账号？前往登录」（定稿原文，动作词带下划线加粗）。
  *
- * 不用 `XhsTextAction`：那是顶栏动作档（17sp），这里要与提示文字同档（线框两者同字号）。
+ * 不用 `XhsTextAction`：那是顶栏动作档（17sp），这里要与提示文字同档。
  * 整行高 44 = 触控热区下限。
  */
 @Composable

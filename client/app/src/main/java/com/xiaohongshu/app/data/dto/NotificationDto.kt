@@ -43,7 +43,7 @@ data class UnreadCountDto(
 /**
  * 通知入口分类 —— `GET /api/notification/list?category=`（契约变更 #7）。
  *
- * 线框 G1 三入口 → G2/G3/G4 三个列表页。
+ * G1 三入口 → G2/G3/G4 三个列表页。
  */
 enum class NotificationCategory(val value: Int) {
     /** 赞和收藏（G2）：type ∈ {1,2,5}。 */

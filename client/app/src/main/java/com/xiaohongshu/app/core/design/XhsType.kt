@@ -6,7 +6,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 
 /**
- * 字号阶梯 —— 线框图 v6 章节 T-4b（收敛为 8 档：11/12/14/15/16/17/20/24）。
+ * 字号阶梯 —— 收敛为 8 档：11/12/14/15/16/17/20/24。**编码以本文件为准。**
  * 字重仅两档：常规 400、强调 600（选中 Tab、计数、按钮文字、页面大标题）。
  *
  * 用 [XhsType.s] 构造自定义档位，用下列具名 style 保证同一个语义在全局一致。

@@ -88,7 +88,7 @@ fun XhsCheckCircle(
     }
 }
 
-/** 空态插画位：一个虚线框 + 占位素材，明确表达「待替换矢量插画」。 */
+/** 空态插画位：一个虚线边框 + 占位素材，明确表达「待替换矢量插画」。 */
 @Composable
 fun XhsIllustrationSlot(
     modifier: Modifier = Modifier,

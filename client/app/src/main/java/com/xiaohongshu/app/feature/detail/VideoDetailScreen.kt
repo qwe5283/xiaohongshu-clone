@@ -70,7 +70,7 @@ import kotlinx.coroutines.delay
  * 视频**不侵入**状态栏与底栏两条黑区：两条黑区在媒体区之外，用 inset padding 撑出来。
  *
  * 播放器：框架 `VideoView`（内部即 MediaPlayer）用 `AndroidView` 包装，零新依赖；
- * 不自动播放以外的控制（无暂停按钮，线框未定义），循环播放，`onDispose` 释放。
+ * 不自动播放以外的控制（无暂停按钮，行为未定义），循环播放，`onDispose` 释放。
  */
 
 /** C2-1 实测：作者行 48 / 标题行 46（`Dimens` 无对应档位，就地声明并标注来源）。 */
@@ -80,17 +80,17 @@ private val VideoTitleRowHeight = 46.dp
 /** C2-5：手指落点需在媒体区**底部 30%** 内才进入 seek。 */
 private const val SEEK_ZONE_FRACTION = 0.3f
 
-/** 进度条锚点：常态 7dp（约线粗 2 倍余），seek 时放大到 14dp（线框 C2-5）。 */
+/** 进度条锚点：常态 7dp（约线粗 2 倍余），seek 时放大到 14dp（C2-5）。 */
 private val ProgressDotSize = 7.dp
 private val SeekDotSize = 14.dp
 
-/** 未播放部分为**高透明度**白（线框 rgba(255,255,255,.35)）。 */
+/** 未播放部分为**高透明度**白。 */
 private const val PROGRESS_TRACK_ALPHA = 0.35f
 
-/** seek 态时间文本与进度条之间的 gap（线框 C2-5 margin-bottom 10）。 */
+/** seek 态时间文本与进度条之间的 gap（C2-5，10dp）。 */
 private val SeekTimeGap = 10.dp
 
-/** 顶/底渐变遮罩的“subtle”强度（线框只要求感观，无实测值）。 */
+/** 顶/底渐变遮罩的“subtle”强度（只要求感观，无实测值）。 */
 private const val SCRIM_TOP_ALPHA = 0.45f
 private const val SCRIM_BOTTOM_ALPHA = 0.55f
 
@@ -299,7 +299,7 @@ private fun VideoMediaArea(
                         contentDescription = "搜索",
                     )
                     Spacer(modifier = Modifier.width(Dimens.s8))
-                    // ↗ 分享：线框未定义行为 → 点击 no-op
+                    // ↗ 分享：行为未定义 → 点击 no-op
                     XhsIconButton(
                         iconRes = R.drawable.ic_share,
                         onClick = {},
@@ -331,8 +331,8 @@ private fun VideoMediaArea(
                 VideoProgressBar(progress = progress, seeking = seeking)
             }
         } else {
-            // 线框 C3-1：点遮罩关闭面板并恢复媒体区。
-            // 媒体条本身不额外压暗（与线框 C3-1 的截图一致），只让点击落到「关闭」上。
+            // C3-1：点遮罩关闭面板并恢复媒体区。
+            // 媒体条本身不额外压暗，只让点击落到「关闭」上。
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -375,7 +375,7 @@ private fun VideoSurface(
                 )
                 setVideoURI(Uri.parse(videoUrl))
                 setOnPreparedListener { mediaPlayer ->
-                    // 自动播放 + 循环（线框允许）
+                    // 自动播放 + 循环
                     player.onPrepared(this, mediaPlayer)
                 }
                 setOnErrorListener { _, _, _ ->
@@ -400,7 +400,7 @@ private fun VideoSurface(
 /**
  * 播放器状态（不放进 ViewModel：MediaPlayer 与视图生命周期绑定，随组合进出）。
  *
- * 进度/时长/seek 全部经**显式持有的 MediaPlayer** 读写（线框要求框架播放器 + MediaPlayer，
+ * 进度/时长/seek 全部经**显式持有的 MediaPlayer** 读写（采用框架播放器 + MediaPlayer，
  * 不引入 media3/ExoPlayer）。
  */
 internal class VideoPlayerState {
@@ -757,12 +757,12 @@ private fun MediaError(onBack: () -> Unit) {
 private val VideoTopScrimHeight = Dimens.topBar + Dimens.s24
 private val VideoBottomScrimHeight = VideoAuthorRowHeight + VideoTitleRowHeight + Dimens.videoProgressTouch + Dimens.s24
 
-/** C2-1：关注胶囊 49×26 / 音乐碟 22（线框实测，Dimens 无档位）。 */
+/** C2-1：关注胶囊 49×26 / 音乐碟 22（实测，Dimens 无档位）。 */
 private val FollowPillSmallWidth = 49.dp
 private val FollowPillSmallHeight = 26.dp
 private val MusicDiscSize = 22.dp
 
-/** C2-2 骨架条宽度（线框 C2-2 的 88px 昵称条）。 */
+/** C2-2 骨架条宽度（88px 昵称条）。 */
 private val SkeletonAuthorWidth = 88.dp
 
 /** `mm:ss`（C2-5 时间文本）。 */
@@ -771,7 +771,7 @@ internal fun formatVideoTime(ms: Long): String {
     return "%02d:%02d".format(seconds / 60L, seconds % 60L)
 }
 
-/** C2 文案（线框已定稿，不自创）。 */
+/** C2 文案（定稿，不自创）。 */
 internal object VideoTexts {
     const val LoadFailed = "视频加载失败"
 }

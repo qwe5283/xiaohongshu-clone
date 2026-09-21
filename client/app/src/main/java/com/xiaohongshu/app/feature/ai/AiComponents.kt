@@ -1,6 +1,6 @@
 package com.xiaohongshu.app.feature.ai
 
-// TODO(公共组件变更)：下列尺寸来自线框 H1/H2 实测，`core/design/Dimens` 里没有对应 token，
+// TODO(公共组件变更)：下列尺寸来自 H1/H2 实测，`core/design/Dimens` 里没有对应 token，
 //   按「不许写魔法数」的要求先收敛成本文件顶部的具名常量；建议由架构负责人下沉到 Dimens：
 //   - 笔记卡 164×236（H2）
 //   - 笔记卡作者行图标 18（H2）
@@ -60,18 +60,18 @@ import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsTextChip
 import com.xiaohongshu.app.domain.model.Note
 
-// ---- 线框实测尺寸（Dimens 暂无 token，见文件头 TODO）----
+// ---- 实测尺寸（Dimens 暂无 token，见文件头 TODO）----
 private val AiNoteCardWidth = 164.dp
 private val AiNoteCardHeight = 236.dp
 private val AiNoteAuthorIcon = 18.dp
 private val SuggestionChipMinWidth = 200.dp
 private val SuggestionChipMaxWidth = 220.dp
 
-/** 用户气泡最大宽度占比（线框 H2：`max-width:62%`，右对齐灰气泡）。 */
+/** 用户气泡最大宽度占比（H2：`max-width:62%`，右对齐灰气泡）。 */
 private const val UserBubbleWidthFraction = 0.62f
 
 /**
- * H1 空态的问候气泡（线框文案；**静态内容**，不进 [com.xiaohongshu.app.domain.model.ChatMessage]
+ * H1 空态的问候气泡（定稿文案；**静态内容**，不进 [com.xiaohongshu.app.domain.model.ChatMessage]
  * 历史，因此「新建对话」清空后依然显示）。
  */
 @Composable
@@ -98,7 +98,7 @@ internal fun AiUserBubble(text: String) {
                 .clip(
                     RoundedCornerShape(
                         topStart = Dimens.radiusCard,
-                        // 右上角按线框做成直角（10px 0 10 10 的对应角）
+                        // 右上角做成直角（10px 0 10 10 的对应角）
                         topEnd = 0.dp,
                         bottomEnd = Dimens.radiusCard,
                         bottomStart = Dimens.radiusCard,
@@ -241,7 +241,7 @@ internal fun AiAnswerText(text: String) {
 }
 
 /**
- * H2 笔记卡（164×236）：图（占满剩余高度，线框实测 ≈159×159）→ 标题 17sp → 作者行（18 图标 + 昵称）。
+ * H2 笔记卡（164×236）：图（占满剩余高度，实测 ≈159×159）→ 标题 17sp → 作者行（18 图标 + 昵称）。
  * 点击 → `navigator.toNote(id, isVideo)`（由调用方给出）。
  */
 @Composable
@@ -302,7 +302,7 @@ private fun AiNoteCard(
  * H2 操作条：复制 / ★ / 分享 ｜ 踩 / 重新生成。
  *
  * - **复制真实可用**（写系统剪贴板，由调用方实现）；
- * - ★、分享、踩、重新生成按线框均为**视觉占位**（★与分享线框已注明，踩/重新生成同款处理）：
+ * - ★、分享、踩、重新生成均为**视觉占位**：
  *   只渲染按钮、无任何行为，故统一接到 [onPlaceholderAction]（空实现）。
  * 按钮 32×32（`Dimens.s32`）、间距 8（`Dimens.s8`），触控热区由 [XhsIconButton] 扩到 ≥44。
  */
@@ -387,7 +387,7 @@ internal fun AiSuggestionChips(
  * H1/H2 底部输入条（高 48）：胶囊（语音/表情/＋ 三个 24dp 空占位 + 输入 + 发送）
  * ＋「内容由AI生成」声明行 24。
  *
- * 关于线框的「⊕」：它画在输入胶囊的右端，也就是本条唯一的发送入口。按交付要求
+ * 关于「⊕」：它画在输入胶囊的右端，也就是本条唯一的发送入口。按交付要求
  * （「回车或发送按钮提交」）把它实现为**可用的发送钮**（素材用仓库已有的 `ic_ai_send`），
  * 而非空占位；空占位的是胶囊内的语音 / 表情 / ＋ 三个图标（[PlaceholderIconRes]）。
  *
@@ -427,7 +427,7 @@ internal fun AiInputBar(
                     .padding(horizontal = Dimens.s12),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // 语音 / 表情 / ＋：线框未定义行为 → ic_placeholder 视觉占位（无点击）
+                // 语音 / 表情 / ＋：未定义行为 → ic_placeholder 视觉占位（无点击）
                 AiInputPlaceholderIcon(contentDescription = "语音")
                 AiInputPlaceholderIcon(contentDescription = "表情")
                 AiInputPlaceholderIcon(contentDescription = "更多")
@@ -456,7 +456,7 @@ internal fun AiInputBar(
                     )
                 }
 
-                // 发送（线框右下 ⊕ 位；思考中禁用 → 置灰 + 回调内拦截）
+                // 发送（右下 ⊕ 位；思考中禁用 → 置灰 + 回调内拦截）
                 XhsIconButton(
                     iconRes = R.drawable.ic_ai_send,
                     onClick = { if (canSend) onSend() },
@@ -503,7 +503,7 @@ private fun AiInputPlaceholderIcon(contentDescription: String) {
 @Composable
 private fun AiCard(
     modifier: Modifier = Modifier,
-    /** true = 左上来角做成直角（线框 H1 问候气泡 `0 10 10 10`；H2 回复卡片四角同圆）。 */
+    /** true = 左上来角做成直角（H1 问候气泡 `0 10 10 10`；H2 回复卡片四角同圆）。 */
     squareTopStart: Boolean = false,
     content: @Composable () -> Unit,
 ) {

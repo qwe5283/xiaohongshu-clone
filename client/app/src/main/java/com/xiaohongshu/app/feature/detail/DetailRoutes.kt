@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
  *
  * 入口签名固定：`NoteDetailRoute(navigator, postId)` / `VideoDetailRoute(navigator, postId)`。
  * 登录拦截（A2，§4.4）统一在**本层**做：写操作先 `loginGate.runOrDefer`，返回 false 时推入登录页，
- * 且**不弹 Toast**（线框明确）；登录成功后 `popLogin()` 会补执行被暂存的动作。
+ * 且**不弹 Toast**；登录成功后 `popLogin()` 会补执行被暂存的动作。
  */
 
 /** C1-1 ~ C1-5 图文详情（浅色主题）+ D1/D3。 */
@@ -56,7 +56,7 @@ fun NoteDetailRoute(
         onLikeClick = { if (!gate.runOrDefer { vm.toggleLike() }) navigator.toLogin() },
         onCollectClick = { if (!gate.runOrDefer { vm.toggleCollect() }) navigator.toLogin() },
         onCommentCountClick = {
-            // 线框未定义底栏 💬 的行为：滚动到评论区（页面内嵌流）
+            // 底栏 💬 行为未定义：滚动到评论区（页面内嵌流）
             scope.launch { listState.animateScrollToItem(COMMENT_HEADER_INDEX) }
         },
         onCommentLike = { id -> if (!gate.runOrDefer { vm.toggleCommentLike(id) }) navigator.toLogin() },

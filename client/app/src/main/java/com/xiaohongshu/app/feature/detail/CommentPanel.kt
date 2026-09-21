@@ -53,16 +53,16 @@ import com.xiaohongshu.app.domain.model.ReplyGroupState
  * 面板只在 C2-1 点「💬」时打开；点「说点什么」直接弹 C2-4 遮罩输入。
  */
 
-/** 面板高度约 2/3（线框：圆角弹层约 2/3 高）。 */
+/** 面板高度约 2/3。 */
 internal const val PanelHeightFraction = 0.66f
 
 /** C3-1 实测：输入行 52（`Dimens` 无该档位，就地声明并标注来源）。 */
 private val PanelInputRowHeight = 52.dp
 
-/** C3-1：表情 / @ 图标 24（线框未定义其行为 → 统一占位素材、点击 no-op）。 */
+/** C3-1：表情 / @ 图标 24（行为未定义 → 统一占位素材、点击 no-op）。 */
 private val PanelIconSize = Dimens.icon24
 
-/** C3 文案（线框已定稿）。 */
+/** C3 文案（定稿）。 */
 private object PanelTexts {
     const val CommentsEmpty = "还没有评论哦"
     const val ListFailed = "加载失败，请稍后重试"
@@ -128,7 +128,7 @@ internal fun CommentPanel(
                 onClick = {},
             )
             Spacer(modifier = Modifier.weight(1f))
-            // ≡ 排序：线框有该控件，但契约无排序接口 → 视觉占位、点击 no-op
+            // ≡ 排序：契约无排序接口 → 视觉占位、点击 no-op
             Box(
                 modifier = Modifier.size(Dimens.icon24),
                 contentAlignment = Alignment.Center,

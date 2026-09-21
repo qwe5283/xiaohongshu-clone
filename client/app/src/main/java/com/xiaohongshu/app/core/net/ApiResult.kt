@@ -21,7 +21,7 @@ data class ApiEnvelope<T>(
 )
 
 /**
- * 调用结果。业务失败与网络失败分开，便于按线框 I2「三类反馈」分流：
+ * 调用结果。业务失败与网络失败分开，便于按 I2「三类反馈」分流：
  * Toast / 列表错误态+重试（B4-2）/ 表单错误条（A5-1、E4）。
  */
 sealed interface ApiResult<out T> {

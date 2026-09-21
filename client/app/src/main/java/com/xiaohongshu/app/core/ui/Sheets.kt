@@ -140,7 +140,7 @@ fun XhsSheetRow(
 /**
  * 通用底部操作弹层（E1 发布入口 / F3-2 性别选项）。
  *
- * 结构（线框 T-4c）：若干行（默认高 72）+ 间隔 8 + 取消行 56。
+ * 结构：若干行（默认高 72）+ 间隔 8 + 取消行 56。
  */
 @Composable
 fun XhsActionSheet(
@@ -193,7 +193,7 @@ fun XhsConfirmSheet(
     modifier: Modifier = Modifier,
     confirmText: String = "确认",
     cancelText: String = "取消",
-    /** 确认行是否用主色强调（默认 true，与线框底部确认/取消的层级一致）。 */
+    /** 确认行是否用主色强调（默认 true，与底部确认/取消的层级一致）。 */
     emphasizeConfirm: Boolean = false,
 ) {
     XhsBottomSheet(visible = visible, onDismiss = onDismiss, modifier = modifier) {
@@ -359,7 +359,7 @@ fun XhsOverlayInputBar(
 
                     Spacer(modifier = Modifier.width(Dimens.s12))
 
-                    // 发送钮：64×40（线框 T-4c）
+                    // 发送钮：64×40
                     Box(
                         modifier = Modifier
                             .width(Dimens.buttonSendWidth)

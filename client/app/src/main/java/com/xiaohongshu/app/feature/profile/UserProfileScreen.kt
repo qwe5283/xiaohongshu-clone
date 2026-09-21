@@ -82,7 +82,7 @@ internal fun UserProfileScreen(
             onEditProfile = if (state.isMe) onEditProfile else null,
             onBioClick = if (state.isMe) onEditProfile else null,
             footer = {
-                // D2：他人主页用通栏大按钮；自己的主页不显示（线框 F2/D2）
+                // D2：他人主页用通栏大按钮；自己的主页不显示
                 if (!state.isMe) {
                     XhsFollowWideButton(
                         followed = state.followed,
@@ -93,7 +93,7 @@ internal fun UserProfileScreen(
             },
         )
 
-        // 「赞过」仅自己可见（线框 F1 注）：isMe 时用全量 Tab，否则公集
+        // 「赞过」仅自己可见：isMe 时用全量 Tab，否则公集
         ProfileSegmentRow(
             tabs = if (state.isMe) ProfileTab.entries else ProfileTab.Public,
             selected = state.tab,

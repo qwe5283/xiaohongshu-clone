@@ -17,7 +17,7 @@ data class CommentDto(
     val replyUserNickname: String = "",
     val likeCount: Int = 0,
     val liked: Boolean = false,
-    /** 回复总数（仅一级评论有值），即线框「展开 N 条回复」的 N，无上限。 */
+    /** 回复总数（仅一级评论有值），即「展开 N 条回复」的 N，无上限。 */
     val replyCount: Int = 0,
     val createTime: String = "",
 )

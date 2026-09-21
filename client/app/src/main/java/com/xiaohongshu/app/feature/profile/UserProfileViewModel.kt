@@ -33,7 +33,7 @@ internal data class UserProfileUiState(
     val liked: List<Note> = emptyList(),
     /** 已合并本地乐观态的关注态（渲染用）。 */
     val followed: Boolean = false,
-    /** 自己的主页不显示关注按钮，但展示「编辑主页」pill 与「赞过」Tab（线框 D2/F1/F2）。 */
+    /** 自己的主页不显示关注按钮，但展示「编辑主页」pill 与「赞过」Tab。 */
     val isMe: Boolean = false,
 ) {
     fun pageStateOf(tab: ProfileTab): PagedState<Note> = when (tab) {
@@ -53,11 +53,11 @@ internal data class UserProfileUiState(
 }
 
 /**
- * F2 他人主页（线框 F2）。
+ * F2 他人主页。
  *
  * 数据来源：
  * - 资料主体 `GET /api/user/{id}`（契约 §1.4，公开）→ [UserRepository]：昵称/头像/简介/背景图/
- *   性别/获赞与收藏，一次性拿全，是线框 F2 头部的权威数据源；
+ *   性别/获赞与收藏，一次性拿全，是 F2 头部的权威数据源；
  * - 「笔记」`GET /api/post/user/{id}`、「收藏」`GET /api/collect/posts/{id}` → [PostRepository]；
  * - 关注数/粉丝数 `GET /api/follow/count/{id}`、关注态 `GET /api/follow/status/{id}` → [FollowRepository]。
  *
@@ -92,7 +92,7 @@ internal class UserProfileViewModel(
         fetch = { page, size -> posts.collectedPosts(userId = userId, page = page, pageSize = size) },
     )
 
-    /** 「赞过」Tab（契约 §4，🔒）：仅 isMe 时可达（「赞过」仅自己可见，线框 F1 注）。 */
+    /** 「赞过」Tab（契约 §4，🔒）：仅 isMe 时可达（「赞过」仅自己可见）。 */
     private val liked = PagedList<Note>(
         keyOf = { it.id },
         toasts = toasts,

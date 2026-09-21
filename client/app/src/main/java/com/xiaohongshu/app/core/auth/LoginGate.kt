@@ -3,7 +3,7 @@ package com.xiaohongshu.app.core.auth
 import com.xiaohongshu.app.data.local.SessionManager
 
 /**
- * 登录拦截（线框 A2 → A3 → A6）。
+ * 登录拦截（A2 → A3 → A6）。
  *
  * 规则：游客可以浏览首页瀑布流/搜索/笔记详情及评论/他人主页；**任何写操作**
  * （点赞/收藏/评论/关注）与「＋」「点点」「消息」「我」入口 → 直接推入登录页，

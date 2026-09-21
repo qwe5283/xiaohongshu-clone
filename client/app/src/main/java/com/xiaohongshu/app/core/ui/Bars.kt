@@ -33,7 +33,7 @@ import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
 
 /**
- * 页面顶栏（线框 T-4c：高 44，图标 24，标题居中）。
+ * 页面顶栏（高 44，图标 24，标题居中）。
  *
  * 默认包含状态栏内边距，因此页面只要把它放在最顶部即可，无需再处理 inset。
  * 沉浸式视频页（C2）请传 [transparent] = true 并把 [contentColor] 置白。
@@ -115,7 +115,7 @@ fun XhsTopBar(
 }
 
 /**
- * 底部 Tab 栏（线框 T-4c：高 48，5 等分；＋钮 56×48 圆角 12 满高红块）。
+ * 底部 Tab 栏（高 48，5 等分；＋钮 56×48 圆角 12 满高红块）。
  *
  * 固定五栏：首页 / 点点 / ＋ / 消息 / 我（本复刻以「点点」替换原版「市集」，见章节 H）。
  * [selectedIndex] 取值 0（首页）、1（点点）、3（消息）、4（我）；2 为 ＋，不是选中态。

@@ -59,9 +59,9 @@ import com.xiaohongshu.app.domain.model.NotificationItem
 /**
  * G2/G3/G4 的条目行。
  *
- * 结构（线框 T-3 实测）：未读红点（行首，已读行**预留同宽占位**以保证头像对齐）→
+ * 结构（实测）：未读红点（行首，已读行**预留同宽占位**以保证头像对齐）→
  * 头像 48 @16（点它 → F2）→ 标题 15sp @76 → 预览/时间行 13sp → 缩略图 48（无封面不渲染）。
- * 已读整行变淡（线框 opacity:.5）。
+ * 已读整行变淡（opacity:.5）。
  */
 @Composable
 internal fun NotificationRow(
@@ -87,7 +87,7 @@ internal fun NotificationRow(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Top,
         ) {
-            // 未读红点 8dp：占住左侧 16 页边距（线框：红点在行首、与标题行齐平；
+            // 未读红点 8dp：占住左侧 16 页边距（红点在行首、与标题行齐平；
             // 已读行**保留同宽占位**，使「头像 @16 / 标题 @76」与实测一致）
             Box(
                 modifier = Modifier
@@ -102,7 +102,7 @@ internal fun NotificationRow(
                 modifier = Modifier
                     .weight(1f)
                     .padding(end = Dimens.pagePadding, top = Dimens.s12, bottom = Dimens.s12)
-                    // 已读整行变淡（线框 opacity:.5）；行内回复输入展开时不再变淡，避免输入区被压暗
+                    // 已读整行变淡（opacity:.5）；行内回复输入展开时不再变淡，避免输入区被压暗
                     .alpha(if (item.read && !(reply.isOpen && reply.targetId == item.id)) ReadRowAlpha else 1f),
             ) {
                 Box(modifier = Modifier.clickable(onClick = onAvatarClick)) {
@@ -139,7 +139,7 @@ internal fun NotificationRow(
                         )
                     }
 
-                    // G3：评论/回复正文（线框「拍得太好了，求滤镜参数！」）
+                    // G3：评论/回复正文
                     if (category == NotificationCategory.COMMENT && item.content.isNotBlank()) {
                         Spacer(modifier = Modifier.height(Dimens.s4))
                         Text(
@@ -220,7 +220,7 @@ internal fun NotificationRow(
  * G4「回关」按钮。
  *
  * 为什么不在 feature 内直接用 `XhsFollowPill`：公共组件的文案硬编码为「关注 / 已关注」，
- * 而线框 G4 明确要求未关注态是「回关」。这里按 `XhsFollowPill` 的同一结构（高度 `buttonFollow`、
+ * 而 G4 明确要求未关注态是「回关」。这里按 `XhsFollowPill` 的同一结构（高度 `buttonFollow`、
  * pill 圆角、红/灰配色）实现，**仅文案不同**（已列入「需要改公共组件」，见文件头 TODO）。
  * 外层再套一层 ≥44 的点击盒，满足「触控热区一律 ≥44」。
  */
@@ -348,5 +348,5 @@ private fun InlineReplyBar(
     }
 }
 
-/** 已读条目整行变淡的比例（线框 G2 第三条 `opacity:.5`）。 */
+/** 已读条目整行变淡的比例（`opacity:.5`）。 */
 private const val ReadRowAlpha = 0.5f

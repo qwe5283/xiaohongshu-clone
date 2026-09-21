@@ -47,7 +47,7 @@ import com.xiaohongshu.app.navigation.AppNavigator
 
 /**
  * A3 登录页（推入式全屏）：← 返回来源页、右上「帮助」、LOGO + 标语、用户名/密码、全圆角主按钮、
- * 协议勾选、底部「没有账号？注册」。账号密码登录，**无第三方/一键登录**（线框明确排除）。
+ * 协议勾选、底部「没有账号？注册」。账号密码登录，**无第三方/一键登录**。
  */
 @Composable
 fun LoginRoute(navigator: AppNavigator) {
@@ -76,7 +76,7 @@ fun LoginRoute(navigator: AppNavigator) {
         onPasswordChange = vm::updatePassword,
         onToggleAgreement = vm::toggleAgreement,
         onBack = leave,
-        // 「帮助」是 #9 占位：只弹全局 Toast，不新建页面
+        // 「帮助」是占位：只弹全局 Toast，不新建页面
         onHelp = { container.toastController.show(HelpPlaceholderToast) },
         // A6：VM 先弹 Toast「登录成功」，再 popLogin() 弹回来源页并补跑被拦截的动作。
         // **不自己 popBackStack**（§4.4 / A6）：popLogin() 内部是「consumePending() + popBackStack()」。
@@ -98,7 +98,7 @@ private fun LoginScreen(
     onRegister: () -> Unit,
 ) {
     AuthScaffold(
-        // 线框 A3 顶栏：左 ← 返回，右「帮助」；无居中标题
+        // A3 顶栏：左 ← 返回，右「帮助」；无居中标题
         topBar = {
             XhsTopBar(
                 navigationIcon = {
@@ -111,7 +111,7 @@ private fun LoginScreen(
                     )
                 },
                 actions = {
-                    // A5-2 线框里「帮助」同样置灰
+                    // A5-2：「帮助」同样置灰
                     XhsTextAction(
                         text = HelpLabel,
                         onClick = onHelp,
@@ -194,7 +194,7 @@ fun RegisterRoute(navigator: AppNavigator) {
         onNicknameChange = vm::updateNickname,
         onPhoneChange = vm::updatePhone,
         onToggleAgreement = vm::toggleAgreement,
-        // 不自动登录：把用户名交给 A3 回填，登录动作留给用户在登录页完成（线框 A4）
+        // 不自动登录：把用户名交给 A3 回填，登录动作留给用户在登录页完成
         onSubmit = {
             vm.submit(onSuccess = { username ->
                 AuthPrefill.setUsername(username)
@@ -219,7 +219,7 @@ private fun RegisterScreen(
     onBack: () -> Unit,
 ) {
     AuthScaffold(
-        // 线框 A4 顶栏：← + 居中「注册小红书」
+        // A4 顶栏：← + 居中「注册小红书」
         topBar = {
             XhsTopBar(
                 title = "注册小红书",
@@ -330,7 +330,7 @@ private fun AuthScaffold(
                     .verticalScroll(rememberScrollState()),
             ) {
                 Spacer(modifier = Modifier.height(Dimens.s24))
-                // A3 有居中 LOGO + 标语；A4 线框没有 LOGO，直接进表单
+                // A3 有居中 LOGO + 标语；A4 没有 LOGO，直接进表单
                 if (showLogo) {
                     AuthLogoHeader()
                     Spacer(modifier = Modifier.height(Dimens.s24))

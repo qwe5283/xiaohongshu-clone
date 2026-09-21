@@ -32,11 +32,11 @@ import com.xiaohongshu.app.core.ui.XhsTopBar
 /**
  * F5 设置（无状态；路由见 [SettingsRoute]）。
  *
- * 线框 T-3 实测：列表行距 52（label 15sp @68、icon 24 @28、右值灰如「2.25 GB」）；
+ * 列表行距 52（label 15sp @68、icon 24 @28、右值灰如「2.25 GB」）；
  * 分组 = 账号与安全/通用设置/通知设置/多语言和翻译/隐私设置｜存储空间/内容偏好调节/收货地址/
  * 添加小组件/未成年人模式｜新功能体验｜帮助与客服/关于小红书；底部居中「切换账号」15sp。
  *
- * **子页全部为占位**（线框 F5：范围待产品定义），故除「退出登录」外一律无跳转；
+ * **子页全部为占位**（范围待产品定义），故除「退出登录」外一律无跳转；
  * 行图标除「关于小红书」用真实素材 `ic_about` 外，其余为缺失素材 → `ic_placeholder`（§4.5）。
  */
 @Composable
@@ -72,7 +72,7 @@ internal fun SettingsScreen(
             SettingsGroupGap()
 
             SettingsGroup {
-                // 「2.25 GB」为线框示例的占位数值（本地未接存储统计）
+                // 「2.25 GB」为占位数值（本地未接存储统计）
                 SettingRow(label = "存储空间", value = "2.25 GB")
                 XhsDivider()
                 SettingRow(label = "内容偏好调节")
@@ -119,7 +119,7 @@ private fun SettingsGroup(content: @Composable () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().padding(top = Dimens.s8)) { content() }
 }
 
-/** 分组间隔（线框 T-3 的分组视觉分隔）。 */
+/** 分组间隔。 */
 @Composable
 private fun SettingsGroupGap() {
     Box(

@@ -18,7 +18,7 @@ interface CommentApi {
     @POST("api/comment/create")
     suspend fun create(@Body body: CreateCommentRequest): ApiEnvelope<CommentDto>
 
-    /** 线框未设删除入口（#2），客户端不调用；契约保留。 */
+    /** 未设删除入口，客户端不调用；契约保留。 */
     @DELETE("api/comment/delete/{commentId}")
     suspend fun delete(@Path("commentId") commentId: Long): ApiEnvelope<Unit>
 

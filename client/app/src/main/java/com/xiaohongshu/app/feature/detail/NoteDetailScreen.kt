@@ -281,7 +281,7 @@ private fun NoteTopBar(
                 Spacer(modifier = Modifier.weight(1f))
             } else {
                 Spacer(modifier = Modifier.width(Dimens.s4))
-                // 线框实测头像 60 > 顶栏 56：用 requiredSize 让它按实测溢出显示
+                // 实测头像 60 > 顶栏 56：用 requiredSize 让它按实测溢出显示
                 XhsAvatar(
                     url = note.authorAvatar,
                     size = Dimens.avatarDetailAuthor,
@@ -313,7 +313,7 @@ private fun NoteTopBar(
                     )
                     Spacer(modifier = Modifier.width(Dimens.s8))
                 }
-                // ↗ 分享：线框未定义其行为 → 统一缺失素材占位（ic_placeholder）、点击 no-op
+                // ↗ 分享：行为未定义 → 统一缺失素材占位（ic_placeholder）、点击 no-op
                 XhsIconButton(
                     iconRes = R.drawable.ic_share,
                     onClick = {},
@@ -522,7 +522,7 @@ private fun NoteLoadingContent() {
 internal fun rememberInputPlaceholder(replyNickname: String?): String =
     remember(replyNickname) { NoteTexts.inputPlaceholder(replyNickname) }
 
-/** C1 文案（线框已定稿，不自创）。 */
+/** C1 文案（定稿，不自创）。 */
 internal object NoteTexts {
     const val LoadFailed = "笔记加载失败"
     const val ListFailed = "加载失败，请稍后重试"

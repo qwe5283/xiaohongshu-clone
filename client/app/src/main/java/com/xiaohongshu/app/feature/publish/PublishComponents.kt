@@ -59,13 +59,12 @@ import java.io.File
 /**
  * E2 媒体缩略图边长。
  *
- * 线框 E2 明示「表单结构为占位设计，编码前需产品确认细节」，其缩略 mock 仅 40×40；
- * 但 40dp 无法承载 §4.1「触控热区一律 ≥44dp」的删除钮，故按 token 阶梯取 32×3。
+ * 40dp 无法承载 §4.1「触控热区一律 ≥44dp」的删除钮，故按 token 阶梯取 32×3。
  * 全部由 `Dimens` 推导，未引入新的魔法数档位。
  */
 internal val MediaThumbSize: Dp = Dimens.s32 * 3
 
-/** 线框 E2/E4 的虚线添加框描边宽度（mock 1.5px → hairline 的 2 倍）。 */
+/** E2/E4 的虚线添加框描边宽度（hairline 的 2 倍）。 */
 private val AddTileBorderWidth: Dp = Dimens.hairline * 2
 
 /**
@@ -73,7 +72,7 @@ private val AddTileBorderWidth: Dp = Dimens.hairline * 2
  *
  * 图片/视频可共存；顺序即最终入库顺序（`PublishDraft.remoteImageUrls` 按此顺序取 URL）。
  *
- * @param editable E5-1 提交中传 false：隐藏 × 与 ＋（线框 E5-1 的缩略图同样无 × / 无 ＋），
+ * @param editable E5-1 提交中传 false：隐藏 × 与 ＋（E5-1 的缩略图同样无 × / 无 ＋），
  *   同时避免上传过程中增删媒体导致 `updateMedia(index)` 写错下标。
  */
 @Composable
@@ -138,7 +137,7 @@ internal fun MediaThumb(
         }
 
         if (item.isVideo) {
-            // 线框 E2：视频缩略用 ▶ 区分
+            // E2：视频缩略用 ▶ 区分
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -203,7 +202,7 @@ internal fun MediaThumb(
     }
 }
 
-/** 虚线 ＋ 添加框（线框 E2：`border:1.5px dashed` + 居中 ＋）。 */
+/** 虚线 ＋ 添加框（`border:1.5px dashed` + 居中 ＋）。 */
 @Composable
 internal fun MediaAddTile(
     onClick: () -> Unit,
@@ -292,8 +291,7 @@ private fun decodeLocal(path: String, targetPx: Int): ImageBitmap? = runCatching
 /**
  * E2 表单输入框（标题 / 正文）。
  *
- * 线框 E2 的表单是占位设计（`.inp` 为 1px 边框白底），这里落到设计系统既有语言：
- * 灰底（`BgGray`）圆角 8、正文 14sp、占位 `Text3`。
+ * 表单落到设计系统既有语言：灰底（`BgGray`）圆角 8、正文 14sp、占位 `Text3`。
  *
  * @param maxLength 非空时硬截断（正文 10000）；**标题不传**——超 200 必须可达，
  *   否则 E3 预填超长标题时 E4 的「标题不能超过200个字符」将永远触发不到。
@@ -330,7 +328,7 @@ internal fun PublishField(
     }
 }
 
-/** E2 字段标签（线框 `.lbl`：标题 * / 正文）。 */
+/** E2 字段标签（标题 * / 正文）。 */
 @Composable
 internal fun PublishFieldLabel(text: String, modifier: Modifier = Modifier) {
     Text(text = text, style = XhsType.meta, color = XhsColor.Text1, modifier = modifier)
@@ -339,7 +337,7 @@ internal fun PublishFieldLabel(text: String, modifier: Modifier = Modifier) {
 /**
  * E2 标题/正文的剩余字数（§4.8 指定 `XhsCharCounter`；超限自动转 `XhsColor.Error`）。
  *
- * 与线框的「剩余 187 / 200」是同一信息的两种呈现（组件固定为「已用/上限」）。
+ * 组件固定为「已用/上限」呈现。
  */
 @Composable
 internal fun PublishCounter(current: Int, max: Int, modifier: Modifier = Modifier) {
@@ -376,15 +374,15 @@ internal fun WriteTextNextButton(
     }
 }
 
-/** 写文字画布的占位文案（线框 E3 原文）。 */
+/** 写文字画布的占位文案（E3 定稿原文）。 */
 internal const val WriteCanvasTitle = "写想法"
 internal const val WriteCanvasHint = "说点什么或提个问题..."
 
 /**
  * E3 底部「写长文」卡（高 98：icon 46→48 档、副文案 11sp、箭头 24）。
  *
- * 线框只把它作为**长文写作的视觉入口**，除聚焦画布外无独立行为；线框未给副文案定稿，
- * 此处为自拟占位文案（原型注：E3/E2 的表单细节待产品确认）。
+ * 它只是**长文写作的视觉入口**，除聚焦画布外无独立行为；副文案未定稿，
+ * 此处为自拟占位文案（E3/E2 的表单细节待产品确认）。
  */
 @Composable
 internal fun WriteLongFormCard(

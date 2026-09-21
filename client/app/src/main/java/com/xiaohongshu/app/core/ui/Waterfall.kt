@@ -36,15 +36,14 @@ import com.xiaohongshu.app.core.util.Formatters
 import com.xiaohongshu.app.domain.model.Note
 
 /**
- * 瀑布流卡片（线框 B1 / T-4c 实测）。
+ * 瀑布流卡片（B1）。
  *
  * 结构：封面（按真实宽高比 4:3 或 3:4）→ 标题（最多两行）→ 脚栏（头像 24 + 昵称 12sp + ♥ + 计数 12sp）。
  *
- * 关于脚栏 ♥ 尺寸的取值说明：T-3 实测写「赞 icon 30」，但 T-4b 把 30 明确限定为
- * 「详情/视频底栏互动图标」，其余图标收敛为 12/16/20/24 四档。为避免 30dp 图标压过 12sp 计数
- * （原版小红书卡片脚栏的心形约与文字同高），此处取 16dp 档；详情底栏仍用 30dp。
+ * 脚栏 ♥ 取 16dp 档而非 30dp：30dp 图标会压过 12sp 计数（原版小红书卡片脚栏的心形
+ * 约与文字同高）；30dp 留给详情/视频底栏的互动图标。
  *
- * 计数为 0 时按线框规则显示文字「赞」（见 [XhsCountText]）。
+ * 计数为 0 时显示文字「赞」（见 [XhsCountText]）。
  */
 @Composable
 fun WaterfallCard(
@@ -74,7 +73,7 @@ fun WaterfallCard(
                 contentScale = androidx.compose.ui.layout.ContentScale.Crop,
             )
             if (note.isVideo) {
-                // 视频角标 20×20，右上 inset 10（T-4c）
+                // 视频角标 20×20，右上 inset 10
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -111,7 +110,7 @@ fun WaterfallCard(
             )
         }
 
-        // 脚栏：高 40 = 上下 6 + 头像 24（T-4c 示例）
+        // 脚栏：高 40 = 上下 6 + 头像 24
         Row(
             modifier = Modifier
                 .fillMaxWidth()

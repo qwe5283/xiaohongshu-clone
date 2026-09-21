@@ -3,7 +3,7 @@ package com.xiaohongshu.app.core.design
 import androidx.compose.ui.graphics.Color
 
 /**
- * 色板 —— 线框图 v6 章节 T-4a（真机截图采样 → 甜点值）。**编码以本文件为准。**
+ * 色板 —— **编码以本文件为准**（早期源自真机截图采样的甜点值，此后独立演化）。
  * 扁平风格：不使用投影分层，只靠 hairline 与 #F5F5F5。
  */
 object XhsColor {
@@ -61,10 +61,10 @@ object XhsColor {
     /** 错误文案（H3-2 正式 UI 为红色气泡）。 */
     val Error = Color(0xFFE34D4D)
 
-    /** 图片占位斜纹底（线框 .ph 的近似）。 */
+    /** 图片占位斜纹底。 */
     val PlaceholderBg = Color(0xFFEDEDED)
 
-    /** 图片页码角标底（线框实测 rgba(0,0,0,.45)）。 */
+    /** 图片页码角标底（45% 黑）。 */
     val PageBadge = Color(0x73000000)
 
     /** 数字徽标白字。 */

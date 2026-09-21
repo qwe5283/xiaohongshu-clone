@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * 列表四态（线框 B4-1 ~ B4-5，适用于所有瀑布流列表）。
+ * 列表四态（B4-1 ~ B4-5，适用于所有瀑布流列表）。
  */
 data class PagedState<T>(
     val items: List<T> = emptyList(),
@@ -42,7 +42,7 @@ data class PagedState<T>(
  * 通用分页列表控制器。
  *
  * 设计取舍：不引入 Paging 3（需要额外依赖与 Rx/Flow 适配），而是把这个项目里
- * 每种列表都要重复一遍的分页逻辑收敛成一个小类。约定与线框一致：
+ * 每种列表都要重复一遍的分页逻辑收敛成一个小类。约定如下：
  * - 每页 20 条；
  * - 滚动距底约 600px 预加载下一页（由 UI 侧触发 [loadMore]）；
  * - 到底置 [PagedState.endReached]，不再发请求；
@@ -160,7 +160,7 @@ class PagedList<T : Any>(
     companion object {
         const val DEFAULT_PAGE_SIZE = 20
 
-        /** 滚动距底约 600px 预加载下一页（线框全局规范）。 */
+        /** 滚动距底约 600px 预加载下一页。 */
         const val PRELOAD_DISTANCE_PX = 600
     }
 }
@@ -168,7 +168,7 @@ class PagedList<T : Any>(
 /**
  * 给 LazyListState 用的「近底部」观察器。
  *
- * 线框要求「滚动距底约 600px 预加载」，这里用最近可见项索引 + 阈值条数近似，
+ * 约定「滚动距底约 600px 预加载」，这里用最近可见项索引 + 阈值条数近似，
  * 避免依赖像素换算（不同屏密度下 600px 等价行数不同）。
  */
 @Composable

@@ -23,9 +23,9 @@ import kotlinx.coroutines.launch
 enum class HomeTab { DISCOVER, FOLLOWING }
 
 /**
- * 频道栏词条（线框 B1）。
+ * 频道栏词条（B1）。
  *
- * 线框注 #3：**点击仅高亮，不改变数据**——频道栏只是视觉态，不做服务端过滤
+ * **点击仅高亮，不改变数据**——频道栏只是视觉态，不做服务端过滤
  * （契约 §2.5 只有 `keyword`/`type`/`sortType`，没有频道维度）。
  */
 val HomeChannels: List<String> = listOf("推荐", "穿搭", "美食", "彩妆", "影视", "职场", "情感", "数码")
@@ -129,7 +129,7 @@ class HomeViewModel(
         ensureLoaded()
     }
 
-    /** 频道点击仅高亮（线框注 #3），不发请求。 */
+    /** 频道点击仅高亮，不发请求。 */
     fun selectChannel(channel: String) {
         _channel.value = channel
     }

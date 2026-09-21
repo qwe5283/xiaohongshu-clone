@@ -58,7 +58,7 @@ class CommentRepository(private val commentApi: CommentApi) {
     }.map { it.toDomain() }
 
     companion object {
-        /** 每批回复条数（线框 T-4c / C3 规则）。 */
+        /** 每批回复条数（C3 规则）。 */
         const val BATCH_SIZE = 10
 
         /** 一级评论每页条数。 */
