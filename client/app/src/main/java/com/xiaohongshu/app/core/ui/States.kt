@@ -162,7 +162,7 @@ fun XhsErrorState(
     }
 }
 
-/** 表单错误条（A5-1 / A4 / E4）：表单上方，浅灰底深字；与 H3-2 的红色 Error 气泡分工不同。 */
+/** 表单错误条（E4）：表单上方，浅灰底深字；与 H3-2 的红色 Error 气泡分工不同。 */
 @Composable
 fun XhsFormErrorBar(
     message: String,

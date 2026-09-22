@@ -1,7 +1,7 @@
 package com.xiaohongshu.app.feature.auth
 
 /**
- * A3/A4 共用的表单控件与文案。
+ * Auth 页（A3 登录 / A4 注册合并页）共用的表单控件与文案。
  *
  * 为什么不放进 `core/ui`：它们只被 auth 一个 feature 使用（规范 §4.8「新增公共组件的门槛：
  * 两个以上 feature 会用才放 core/，否则留在自己的 feature 目录里」）。样式与 `core/ui` 里的
@@ -63,10 +63,10 @@ internal const val LoginSuccessToast = "登录成功"
 /** A4 定稿文案（规范 §7 A4）：注册成功**不自动登录**。 */
 internal const val RegisterSuccessToast = "注册成功，请登录"
 
-/** A3 用户名占位（定稿原文），同时用作「未填写」时的错误条文案。 */
+/** A3 用户名占位（定稿原文），同时用作「未填写」时的全局 Toast 文案。 */
 internal const val UsernamePlaceholder = "请输入用户名"
 
-/** A3 密码占位（定稿原文），同时用作「未填写」时的错误条文案。 */
+/** A3 密码占位（定稿原文），同时用作「未填写」时的全局 Toast 文案。 */
 internal const val PasswordPlaceholder = "请输入密码"
 
 /** A3 提交按钮文案（定稿原文）。 */
@@ -80,6 +80,21 @@ internal const val RegisterLabel = "注册"
 
 /** A5-2 注册提交中按钮文案（「登录中...」的注册版）。 */
 internal const val RegisterSubmitLabel = "注册中..."
+
+/** A4 注册态顶栏标题（定稿原文）。 */
+internal const val RegisterTitle = "注册小红书"
+
+/** A4 注册态输入占位（定稿原文）。 */
+internal const val RegisterUsernamePlaceholder = "设置用户名（3-20字符）*"
+internal const val RegisterPasswordPlaceholder = "设置密码（6-20字符）*"
+internal const val NicknamePlaceholder = "昵称（选填）"
+internal const val PhonePlaceholder = "手机号（选填）"
+
+/** Auth 页底部模式切换文案（定稿原文）。 */
+internal const val LoginSwitchPrefix = "没有账号？"
+internal const val LoginSwitchAction = "注册"
+internal const val RegisterSwitchPrefix = "已有账号？"
+internal const val RegisterSwitchAction = "前往登录"
 
 // ================================================================ 控件
 
@@ -135,7 +150,7 @@ internal fun AuthTextField(
 }
 
 /**
- * A3/A4 居中 LOGO + 标语（LOGO 居中，下方「登录后，体验更多功能」）。
+ * Auth 页居中 LOGO + 标语（登录/注册两态常显；LOGO 居中，下方「登录后，体验更多功能」）。
  *
  * LOGO 用真实素材 `R.drawable.ic_logo`（非占位）；高度取 `Dimens.s32`，宽按素材
  * 205×96 等比 ≈ 68dp。

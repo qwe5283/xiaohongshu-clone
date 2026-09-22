@@ -21,8 +21,7 @@ import androidx.navigation.navArgument
 import com.xiaohongshu.app.data.dto.NotificationCategory
 import com.xiaohongshu.app.di.AppContainer
 import com.xiaohongshu.app.feature.ai.AiRoute
-import com.xiaohongshu.app.feature.auth.LoginRoute
-import com.xiaohongshu.app.feature.auth.RegisterRoute
+import com.xiaohongshu.app.feature.auth.AuthRoute
 import com.xiaohongshu.app.feature.detail.NoteDetailRoute
 import com.xiaohongshu.app.feature.detail.VideoDetailRoute
 import com.xiaohongshu.app.feature.message.NotificationListRoute
@@ -59,9 +58,9 @@ fun AppNavHost(container: AppContainer) {
             container.sessionManager.onSessionExpired()
             container.interactionStore.clear()
             container.unreadCountCenter.clear()
-            // 已在登录页时不重复推入
+            // 已在 Auth 页时不重复推入
             val current = navController.currentDestination?.route
-            if (current != Routes.LOGIN && current != Routes.REGISTER) {
+            if (current != Routes.AUTH) {
                 navigator.toLogin()
             }
         }
@@ -94,7 +93,7 @@ fun AppNavHost(container: AppContainer) {
     NavHost(
         navController = navController,
         startDestination = Routes.MAIN,
-        // 全部推入页（登录/注册/搜索/详情/发布/主页/设置/通知/点点）统一「右进左出 + 旧页 1/4 视差」，
+        // 全部推入页（Auth/搜索/详情/发布/主页/设置/通知/点点）统一「右进左出 + 旧页 1/4 视差」，
         // 返回自动反向。个别页面要换观感时，在该 composable 上覆盖这四个参数即可。
         enterTransition = { pushEnter() },
         exitTransition = { pushExit() },
@@ -109,8 +108,7 @@ fun AppNavHost(container: AppContainer) {
             enterTransition = { EnterTransition.None },
         ) { MainScaffold(navigator) }
 
-        composable(Routes.LOGIN) { LoginRoute(navigator) }
-        composable(Routes.REGISTER) { RegisterRoute(navigator) }
+        composable(Routes.AUTH) { AuthRoute(navigator) }
 
         composable(Routes.SEARCH) { SearchRoute(navigator) }
         composable(
@@ -197,11 +195,7 @@ private class NavControllerNavigator(
     }
 
     override fun toLogin() {
-        navController.navigate(Routes.LOGIN)
-    }
-
-    override fun toRegister() {
-        navController.navigate(Routes.REGISTER)
+        navController.navigate(Routes.AUTH)
     }
 
     override fun popLogin() {

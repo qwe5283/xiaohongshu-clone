@@ -18,13 +18,10 @@ interface AppNavigator {
     /** 回到 Tab 宿主（发布成功 E5-2、放弃发布 E7 用）。 */
     fun toMain()
 
-    /** A3 推入登录页（游客拦截 A2 / 会话过期 I1）。 */
+    /** 推入 Auth 页（默认登录态；游客拦截 A2 / 会话过期 I1 用）。 */
     fun toLogin()
 
-    /** A4 推入注册页。 */
-    fun toRegister()
-
-    /** 登录/注册成功后弹回来源页（A6）。 */
+    /** 登录成功后弹回来源页（A6）。 */
     fun popLogin()
 
     /** B2 搜索页。 */

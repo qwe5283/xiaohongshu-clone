@@ -9,11 +9,8 @@ object Routes {
     /** Tab 宿主（首页 / 点点入口 / ＋ / 消息 / 我）。 */
     const val MAIN = "main"
 
-    /** A3 登录页（推入式全屏）。 */
-    const val LOGIN = "login"
-
-    /** A4 注册页。 */
-    const val REGISTER = "register"
+    /** A3/A4 合并后的 Auth 页（推入式全屏，登录 / 注册同页切换）。 */
+    const val AUTH = "auth"
 
     /** B2 搜索页。 */
     const val SEARCH = "search"

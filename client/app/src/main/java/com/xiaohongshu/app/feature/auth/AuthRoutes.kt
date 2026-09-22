@@ -1,13 +1,16 @@
 package com.xiaohongshu.app.feature.auth
 
 /**
- * WS-Auth 入口：A3 登录页（含 A5-1 失败态 / A5-2 提交中 / A6 成功）与 A4 注册页。
+ * WS-Auth 入口：A3 登录与 A4 注册合并为单个 Auth 页（含 A5-1 失败态 / A5-2 提交中 / A6 成功）。
  *
- * 只有 [LoginRoute] / [RegisterRoute] 是包外可见入口（签名固定，`AppNavHost` 直接调用）；
- * 控件在同目录 [AuthComponents]、状态与校验在 [AuthViewModel]、A4→A3 回填在 [AuthPrefill]。
+ * 只有 [AuthRoute] 是包外可见入口（`AppNavHost` 直接调用）。登录/注册切换只改
+ * [AuthViewModel] 的 [AuthUiState.mode]，**不发生导航**，因此用户名、密码等已输入内容原地保留；
+ * 注册成功后切回登录态并仅保留用户名（见 [AuthViewModel.submit]）。
+ *
+ * 错误反馈：客户端校验 / 服务端业务失败 / 网络失败统一走全局 Toast（I2），页面不再有错误条。
  *
  * A1（游客态差异）与 A2（拦截本身）分别由 WS-Home / MainScaffold 拥有，本工作流只保证
- * 「从 A2 可达的登录页行为正确」：← 回来源页、成功走 `popLogin()`。
+ * 「从 A2 可达的 Auth 页行为正确」：← 回来源页、成功走 `popLogin()`。
  */
 
 import androidx.activity.compose.BackHandler
@@ -24,7 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -33,7 +35,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
-import com.xiaohongshu.app.core.ui.XhsFormErrorBar
 import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsPrimaryButton
 import com.xiaohongshu.app.core.ui.XhsTextAction
@@ -42,22 +43,20 @@ import com.xiaohongshu.app.di.LocalAppContainer
 import com.xiaohongshu.app.di.appViewModel
 import com.xiaohongshu.app.navigation.AppNavigator
 
-// ==================================================================== A3 登录页
+// ============================================================ Auth 页（A3 登录 + A4 注册合并）
 
 /**
- * A3 登录页（推入式全屏）：← 返回来源页、右上「帮助」、LOGO + 标语、用户名/密码、全圆角主按钮、
- * 协议勾选、底部「没有账号？注册」。账号密码登录，**无第三方/一键登录**。
+ * Auth 页（推入式全屏）：登录态无标题 + 右上「帮助」+ LOGO/标语 + 用户名/密码 + 底部
+ * 「没有账号？注册」；注册态居中标题「注册小红书」+ 4 个输入 + 底部「已有账号？前往登录」。
+ * 两态共用同一份状态（[AuthUiState]），切换只改 mode、不导航，已输入内容全部保留。
  */
 @Composable
-fun LoginRoute(navigator: AppNavigator) {
+fun AuthRoute(navigator: AppNavigator) {
     val container = LocalAppContainer.current
-    val vm: LoginViewModel = appViewModel { LoginViewModel(it.sessionManager, it.toastController) }
+    val vm: AuthViewModel = appViewModel { AuthViewModel(it.sessionManager, it.toastController) }
     val state by vm.state.collectAsStateWithLifecycle()
 
-    // A4 → A3：注册成功后回填用户名（不自动登录）。取走即清空，不会残留到下次进入。
-    LaunchedEffect(Unit) { AuthPrefill.consumeUsername()?.let(vm::prefillUsername) }
-
-    /** 离开登录页 = 放弃登录：丢弃暂存的游客动作（`LoginGate.clear` 的语义），否则用户改从
+    /** 离开 Auth 页 = 放弃登录：丢弃暂存的游客动作（`LoginGate.clear` 的语义），否则用户改从
      *  悬浮条登录时会把很久以前被拦截的动作补跑一遍。 */
     val leave: () -> Unit = {
         if (!state.submitting) {
@@ -66,40 +65,53 @@ fun LoginRoute(navigator: AppNavigator) {
         }
     }
 
-    // A5-2：提交中「此状态 ← 不可返回」；其余情况系统返回键与顶栏 ← 走同一条路径
-    BackHandler { leave() }
+    /**
+     * 顶栏 ← 与系统返回键走同一条路径：A5-2 提交中不可返回；注册态先切回登录态
+     * （等价原来的两级页面栈，且保留已输入内容），登录态才真正离开 Auth 页。
+     */
+    val back: () -> Unit = {
+        if (!state.submitting) {
+            if (state.isRegister) vm.switchMode(AuthMode.Login) else leave()
+        }
+    }
+    BackHandler { back() }
 
-    LoginScreen(
+    AuthScreen(
         state = state,
         onUsernameChange = vm::updateUsername,
         onPasswordChange = vm::updatePassword,
+        onNicknameChange = vm::updateNickname,
+        onPhoneChange = vm::updatePhone,
         onToggleAgreement = vm::toggleAgreement,
-        onBack = leave,
-        // 「帮助」是占位：只弹全局 Toast，不新建页面
+        onSwitchMode = vm::switchMode,
+        onBack = back,
+        // 「帮助」是占位：只弹全局 Toast，不新建页面（仅登录态顶栏显示）
         onHelp = { container.toastController.show(HelpPlaceholderToast) },
         // A6：VM 先弹 Toast「登录成功」，再 popLogin() 弹回来源页并补跑被拦截的动作。
-        // **不自己 popBackStack**（§4.4 / A6）：popLogin() 内部是「consumePending() + popBackStack()」。
-        onLogin = { vm.submit(onSuccess = navigator::popLogin) },
-        onRegister = { if (!state.submitting) navigator.toRegister() },
+        // **不自己 popBackStack**：popLogin() 内部是「consumePending() + popBackStack()」。
+        onSubmit = { vm.submit(onSuccess = navigator::popLogin) },
     )
 }
 
-/** A3 无状态内容层（方便 Preview，也强制状态提升到 VM）。 */
+/** Auth 无状态内容层（登录/注册共用一个表单，按 [AuthUiState.mode] 切换文案与字段）。 */
 @Composable
-private fun LoginScreen(
-    state: LoginUiState,
+private fun AuthScreen(
+    state: AuthUiState,
     onUsernameChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
+    onNicknameChange: (String) -> Unit,
+    onPhoneChange: (String) -> Unit,
     onToggleAgreement: () -> Unit,
+    onSwitchMode: (AuthMode) -> Unit,
     onBack: () -> Unit,
     onHelp: () -> Unit,
-    onLogin: () -> Unit,
-    onRegister: () -> Unit,
+    onSubmit: () -> Unit,
 ) {
     AuthScaffold(
-        // A3 顶栏：左 ← 返回，右「帮助」；无居中标题
+        // 登录态：左 ← + 右上「帮助」，无居中标题；注册态：左 ← + 居中「注册小红书」
         topBar = {
             XhsTopBar(
+                title = if (state.isRegister) RegisterTitle else null,
                 navigationIcon = {
                     XhsIconButton(
                         iconRes = R.drawable.ic_chevron_left,
@@ -110,25 +122,23 @@ private fun LoginScreen(
                     )
                 },
                 actions = {
-                    // A5-2：「帮助」同样置灰
-                    XhsTextAction(
-                        text = HelpLabel,
-                        onClick = onHelp,
-                        enabled = !state.submitting,
-                        color = XhsColor.Text2,
-                    )
+                    if (!state.isRegister) {
+                        // A5-2：「帮助」同样置灰
+                        XhsTextAction(
+                            text = HelpLabel,
+                            onClick = onHelp,
+                            enabled = !state.submitting,
+                            color = XhsColor.Text2,
+                        )
+                    }
                 },
             )
         },
-        showLogo = true,
     ) {
-        // A5-1：错误条在表单**上方**；已填内容由 VM 状态保留，可直接重试
-        AuthErrorBar(message = state.error)
-
         AuthTextField(
             value = state.username,
             onValueChange = onUsernameChange,
-            placeholder = UsernamePlaceholder,
+            placeholder = if (state.isRegister) RegisterUsernamePlaceholder else UsernamePlaceholder,
             enabled = !state.submitting,
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next,
@@ -137,147 +147,42 @@ private fun LoginScreen(
         AuthTextField(
             value = state.password,
             onValueChange = onPasswordChange,
-            placeholder = PasswordPlaceholder,
+            placeholder = if (state.isRegister) RegisterPasswordPlaceholder else PasswordPlaceholder,
             enabled = !state.submitting,
             password = true, // PasswordVisualTransformation：掩码显示
             keyboardType = KeyboardType.Password,
-            imeAction = ImeAction.Done,
+            // 登录态密码是最后一个输入 → Done；注册态后面还有昵称/手机号 → Next
+            imeAction = if (state.isRegister) ImeAction.Next else ImeAction.Done,
         )
 
-        Spacer(modifier = Modifier.height(Dimens.s24))
-        // A5-2：按钮禁用 + 「登录中...」；未勾选协议时禁用（见 LoginViewModel 顶部取舍说明）
-        XhsPrimaryButton(
-            text = LoginLabel,
-            onClick = onLogin,
-            enabled = state.canSubmit,
-            loading = state.submitting,
-            loadingText = LoginSubmitLabel,
-        )
-
-        Spacer(modifier = Modifier.height(Dimens.s8))
-        AuthAgreementRow(
-            checked = state.agreed,
-            onToggle = onToggleAgreement,
-            enabled = !state.submitting,
-        )
-
-        Spacer(modifier = Modifier.height(Dimens.s16))
-        AuthFooterLink(
-            prefix = "没有账号？",
-            action = "注册",
-            onClick = onRegister,
-            enabled = !state.submitting,
-        )
-        Spacer(modifier = Modifier.height(Dimens.s32))
-    }
-}
-
-// ==================================================================== A4 注册页
-
-/**
- * A4 注册页：标题「注册小红书」+ ← 、四个输入（用户名 3-20 必填 / 密码 6-20 必填 /
- * 昵称选填 ≤20 / 手机号选填 `1[3-9]\d{9}`）、「注册」主按钮、同款协议勾选、底部「已有账号？前往登录」。
- */
-@Composable
-fun RegisterRoute(navigator: AppNavigator) {
-    val vm: RegisterViewModel = appViewModel { RegisterViewModel(it.sessionManager, it.toastController) }
-    val state by vm.state.collectAsStateWithLifecycle()
-
-    // A5-2：提交中「此状态 ← 不可返回」；其余情况系统返回键与顶栏 ← 一致（回 A3）
-    BackHandler { if (!state.submitting) navigator.back() }
-
-    RegisterScreen(
-        state = state,
-        onUsernameChange = vm::updateUsername,
-        onPasswordChange = vm::updatePassword,
-        onNicknameChange = vm::updateNickname,
-        onPhoneChange = vm::updatePhone,
-        onToggleAgreement = vm::toggleAgreement,
-        // 不自动登录：把用户名交给 A3 回填，登录动作留给用户在登录页完成
-        onSubmit = {
-            vm.submit(onSuccess = { username ->
-                AuthPrefill.setUsername(username)
-                navigator.back()
-            })
-        },
-        // 返回来源页（A3）：本页是从 A3 推入的，back() 即回登录页
-        onBack = { if (!state.submitting) navigator.back() },
-    )
-}
-
-/** A4 无状态内容层。 */
-@Composable
-private fun RegisterScreen(
-    state: RegisterUiState,
-    onUsernameChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onNicknameChange: (String) -> Unit,
-    onPhoneChange: (String) -> Unit,
-    onToggleAgreement: () -> Unit,
-    onSubmit: () -> Unit,
-    onBack: () -> Unit,
-) {
-    AuthScaffold(
-        // A4 顶栏：← + 居中「注册小红书」
-        topBar = {
-            XhsTopBar(
-                title = "注册小红书",
-                navigationIcon = {
-                    XhsIconButton(
-                        iconRes = R.drawable.ic_chevron_left,
-                        onClick = onBack,
-                        tint = if (state.submitting) XhsColor.Text3 else XhsColor.Text1,
-                        contentDescription = "返回",
-                    )
-                },
+        if (state.isRegister) {
+            Spacer(modifier = Modifier.height(Dimens.s12))
+            AuthTextField(
+                value = state.nickname,
+                onValueChange = onNicknameChange,
+                placeholder = NicknamePlaceholder,
+                enabled = !state.submitting,
+                imeAction = ImeAction.Next,
             )
-        },
-    ) {
-        // A4/A5-1：与登录页同款错误条（客户端校验失败 或 服务端失败，如 1003 用户名已存在）
-        AuthErrorBar(message = state.error)
-
-        AuthTextField(
-            value = state.username,
-            onValueChange = onUsernameChange,
-            placeholder = "设置用户名（3-20字符）*",
-            enabled = !state.submitting,
-            imeAction = ImeAction.Next,
-        )
-        Spacer(modifier = Modifier.height(Dimens.s12))
-        AuthTextField(
-            value = state.password,
-            onValueChange = onPasswordChange,
-            placeholder = "设置密码（6-20字符）*",
-            enabled = !state.submitting,
-            password = true,
-            keyboardType = KeyboardType.Password,
-            imeAction = ImeAction.Next,
-        )
-        Spacer(modifier = Modifier.height(Dimens.s12))
-        AuthTextField(
-            value = state.nickname,
-            onValueChange = onNicknameChange,
-            placeholder = "昵称（选填）",
-            enabled = !state.submitting,
-            imeAction = ImeAction.Next,
-        )
-        Spacer(modifier = Modifier.height(Dimens.s12))
-        AuthTextField(
-            value = state.phone,
-            onValueChange = onPhoneChange,
-            placeholder = "手机号（选填）",
-            enabled = !state.submitting,
-            keyboardType = KeyboardType.Phone,
-            imeAction = ImeAction.Done,
-        )
+            Spacer(modifier = Modifier.height(Dimens.s12))
+            AuthTextField(
+                value = state.phone,
+                onValueChange = onPhoneChange,
+                placeholder = PhonePlaceholder,
+                enabled = !state.submitting,
+                keyboardType = KeyboardType.Phone,
+                imeAction = ImeAction.Done,
+            )
+        }
 
         Spacer(modifier = Modifier.height(Dimens.s24))
+        // A5-2：按钮禁用 +「登录中.../注册中...」；未勾选协议时禁用（与合并前同一口径）
         XhsPrimaryButton(
-            text = RegisterLabel,
+            text = if (state.isRegister) RegisterLabel else LoginLabel,
             onClick = onSubmit,
             enabled = state.canSubmit,
             loading = state.submitting,
-            loadingText = RegisterSubmitLabel,
+            loadingText = if (state.isRegister) RegisterSubmitLabel else LoginSubmitLabel,
         )
 
         Spacer(modifier = Modifier.height(Dimens.s8))
@@ -289,9 +194,10 @@ private fun RegisterScreen(
 
         Spacer(modifier = Modifier.height(Dimens.s16))
         AuthFooterLink(
-            prefix = "已有账号？",
-            action = "前往登录",
-            onClick = onBack,
+            prefix = if (state.isRegister) RegisterSwitchPrefix else LoginSwitchPrefix,
+            action = if (state.isRegister) RegisterSwitchAction else LoginSwitchAction,
+            // 模式切换不导航：同一份 state 原地换 mode，已输入内容全部保留
+            onClick = { onSwitchMode(if (state.isRegister) AuthMode.Login else AuthMode.Register) },
             enabled = !state.submitting,
         )
         Spacer(modifier = Modifier.height(Dimens.s32))
@@ -301,16 +207,16 @@ private fun RegisterScreen(
 // ==================================================================== 共用骨架
 
 /**
- * A3/A4 共用骨架：白底 + 顶栏 + 可滚动表单区。
+ * Auth 共用骨架：白底 + 顶栏 + 居中 LOGO + 可滚动表单区（登录/注册两态 LOGO 常显）。
  *
- * - 表单区左右边距 = [Dimens.pagePadding]（§4.1 页边距 16）；
- * - `verticalScroll` + `imePadding`：键盘弹起时表单可滚，「没有账号？注册」不会被顶出屏幕
+ * - 表单区左右边距 = [Dimens.authPagePadding]（24，Auth 页专用；全项目页边距仍是
+ *   [Dimens.pagePadding] 16）；
+ * - `verticalScroll` + `imePadding`：键盘弹起时表单可滚，底部链接不会被顶出屏幕
  *   （Manifest 为 `adjustResize` + edge-to-edge，需要主动吃 IME inset）。
  */
 @Composable
 private fun AuthScaffold(
     topBar: @Composable () -> Unit,
-    showLogo: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Box(
@@ -329,25 +235,14 @@ private fun AuthScaffold(
                     .verticalScroll(rememberScrollState()),
             ) {
                 Spacer(modifier = Modifier.height(Dimens.s24))
-                // A3 有居中 LOGO + 标语；A4 没有 LOGO，直接进表单
-                if (showLogo) {
-                    AuthLogoHeader()
-                    Spacer(modifier = Modifier.height(Dimens.s24))
-                }
+                AuthLogoHeader()
+                Spacer(modifier = Modifier.height(Dimens.s24))
 
                 Column(
-                    modifier = Modifier.padding(horizontal = Dimens.pagePadding),
+                    modifier = Modifier.padding(horizontal = Dimens.authPagePadding),
                     content = content,
                 )
             }
         }
     }
-}
-
-/** A5-1 错误条：非空时展示在表单**上方**（`XhsFormErrorBar` 已处理空串）。 */
-@Composable
-private fun AuthErrorBar(message: String) {
-    if (message.isBlank()) return
-    XhsFormErrorBar(message = message)
-    Spacer(modifier = Modifier.height(Dimens.s8))
 }

@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.asSharedFlow
  * 全局 Toast 中心（I2）。
  *
  * 规范：**屏幕中心**显示 2s 后自动消失（时长见 `TOAST_DURATION_MS`）；黑底白字圆角条。
- * 三类反馈分工（I2）：Toast（本类）/ 列表错误态+重试（B4-2）/ 表单错误条（A5-1、E4）。
+ * 三类反馈分工（I2）：Toast（本类，含 Auth 页校验/业务失败）/ 列表错误态+重试（B4-2）/ 表单错误条（E4）。
  */
 class ToastController {
 

@@ -23,6 +23,9 @@ object Dimens {
     /** 页面左右边距统一 16。 */
     val pagePadding = 16.dp
 
+    /** Auth 页（登录/注册合并页）表单内容左右边距：比全项目口径 [pagePadding] 更大，仅此页使用。 */
+    val authPagePadding = 48.dp
+
     /** 卡片标题区内边距 12。 */
     val cardInnerPadding = 12.dp
 

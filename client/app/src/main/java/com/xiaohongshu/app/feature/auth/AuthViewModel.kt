@@ -11,117 +11,33 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * A3 登录页状态。
- *
- * A5-1「已填内容保留」是**结构上**保证的：用户名/密码只存在这份状态里，失败只写 [error]，
- * 不清空字段，因此重试时用户不用重新输入。
- */
-internal data class LoginUiState(
-    val username: String = "",
-    val password: String = "",
-    /** 协议勾选（A3 必填，见 [LoginViewModel] 顶部的取舍说明）。 */
-    val agreed: Boolean = false,
-    /** A5-1 错误条文案（空 = 不显示）。服务端 `message` 原样展示。 */
-    val error: String = "",
-    /** A5-2 提交中：按钮禁用 +「登录中...」+ ← 不可返回。 */
-    val submitting: Boolean = false,
-) {
-    /** 勾选协议后才允许提交（未勾选时按钮禁用）。 */
-    val canSubmit: Boolean get() = agreed && !submitting
-}
+/** Auth 页当前形态：登录 / 注册。 */
+internal enum class AuthMode { Login, Register }
 
 /**
- * A3 登录页（含 A5-1 失败态 / A5-2 提交中 / A6 成功）。
+ * A3 登录 / A4 注册合并后的 Auth 页状态。
  *
- * **协议勾选 vs 登录按钮**（规范 §7 A3 留的取舍项，本实现的选择）：
- * 未勾选时**按钮禁用**（`XhsPrimaryButton(enabled = false)` → 45% 透明，视觉与 A5-2 提交中置灰同源）。
- * 理由：① 真实 App 是硬门槛，登录接口不该在未同意协议时发出；
- * ② 禁用态在本设计系统里已有定义，**不需要新增任何文案**（若改为「可点但报错」，就必须自创一条
- *    A5-1 错误条文案，而 §4.7 要求文案定稿后不自创）。
- * 另外 [submit] 里仍保留一次 `agreed` 防御判断（正常路径到不了）。
+ * 用户名、密码、昵称、手机号、协议勾选只存在这一份状态里；登录/注册切换只改 [mode]，
+ * **不发生导航**，所以已输入内容（尤其用户名/密码）原地保留，不依赖回填或 SavedState。
  *
- * 其余行为：客户端先挡空值（不发明知无效的请求）；业务失败（1001 用户不存在 / 1002 密码错误 /
- * 1004 被禁用）把服务端 `message` **原样**写进错误条；网络层失败走全局 Toast（I2）。成功：
- * Toast「登录成功」+ 回调（Route 调 `popLogin()`，由它补跑被拦截的游客动作并弹回来源页，
- * 见 §4.4 / A6）。
+ * 错误不再进 state：客户端校验失败与服务端业务失败统一走全局 Toast（见 [AuthViewModel]）。
  */
-internal class LoginViewModel(
-    private val session: SessionManager,
-    private val toasts: ToastController,
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(LoginUiState())
-    val state: StateFlow<LoginUiState> = _state.asStateFlow()
-
-    fun updateUsername(value: String) = edit { it.copy(username = value.trim()) }
-
-    /** 密码不做 trim（空格可能是密码的一部分，`SessionManager.login` 也不 trim 密码）。 */
-    fun updatePassword(value: String) = edit { it.copy(password = value) }
-
-    fun toggleAgreement() = edit { it.copy(agreed = !it.agreed) }
-
-    /** A4 → A3：注册成功后回填用户名（此时密码仍为空，符合「请登录」的引导）。 */
-    fun prefillUsername(username: String) = edit { it.copy(username = username) }
-
-    /** 编辑任一字段即清掉上一条错误条，避免「已修正却还挂着旧报错」。 */
-    private fun edit(transform: (LoginUiState) -> LoginUiState) {
-        _state.value = transform(_state.value).copy(error = "")
-    }
-
-    /**
-     * 提交登录。成功回调交给 Route（一次性事件不用 SharedFlow，规范 §3）。
-     */
-    fun submit(onSuccess: () -> Unit) {
-        val current = _state.value
-        if (current.submitting) return // A5-2：防重复提交
-        if (!current.agreed) return // 防御：按钮已禁用，正常路径到不了
-        if (current.username.isBlank()) {
-            _state.value = current.copy(error = UsernamePlaceholder)
-            return
-        }
-        if (current.password.isBlank()) {
-            _state.value = current.copy(error = PasswordPlaceholder)
-            return
-        }
-
-        _state.value = current.copy(submitting = true, error = "")
-        viewModelScope.launch {
-            when (val result = session.login(current.username, current.password)) {
-                // A6：Toast「登录成功」→ Route 调 popLogin() 弹回来源页并补跑被拦截的动作
-                is ApiResult.Ok -> {
-                    _state.value = _state.value.copy(submitting = false)
-                    toasts.show(LoginSuccessToast)
-                    onSuccess()
-                }
-
-                // A5-1：业务失败（1001/1002/1004…）→ 服务端 message 原样进错误条，已填内容保留
-                is ApiResult.Biz -> {
-                    _state.value = _state.value.copy(submitting = false, error = result.userMessage())
-                }
-
-                // 网络层失败 → 全局 Toast，停留本页可重试
-                else -> {
-                    _state.value = _state.value.copy(submitting = false)
-                    toasts.show(result.userMessage())
-                }
-            }
-        }
-    }
-}
-
-/** A4 注册页状态。 */
-internal data class RegisterUiState(
+internal data class AuthUiState(
+    val mode: AuthMode = AuthMode.Login,
     val username: String = "",
     val password: String = "",
     val nickname: String = "",
     val phone: String = "",
+    /** 协议勾选（登录/注册必填，见 [AuthViewModel] 顶部的取舍说明）。 */
     val agreed: Boolean = false,
-    val error: String = "",
+    /** A5-2 提交中：按钮禁用 +「登录中.../注册中...」+ ← 不可返回。 */
     val submitting: Boolean = false,
 ) {
-    /** 勾选协议后才允许提交（与 A3 同一口径）。 */
+    /** 勾选协议后才允许提交（登录/注册同一口径）。 */
     val canSubmit: Boolean get() = agreed && !submitting
+
+    /** 当前是否注册态（页面按它切换顶栏/字段/按钮文案）。 */
+    val isRegister: Boolean get() = mode == AuthMode.Register
 }
 
 // ---- A4 字段约束（契约 §1.1：username 3–20 必填 / password 6–20 必填 / nickname ≤20 / phone `1[3-9]\d{9}`）----
@@ -136,15 +52,15 @@ internal const val NicknameMaxLength = 20
 private val PhonePattern = Regex("1[3-9]\\d{9}")
 
 /**
- * A4 客户端校验（提交前跑）。
+ * A4 注册客户端校验（仅注册态提交前跑）。
  *
- * 返回非空 = 不通过（文案直接进 A5-1 错误条）。文案来源：
+ * 返回非空 = 不通过（文案直接交给全局 Toast）。文案来源：
  * - 「用户名长度为3-20个字符」= A5-1 失败示例的定稿原文；
  * - 「密码长度为6-20个字符」/「昵称最多20个字符」= 同句式（后者对齐 F3-1 的「名字最多20个字符」）；
  * - 「手机号格式不正确」= F3-1 定稿文案（同一约束 `1[3-9]\d{9}`）；
  * - 「请输入用户名」/「请输入密码」= A3/A4 占位的定稿原文（未填写时不另造文案）。
  */
-internal fun validateRegister(state: RegisterUiState): String? = when {
+internal fun validateRegister(state: AuthUiState): String? = when {
     state.username.isBlank() -> UsernamePlaceholder
     state.username.length !in UsernameMinLength..UsernameMaxLength -> "用户名长度为3-20个字符"
     state.password.isBlank() -> PasswordPlaceholder
@@ -155,24 +71,31 @@ internal fun validateRegister(state: RegisterUiState): String? = when {
 }
 
 /**
- * A4 注册页（含 A5-1 同款错误条 / A5-2 提交中）。
+ * A3 登录 / A4 注册合并页 ViewModel。
  *
- * 与 A3 的差异：
- * - 提交前先跑 [validateRegister]（长度/手机号格式/必填），不通过就停在 A5-1 形态；
- * - 服务端失败（如 `1003` 用户名已存在）同样把 `message` 原样写进错误条；
- * - **成功不自动登录**（`SessionManager.register` 的 KDoc 明确如此）：Toast「注册成功，请登录」，
- *   把用户名交回 Route 写入 [AuthPrefill] 后返回 A3 预填，登录动作留给用户在 A3 完成。
+ * **协议勾选 vs 提交按钮**（沿用原登录页取舍）：未勾选时按钮禁用（45% 透明），[submit] 内
+ * 仍保留一次 `agreed` 防御判断（正常路径到不了）。
+ *
+ * 反馈与错误：客户端校验失败、服务端业务失败（1001/1002/1003/1004…）与网络层失败统一走
+ * 全局 Toast（I2），页面不再有错误条；失败不清空任何已输入内容，可直接重试。
+ *
+ * 成功路径：
+ * - 登录成功 → Toast「登录成功」+ [submit] 的 `onSuccess`（Route 调 `popLogin()` 弹回来源页
+ *   并补跑被拦截的游客动作，见 §4.4 / A6）；
+ * - 注册成功**不自动登录** → Toast「注册成功，请登录」+ 切回登录态，**仅保留用户名**
+ *   （密码/昵称/手机号清空，协议勾选复位），登录动作留给用户完成。
  */
-internal class RegisterViewModel(
+internal class AuthViewModel(
     private val session: SessionManager,
     private val toasts: ToastController,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(RegisterUiState())
-    val state: StateFlow<RegisterUiState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(AuthUiState())
+    val state: StateFlow<AuthUiState> = _state.asStateFlow()
 
     fun updateUsername(value: String) = edit { it.copy(username = value.trim()) }
 
+    /** 密码不做 trim（空格可能是密码的一部分，`SessionManager.login/register` 也不 trim 密码）。 */
     fun updatePassword(value: String) = edit { it.copy(password = value) }
 
     fun updateNickname(value: String) = edit { it.copy(nickname = value.trim()) }
@@ -181,26 +104,72 @@ internal class RegisterViewModel(
 
     fun toggleAgreement() = edit { it.copy(agreed = !it.agreed) }
 
-    private fun edit(transform: (RegisterUiState) -> RegisterUiState) {
-        _state.value = transform(_state.value).copy(error = "")
+    /** 登录 ⇄ 注册：只切 [AuthUiState.mode]，保留所有已输入内容（含密码）；提交中忽略。 */
+    fun switchMode(mode: AuthMode) {
+        if (_state.value.submitting) return
+        _state.value = _state.value.copy(mode = mode)
     }
 
     /**
-     * 提交注册。[onSuccess] 收到的是**提交用的用户名**（Route 用它做 A3 回填）。
+     * 提交当前模式表单。
+     *
+     * @param onSuccess 仅登录成功时回调（导航是一次性事件，交给 Route 触发）。
      */
-    fun submit(onSuccess: (String) -> Unit) {
+    fun submit(onSuccess: () -> Unit) {
         val current = _state.value
         if (current.submitting) return // A5-2：防重复提交
         if (!current.agreed) return // 防御：按钮已禁用，正常路径到不了
 
-        val invalid = validateRegister(current)
-        if (invalid != null) {
-            // A4/A5-1：客户端校验失败 → 同款错误条，已填内容保留
-            _state.value = current.copy(error = invalid)
+        when (current.mode) {
+            AuthMode.Login -> submitLogin(current, onSuccess)
+            AuthMode.Register -> submitRegister(current)
+        }
+    }
+
+    private fun submitLogin(current: AuthUiState, onSuccess: () -> Unit) {
+        if (current.username.isBlank()) {
+            toasts.show(UsernamePlaceholder)
+            return
+        }
+        if (current.password.isBlank()) {
+            toasts.show(PasswordPlaceholder)
             return
         }
 
-        _state.value = current.copy(submitting = true, error = "")
+        _state.value = current.copy(submitting = true)
+        viewModelScope.launch {
+            when (val result = session.login(current.username, current.password)) {
+                // A6：Toast「登录成功」→ Route 调 popLogin() 弹回来源页并补跑被拦截的动作
+                is ApiResult.Ok -> {
+                    _state.value = _state.value.copy(submitting = false)
+                    toasts.show(LoginSuccessToast)
+                    onSuccess()
+                }
+
+                // 1001/1002/1004…：服务端 message 原样 Toast，已填内容保留可重试
+                is ApiResult.Biz -> {
+                    _state.value = _state.value.copy(submitting = false)
+                    toasts.show(result.userMessage())
+                }
+
+                // 网络层失败 → 全局 Toast，停留本页可重试
+                else -> {
+                    _state.value = _state.value.copy(submitting = false)
+                    toasts.show(result.userMessage())
+                }
+            }
+        }
+    }
+
+    private fun submitRegister(current: AuthUiState) {
+        val invalid = validateRegister(current)
+        if (invalid != null) {
+            // A5-1：客户端校验失败 → 全局 Toast，已填内容保留可重试
+            toasts.show(invalid)
+            return
+        }
+
+        _state.value = current.copy(submitting = true)
         viewModelScope.launch {
             val result = session.register(
                 username = current.username,
@@ -210,14 +179,19 @@ internal class RegisterViewModel(
             )
             when (result) {
                 is ApiResult.Ok -> {
-                    _state.value = _state.value.copy(submitting = false)
+                    // 注册成功不自动登录：Toast「注册成功，请登录」→ 切回登录态，仅保留用户名。
+                    // 协议勾选一并复位，登录前重新确认（与合并前「回到登录页」的口径一致）。
                     toasts.show(RegisterSuccessToast)
-                    onSuccess(current.username)
+                    _state.value = AuthUiState(
+                        mode = AuthMode.Login,
+                        username = current.username,
+                    )
                 }
 
-                // 1003「该用户名已被注册」/ 5001「参数错误」…：服务端 message 原样展示
+                // 1003「该用户名已被注册」/ 5001「参数错误」…：服务端 message 原样 Toast
                 is ApiResult.Biz -> {
-                    _state.value = _state.value.copy(submitting = false, error = result.userMessage())
+                    _state.value = _state.value.copy(submitting = false)
+                    toasts.show(result.userMessage())
                 }
 
                 else -> {
@@ -226,5 +200,10 @@ internal class RegisterViewModel(
                 }
             }
         }
+    }
+
+    /** 字段编辑只改内容（错误已不在 state 里，无需清错误）。 */
+    private fun edit(transform: (AuthUiState) -> AuthUiState) {
+        _state.value = transform(_state.value)
     }
 }
