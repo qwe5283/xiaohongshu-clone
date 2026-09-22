@@ -1,6 +1,8 @@
 package com.xiaohongshu.app.core.net
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import retrofit2.HttpException
 import java.io.IOException
 import java.net.SocketTimeoutException
@@ -22,7 +24,7 @@ data class ApiEnvelope<T>(
 
 /**
  * 调用结果。业务失败与网络失败分开，便于按 I2「三类反馈」分流：
- * Toast / 列表错误态+重试（B4-2）/ 表单错误条（A5-1、E4）。
+ * Toast（含 A3/A4 Auth 页表单失败）/ 列表错误态+重试（B4-2）/ 表单错误条（E4）。
  */
 sealed interface ApiResult<out T> {
 
@@ -103,12 +105,36 @@ suspend fun <T> apiCall(block: suspend () -> T): ApiResult<T> = try {
         else -> ApiResult.Biz(e.code, e.message ?: "操作失败")
     }
 } catch (e: HttpException) {
-    if (e.code() == 401) ApiResult.Unauthorized
-    else ApiResult.Server(e.code(), e.message())
+    // 契约 §9：业务失败（如 1002 密码错误）走 HTTP 400 + 信封 code/message。
+    // Retrofit 对非 2xx 统一抛 HttpException，必须先解析 errorBody 才能还原成 Biz，
+    // 否则会全部掉进 Server 的兜底文案「服务异常，请稍后重试」。
+    e.toApiResultFromErrorBody()
+        ?: if (e.code() == 401) ApiResult.Unauthorized else ApiResult.Server(e.code(), e.message())
 } catch (e: IOException) {
     ApiResult.Network(e)
 } catch (e: Exception) {
     ApiResult.Server(-1, e.message ?: "未知错误")
+}
+
+/**
+ * 从 HTTP 4xx 错误响应体解析业务信封（契约 §9：业务失败 HTTP 400，登录态失效 HTTP 401）。
+ *
+ * Retrofit 对非 2xx 不会调用信封拆包 [unwrap]，错误信封只能在这里还原；
+ * 解析失败返回 null，由调用方回落到 [ApiResult.Server]。
+ */
+private fun HttpException.toApiResultFromErrorBody(): ApiResult<Nothing>? {
+    // 只接管 4xx 的「业务失败」；5xx 仍归 [ApiResult.Server]（见其 KDoc）。
+    if (code() !in 400..499) return null
+    val raw = runCatching { response()?.errorBody()?.string() }.getOrNull()
+    if (raw.isNullOrBlank()) return null
+    val obj = runCatching { ApiClient.json.parseToJsonElement(raw) as? JsonObject }.getOrNull() ?: return null
+    val code = obj["code"]?.jsonPrimitive?.content?.toIntOrNull() ?: return null
+    if (code == CODE_SUCCESS || code == 0) return null
+    val message = obj["message"]?.jsonPrimitive?.content.orEmpty()
+    return when (code) {
+        CODE_NOT_LOGGED_IN, CODE_TOKEN_EXPIRED, CODE_TOKEN_INVALID -> ApiResult.Unauthorized
+        else -> ApiResult.Biz(code, message.ifBlank { "操作失败" })
+    }
 }
 
 /** 业务异常：信封 `code != 200`。 */
