@@ -111,7 +111,7 @@ private fun AuthScreen(
         // 登录态：左 ← + 右上「帮助」，无居中标题；注册态：左 ← + 居中「注册小红书」
         topBar = {
             XhsTopBar(
-                title = if (state.isRegister) RegisterTitle else null,
+                title = if (state.isRegister) RegisterTitle else LoginTitle,
                 navigationIcon = {
                     XhsIconButton(
                         iconRes = R.drawable.ic_chevron_left,
@@ -183,6 +183,7 @@ private fun AuthScreen(
             enabled = state.canSubmit,
             loading = state.submitting,
             loadingText = if (state.isRegister) RegisterSubmitLabel else LoginSubmitLabel,
+            containerColor = XhsColor.Red,
         )
 
         Spacer(modifier = Modifier.height(Dimens.s8))

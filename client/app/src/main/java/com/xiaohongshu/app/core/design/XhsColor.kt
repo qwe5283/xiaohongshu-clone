@@ -61,6 +61,14 @@ object XhsColor {
     /** 错误文案（H3-2 正式 UI 为红色气泡）。 */
     val Error = Color(0xFFE34D4D)
 
+    /**
+     * 破坏性操作确认文案（E7「放弃发布」等）。
+     *
+     * 与 [Error] 同值但语义独立：Error 用于失败/错误反馈，本 token 用于危险操作提示，
+     * 避免把错误色当成通用警告色扩散到其他弹层。
+     */
+    val Danger = Error
+
     /** 图片占位斜纹底。 */
     val PlaceholderBg = Color(0xFFEDEDED)
 

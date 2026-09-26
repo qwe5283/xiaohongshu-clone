@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -117,6 +116,7 @@ fun XhsBottomSheet(
 @Composable
 fun XhsSheetRow(
     label: String,
+    labelColor: Color = XhsColor.Text1,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
@@ -130,7 +130,7 @@ fun XhsSheetRow(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(text = label, style = XhsType.sheetRow, color = XhsColor.Text1)
+        Text(text = label, style = XhsType.sheetRow, color = labelColor)
         if (!subtitle.isNullOrBlank()) {
             Text(text = subtitle, style = XhsType.captionSub, color = XhsColor.Text2)
         }
@@ -183,15 +183,18 @@ data class SheetAction(
  * 遮罩 + 询问文案 + 底部「确认 / 取消」两行。
  *
  * [message] 必填：二次确认必须有明确的问句（编译期防止调用方漏文案）。
+ * @param messageColor 询问文案颜色；默认 [XhsColor.Text2]，破坏性操作可传 [XhsColor.Danger]（E7 放弃发布）。
  */
 @Composable
 fun XhsConfirmSheet(
     visible: Boolean,
     message: String,
+    messageColor: Color = XhsColor.Text2,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     confirmText: String = "确认",
+    confirmColor: Color = XhsColor.Text1,
     cancelText: String = "取消",
     /** 确认行是否用主色强调（默认 true，与底部确认/取消的层级一致）。 */
     emphasizeConfirm: Boolean = false,
@@ -206,12 +209,13 @@ fun XhsConfirmSheet(
             Text(
                 text = message,
                 style = XhsType.body,
-                color = XhsColor.Text2,
+                color = messageColor,
                 textAlign = TextAlign.Center,
             )
         }
         XhsSheetRow(
             label = confirmText,
+            labelColor = confirmColor,
             onClick = {
                 onDismiss()
                 onConfirm()

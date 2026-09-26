@@ -331,6 +331,7 @@ private fun PublishFormScreen(
             visible = showDiscardConfirm,
             message = "草稿将丢失，确认放弃发布吗？",
             confirmText = "放弃",
+            confirmColor = XhsColor.Danger,
             cancelText = "取消",
             onConfirm = onDiscardConfirm,
             onDismiss = onDiscardDismiss,

@@ -83,6 +83,7 @@ internal const val RegisterSubmitLabel = "注册中..."
 
 /** A4 注册态顶栏标题（定稿原文）。 */
 internal const val RegisterTitle = "注册小红书"
+internal const val LoginTitle = "登录小红书"
 
 /** A4 注册态输入占位（定稿原文）。 */
 internal const val RegisterUsernamePlaceholder = "设置用户名（3-20字符）*"
