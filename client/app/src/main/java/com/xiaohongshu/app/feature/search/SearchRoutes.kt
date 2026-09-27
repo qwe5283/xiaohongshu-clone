@@ -3,6 +3,7 @@ package com.xiaohongshu.app.feature.search
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -208,6 +209,12 @@ private fun SearchResultScreen(
                     onNoteClick = { note -> onNoteClick(note.id, note.isVideo) },
                     onAuthorClick = onAuthorClick,
                     onLikeClick = onLikeClick,
+                    contentPadding = PaddingValues(
+                        start = Dimens.waterfallMargin,
+                        end = Dimens.waterfallMargin,
+                        top = Dimens.s0,
+                        bottom = Dimens.waterfallMargin
+                    ),
                     footer = { XhsListFooter(state = state.page) },
                 )
             }
