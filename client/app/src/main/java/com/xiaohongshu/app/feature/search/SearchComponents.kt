@@ -80,7 +80,7 @@ internal fun SearchInputRow(
             modifier = Modifier
                 .weight(1f)
                 .height(Dimens.inputSearch)
-                .clip(RoundedCornerShape(Dimens.radiusPill))
+                .clip(RoundedCornerShape(Dimens.radiusSearchBar))
                 .background(XhsColor.BgGray)
                 .padding(start = Dimens.s12, end = Dimens.s8),
             verticalAlignment = Alignment.CenterVertically,
@@ -108,29 +108,29 @@ internal fun SearchInputRow(
                 )
             }
 
-            XhsVerticalDivider(height = Dimens.s16)
 
             // 相机入口（原版「拍照搜索」）：本复刻未纳入接口契约，故仅作视觉入口；
-            // 图标素材缺失，按 §4.5 使用全项目统一占位
             Icon(
-                painter = painterResource(PlaceholderIconRes),
+                painter = painterResource(R.drawable.ic_scan),
                 contentDescription = "拍照搜索",
                 tint = XhsColor.Text2,
                 modifier = Modifier.size(Dimens.icon20),
             )
+
+            XhsVerticalDivider(height = Dimens.s16)
+
+            Box(
+                modifier = Modifier
+                    .width(SearchSubmitWidth)
+                    .height(Dimens.inputSearch)
+                    .clip(RoundedCornerShape(Dimens.radiusPill))
+                    .clickable(onClick = onSubmit),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(text = "搜索", style = XhsType.searchEntry, color = XhsColor.Text1)
+            }
         }
 
-        Box(
-            modifier = Modifier
-                .width(SearchSubmitWidth)
-                .height(Dimens.inputSearch)
-                .clip(RoundedCornerShape(Dimens.radiusPill))
-                .background(XhsColor.Text1)
-                .clickable(onClick = onSubmit),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(text = "搜索", style = XhsType.buttonLabelSmall, color = Color.White)
-        }
     }
 }
 
@@ -160,9 +160,9 @@ internal fun SearchHistorySection(
                 maxLines = 1,
                 modifier = Modifier.weight(1f),
             )
-            // 🗑 清空历史（素材缺失，按 §4.5 用统一占位）
+            // 🗑 清空历史
             XhsIconButton(
-                iconRes = PlaceholderIconRes,
+                iconRes = R.drawable.ic_broom,
                 onClick = onClear,
                 iconSize = Dimens.icon20,
                 tint = XhsColor.Text2,
@@ -200,7 +200,7 @@ internal fun HotKeywordSection(
             style = XhsType.sectionTitle,
             color = XhsColor.Text1,
             maxLines = 1,
-            modifier = Modifier.padding(top = Dimens.s24, bottom = Dimens.s8),
+            modifier = Modifier.padding(top = Dimens.s24, bottom = Dimens.s16),
         )
 
         Column(verticalArrangement = Arrangement.spacedBy(HotKeywordRowGap)) {
@@ -264,10 +264,10 @@ private const val PRELOAD_ITEM_COUNT = 6
 
 /**
  * B2 实测值，Dimens 无对应档位，故就近声明：
- * 搜索行 52、返回图标 22、搜索按钮宽 56、猜你想搜条目行高 22。
+ * 搜索行 52、返回图标 22、搜索按钮宽 42、猜你想搜条目行高 22。
  */
 private val SearchRowHeight = 52.dp
 private val SearchBackIconSize = 22.dp
-private val SearchSubmitWidth = 56.dp
+private val SearchSubmitWidth = 42.dp
 private val HotKeywordRowHeight = 22.dp
-private val HotKeywordRowGap = Dimens.s32
+private val HotKeywordRowGap = Dimens.s16

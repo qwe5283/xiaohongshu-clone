@@ -76,6 +76,9 @@ object Dimens {
     /** 卡片 8。 */
     val radiusCard = 8.dp
 
+    /** 搜索框 */
+    val radiusSearchBar = 16.dp
+
     /** 弹层顶部/弹窗/＋按钮 12。 */
     val radiusSheet = 12.dp
 

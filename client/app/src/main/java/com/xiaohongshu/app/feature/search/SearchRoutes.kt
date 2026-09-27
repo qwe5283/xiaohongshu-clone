@@ -194,7 +194,7 @@ private fun SearchResultScreen(
             modifier = Modifier.statusBarsPadding(),
         )
 
-        Box(modifier = Modifier.weight(1f)) {
+        Box(modifier = Modifier.weight(1f).background(XhsColor.WaterfallBg)) {
             XhsListStateHost(
                 state = state.page,
                 onRetry = onRetry,
