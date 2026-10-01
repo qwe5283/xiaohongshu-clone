@@ -201,6 +201,17 @@ function followUserVO(u, followTime, viewer) {
   };
 }
 
+/** `GET /api/user/search` 的元素（契约 §1.9 `UserBriefVO`）。 */
+function userBriefVO(u, viewer) {
+  return {
+    id: u.id,
+    nickname: u.nickname,
+    avatar: u.avatar,
+    bio: u.bio,
+    followed: viewer ? db.followSet.has(`${viewer.id}:${u.id}`) : false,
+  };
+}
+
 function notificationVO(n) {
   const sender = db.usersById.get(n.senderId);
   return {
@@ -669,6 +680,22 @@ R('PUT', '/api/user/update', { auth: true }, (ctx) => {
   if (b.school !== undefined) u.school = String(b.school);
   if (birthday !== undefined) u.birthday = birthday;
   return J(userVO(u), '更新成功');
+});
+
+// user search (B3-1「用户」页签) — static segment, must be registered before /api/user/:id
+R('GET', '/api/user/search', {}, (ctx) => {
+  const keyword = (ctx.query.get('keyword') || '').trim().toLowerCase();
+  if (!keyword) return E(5002, '参数缺失');
+  const matched = db.users.filter(
+    (u) =>
+      u.status === 1 &&
+      ((u.nickname || '').toLowerCase().includes(keyword) ||
+        (u.username || '').toLowerCase().includes(keyword) ||
+        String(u.redId || '').includes(keyword)),
+  );
+  const page = paginate(matched, ctx.query);
+  page.records = page.records.map((u) => userBriefVO(u, ctx.viewer));
+  return J(page);
 });
 
 R('GET', '/api/user/:id', {}, (ctx) => {

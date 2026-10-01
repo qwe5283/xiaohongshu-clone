@@ -39,6 +39,8 @@
 | 14 | 语义明确 | `NotificationVO.type` | 以实体注释为准：1..6（见 §7.2） | G2/G3/G4 |
 | 15 | 语义明确 | 列表 `pageSize` 默认 | 建议后端默认值由 10 调为 20（客户端已显式传参，非阻塞） | 全局 |
 | 16 | 新增字段 | `UserVO` + `collectedPostCount` / `likedPostCount` | **我**收藏/赞过的笔记数（见下方语义说明） | F1 小组件行副文 |
+| 17 | 新增端点 | `GET /api/user/search` | 用户搜索分页（昵称/小红书号/登录账号模糊匹配） | B3-1「用户」页签 |
+| 18 | 语义明确 | `GET /api/post/list` 的 `type` | B3-1 页签取数：**全部不传 `type`**、**视频传 `type=1`** | B3-1「全部/视频」页签 |
 
 ### 语义说明：`likeCount` / `collectCount` 与新增两字段的区别（易混淆，必读）
 原后端 `UserVO.likeCount` / `collectCount` 的既有语义是 **获赞数 / 获藏数**（*别人*赞了我/收藏了我的笔记的累计，用于 F1 统计行），**不是**我赞过/收藏过多少。两者含义相反，故新增两个字段：
@@ -55,7 +57,7 @@
 > 这两个数字需与 `GET /api/collect/posts/{me}`、`GET /api/like/posts/{me}` 的 `total` 一致（收藏/取消收藏、点赞/取消点赞时同步维护）。
 > 他人主页（F2）不展示小组件行，故这两个字段对非本人可为 0。
 
-> 客户端在 mock server 下开发，**以上 15 项均按本文实现**。后端实现完成后，客户端只需把 Base URL 切到真实服务，无需改代码。
+> 客户端在 mock server 下开发，**以上 18 项均按本文实现**。后端实现完成后，客户端只需把 Base URL 切到真实服务，无需改代码。
 
 ---
 
@@ -119,6 +121,19 @@
 ```
 > F1 统计行：关注 / 粉丝 / **获赞与收藏**（`likeAndCollectCount`）。
 > F1 小组件行两卡副文：收藏（`collectedPostCount`）/ 赞过（`likedPostCount`）—— 含义见 §0 语义说明，**勿用** `likeCount`/`collectCount`。
+
+### 1.8 [新增] 用户搜索 — `GET /api/user/search` · 公开（带 token 时填充 `followed`）
+参数：`keyword`（必填，模糊匹配 `nickname` / 小红书号 `redId` / 登录账号 `username`，忽略大小写）、`pageNum`、`pageSize`。
+响应 `data`：`IPage<UserBriefVO>`（§1.9）。
+失败：`5002` 参数缺失（`keyword` 为空或缺省）。
+> B3-1「用户」页签：单独的用户列表流（非瀑布流）。条目＝头像 48 + 昵称 15sp + 简介 13sp + 右侧关注钮（`XhsFollowPill`，同一 D2 状态机）；点条目 → F2。
+> 「全部 / 视频」两页签**无新端点**，走 §2.5 的 `keyword`+`type`：全部不传 `type`，视频传 `type=1`（变更 #18）。
+
+### 1.9 `UserBriefVO`
+```json
+{ "id": 6, "nickname": "林小满", "avatar": "https://...", "bio": "早秋穿搭 / 通勤 ootd", "followed": false }
+```
+> `followed` 语义同 `PostVO.followed`：当前用户是否已关注该用户；未登录一律 `false`。关注后由客户端 `POST /api/follow/{userId}` 维护。
 
 ---
 

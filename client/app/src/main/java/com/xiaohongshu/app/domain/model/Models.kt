@@ -215,4 +215,6 @@ data class UserBrief(
     val nickname: String,
     val avatar: String,
     val bio: String,
+    /** 当前用户是否已关注 ta（服务端值；展示态再经 `InteractionStore.followedOf` 合并本地乐观覆盖）。 */
+    val followed: Boolean = false,
 )

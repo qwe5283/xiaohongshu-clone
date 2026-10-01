@@ -37,6 +37,18 @@ data class UserDto(
     val createTime: String = "",
 )
 
+/**
+ * `GET /api/user/search` 的元素（契约 §1.9 `UserBriefVO`），B3-1「用户」页签。
+ */
+@Serializable
+data class UserBriefDto(
+    val id: Long = 0,
+    val nickname: String = "",
+    val avatar: String = "",
+    val bio: String = "",
+    val followed: Boolean = false,
+)
+
 /** `POST /api/user/register` 请求体。 */
 @Serializable
 data class RegisterRequest(

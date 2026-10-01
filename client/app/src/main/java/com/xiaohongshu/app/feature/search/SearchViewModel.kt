@@ -8,8 +8,11 @@ import com.xiaohongshu.app.core.list.PagedState
 import com.xiaohongshu.app.core.net.ApiResult
 import com.xiaohongshu.app.core.ui.ToastController
 import com.xiaohongshu.app.data.local.SearchHistoryStore
+import com.xiaohongshu.app.data.local.SessionManager
 import com.xiaohongshu.app.data.repo.PostRepository
+import com.xiaohongshu.app.data.repo.UserRepository
 import com.xiaohongshu.app.domain.model.Note
+import com.xiaohongshu.app.domain.model.UserBrief
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -84,48 +87,95 @@ data class SearchResultUiState(
     val keyword: String = "",
     /** 输入框内容，可继续编辑。 */
     val query: String = "",
+    /** 当前选中页签：全部 / 用户 / 视频。 */
+    val filter: SearchResultFilter = SearchResultFilter.ALL,
+    /** 「全部/视频」页签的笔记分页态（在选中页签的列表上取）。 */
     val page: PagedState<Note> = PagedState(),
     /** 已合并本地互动态的展示数据（§4.3）。 */
     val notes: List<Note> = emptyList(),
-)
+    /** 「用户」页签的分页态。 */
+    val userPage: PagedState<UserBrief> = PagedState(),
+    /** 「用户」页签里「已关注」（合并本地乐观覆盖）的用户 id。 */
+    val followedUserIds: Set<Long> = emptySet(),
+    /** 自己的 id：命中的是自己行时不出关注钮（与详情/他人主页同规则）；未登录为 0。 */
+    val selfId: Long = 0,
+) {
+    /** 当前页签是否为瀑布流（「全部/视频」）。 */
+    val showsNotes: Boolean get() = filter != SearchResultFilter.USER
+}
 
 /**
  * B3-1/B3-2 搜索结果 ViewModel。
  *
  * 与 B2 的差异：本页**无底部 Tab**（推入式），且「在结果页再次提交关键词」是**原地重查**
  * （不新开页面），同时把新关键词写入搜索历史。
+ *
+ * 三个筛选页签（契约 §1.8 / §2.5）各持一份分页态：
+ * - 「全部」`type` 缺省、「视频」传 `type=1`（变更 #18），都走 `GET /api/post/list`；
+ * - 「用户」走 `GET /api/user/search`，是独立的用户列表流（仿 G4 关注条目）。
+ * 切页签只补拉「当前关键词下尚未加载」的那一份；再次提交关键词则三份数据同时作废、
+ * 只重查当前页签（其余在切过去时补拉），避免一次提交打三个请求。
  */
 class SearchResultViewModel(
     private val posts: PostRepository,
+    private val users: UserRepository,
     private val history: SearchHistoryStore,
-    initialKeyword: String,
     private val interactions: InteractionStore,
+    private val session: SessionManager,
+    initialKeyword: String,
     toasts: ToastController,
 ) : ViewModel() {
 
     private val _keyword = MutableStateFlow(initialKeyword)
     private val _query = MutableStateFlow(initialKeyword)
+    private val _filter = MutableStateFlow(SearchResultFilter.ALL)
 
-    private val list = PagedList<Note>(
+    private val allNotes = PagedList<Note>(
         keyOf = { it.id },
         toasts = toasts,
         fetch = { page, size ->
-            posts.feed(page = page, pageSize = size, keyword = _keyword.value.ifBlank { null })
+            posts.feed(page = page, pageSize = size, keyword = keywordOrNull(), type = null)
         },
     )
 
-    val state: StateFlow<SearchResultUiState> = combine(
-        _keyword,
-        _query,
-        list.state,
-        interactions.noteOverrides,
-    ) { keyword, query, page, _ ->
-        SearchResultUiState(
-            keyword = keyword,
-            query = query,
-            page = page,
-            notes = interactions.mergeAll(page.items),
-        )
+    private val videoNotes = PagedList<Note>(
+        keyOf = { it.id },
+        toasts = toasts,
+        fetch = { page, size ->
+            posts.feed(page = page, pageSize = size, keyword = keywordOrNull(), type = PostRepository.POST_TYPE_VIDEO)
+        },
+    )
+
+    private val userRows = PagedList<UserBrief>(
+        keyOf = { it.id },
+        toasts = toasts,
+        fetch = { page, size -> users.searchUsers(_keyword.value, page, size) },
+    )
+
+    /** 各页签已加载数据所属的关键词；与当前关键词不一致 = 切过去时需要补拉。 */
+    private val loadedKeyword = mutableMapOf<SearchResultFilter, String>()
+
+    val state: StateFlow<SearchResultUiState> = run {
+        val meta = combine(_keyword, _query, _filter) { keyword, query, filter -> Triple(keyword, query, filter) }
+        val tabs = combine(allNotes.state, videoNotes.state, userRows.state) { all, video, userState ->
+            Triple(all, video, userState)
+        }
+        combine(meta, tabs, interactions.followOverrides, session.state) { (keyword, query, filter), (all, video, userPage), follows, sessionState ->
+            val notesPage = if (filter == SearchResultFilter.VIDEO) video else all
+            SearchResultUiState(
+                keyword = keyword,
+                query = query,
+                filter = filter,
+                page = notesPage,
+                notes = interactions.mergeAll(notesPage.items),
+                userPage = userPage,
+                followedUserIds = userPage.items
+                    .filter { interactions.followedOf(it.id, it.followed) }
+                    .map { it.id }
+                    .toSet(),
+                selfId = if (sessionState.loggedIn) sessionState.user.id else 0L,
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
@@ -139,7 +189,7 @@ class SearchResultViewModel(
     init {
         // B2 提交时已写入历史，这里只负责取数
         if (initialKeyword.isNotBlank()) {
-            viewModelScope.launch { list.refresh() }
+            viewModelScope.launch { load(SearchResultFilter.ALL) }
         }
     }
 
@@ -152,26 +202,61 @@ class SearchResultViewModel(
         val keyword = _query.value.trim()
         if (keyword.isEmpty()) return
         _keyword.value = keyword
+        // 关键词已变：三个页签的既有数据全部作废，只重查当前页签
+        loadedKeyword.clear()
         viewModelScope.launch {
             history.add(keyword)
-            list.refresh()
+            load(_filter.value)
         }
     }
 
-    /** B4-2 首次失败后的「重试」。 */
-    fun retry() {
-        viewModelScope.launch { list.retry() }
+    /** 切换筛选页签；该页签尚未按当前关键词取过数时补拉。 */
+    fun selectFilter(filter: SearchResultFilter) {
+        if (_filter.value == filter) return
+        _filter.value = filter
+        if (_keyword.value.isNotBlank() && loadedKeyword[filter] != _keyword.value) {
+            viewModelScope.launch { load(filter) }
+        }
     }
 
-    /** B4-4 距底预加载下一页。 */
+    /** B4-2 首次失败后的「重试」（当前页签）。 */
+    fun retry() {
+        viewModelScope.launch { paged(_filter.value).retry() }
+    }
+
+    /** B4-4 距底预加载下一页（当前页签）。 */
     fun loadMore() {
-        viewModelScope.launch { list.loadMore() }
+        viewModelScope.launch { paged(_filter.value).loadMore() }
     }
 
     /** D1 点赞（乐观更新 + 失败回滚由 InteractionStore 负责）。 */
     fun toggleLike(note: Note) {
         viewModelScope.launch { interactions.toggleLike(note) }
     }
+
+    /**
+     * 「用户」页签的关注/取关（D2 同一状态机）。
+     * 服务端基准值传该行的 `followed`（列表项服务端原值），展示态由 [SearchResultUiState.followedUserIds] 合并。
+     */
+    fun toggleFollow(user: UserBrief) {
+        viewModelScope.launch { interactions.toggleFollow(user.id, user.followed) }
+    }
+
+    // ------------------------------------------------------------------ 内部
+
+    /** 取当前关键词下的数据（写 `loadedKeyword` 后再拉，翻页/刷新共用入口）。 */
+    private suspend fun load(filter: SearchResultFilter) {
+        loadedKeyword[filter] = _keyword.value
+        paged(filter).refresh()
+    }
+
+    private fun paged(filter: SearchResultFilter): PagedList<*> = when (filter) {
+        SearchResultFilter.ALL -> allNotes
+        SearchResultFilter.VIDEO -> videoNotes
+        SearchResultFilter.USER -> userRows
+    }
+
+    private fun keywordOrNull(): String? = _keyword.value.ifBlank { null }
 }
 
 /** 离开页面后保留订阅 5s，避免转屏/短暂切页导致重新拉取。 */

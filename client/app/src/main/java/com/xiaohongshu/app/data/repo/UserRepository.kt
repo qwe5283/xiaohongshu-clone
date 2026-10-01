@@ -24,4 +24,9 @@ class UserRepository(private val userApi: UserApi) {
     suspend fun getUser(userId: Long): ApiResult<User> = apiCall {
         userApi.getUser(userId).unwrap()
     }.map { it.toDomain() }
+
+    /** B3-1「用户」页签（契约 §1.8）：昵称/小红书号模糊搜索。 */
+    suspend fun searchUsers(keyword: String, page: Int, pageSize: Int): ApiResult<Paged<UserBrief>> = apiCall {
+        userApi.searchUsers(keyword = keyword, pageNum = page, pageSize = pageSize).unwrap()
+    }.map { it.toUserBriefPage() }
 }

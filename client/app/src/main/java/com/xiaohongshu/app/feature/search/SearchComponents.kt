@@ -47,15 +47,24 @@ import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
 import com.xiaohongshu.app.core.ui.PlaceholderIconRes
+import com.xiaohongshu.app.core.ui.XhsAvatar
+import com.xiaohongshu.app.core.ui.XhsDivider
+import com.xiaohongshu.app.core.ui.XhsFollowPill
 import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsTextChip
 import com.xiaohongshu.app.core.ui.XhsVerticalDivider
+import com.xiaohongshu.app.domain.model.UserBrief
 
 /** B2 输入框占位文案（定稿原文）。 */
 private const val SearchPlaceholder = "搜索你感兴趣的内容"
 
-/** B3-1 结果筛选页签：目前仅驱动第二行高亮，尚未接筛选接口。 */
-internal enum class SearchResultFilter(val label: String) {
+/**
+ * B3-1 结果筛选页签（契约变更 #17/#18）：
+ * - [ALL]「全部」= 图文 + 视频笔记（不传 `type`）；
+ * - [VIDEO]「视频」= 仅视频笔记（`type=1`）；
+ * - [USER]「用户」= 独立用户列表流（`GET /api/user/search`），故其余两档走瀑布流。
+ */
+enum class SearchResultFilter(val label: String) {
     ALL("全部"),
     USER("用户"),
     VIDEO("视频"),
@@ -238,6 +247,88 @@ private fun UnderlineLabel(
                 )
             },
         )
+    }
+}
+
+/**
+ * B3-1「用户」页签的行（仿 `feature/message/NotificationComponents.kt` 的 G4 关注条目）：
+ * 头像 48 @16 → 昵称 15sp → 简介 13sp → 右侧关注钮；整行点击 → F2。
+ *
+ * 关注钮用公共的 [XhsFollowPill]（关注/已关注，与详情作者栏同一 D2 状态机）；
+ * 外层 ≥44 点击盒与 G4 的 `FollowBackPill` 同款结构（见 [FollowPillSlot]）。
+ * [showFollow] = false（命中自己）时不渲染关注钮。
+ */
+@Composable
+internal fun SearchUserRow(
+    user: UserBrief,
+    followed: Boolean,
+    showFollow: Boolean,
+    onRowClick: () -> Unit,
+    onFollowToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onRowClick),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.pagePadding, vertical = Dimens.s12),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            XhsAvatar(url = user.avatar, size = Dimens.avatarConversation)
+
+            Spacer(modifier = Modifier.width(Dimens.s12))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = user.nickname,
+                    style = XhsType.listTitle,
+                    color = XhsColor.Text1,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (user.bio.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(Dimens.s4))
+                    Text(
+                        text = user.bio,
+                        style = XhsType.meta,
+                        color = XhsColor.Text2,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+
+            if (showFollow) {
+                Spacer(modifier = Modifier.width(Dimens.s12))
+                FollowPillSlot(followed = followed, onToggle = onFollowToggle)
+            }
+        }
+
+        XhsDivider()
+    }
+}
+
+/**
+ * 关注钮外面套一层 ≥44 的点击盒并**消费**点击，避免点「关注」时误触整行跳转
+ * （与 G4 `FollowBackPill` 同款结构：`XhsFollowPill` 自身高 28，热区不足 44）。
+ */
+@Composable
+private fun FollowPillSlot(
+    followed: Boolean,
+    onToggle: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .defaultMinSize(minWidth = Dimens.minTouchTarget, minHeight = Dimens.minTouchTarget)
+            .clip(RoundedCornerShape(Dimens.radiusPill))
+            .clickable(onClick = onToggle),
+        contentAlignment = Alignment.Center,
+    ) {
+        XhsFollowPill(followed = followed, onToggle = onToggle)
     }
 }
 

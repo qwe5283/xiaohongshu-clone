@@ -8,7 +8,9 @@ import com.xiaohongshu.app.data.dto.NotificationType
 import com.xiaohongshu.app.data.dto.PageDto
 import com.xiaohongshu.app.data.dto.PostDto
 import com.xiaohongshu.app.data.dto.UnreadCountDto
+import com.xiaohongshu.app.data.dto.UserBriefDto
 import com.xiaohongshu.app.data.dto.UserDto
+import com.xiaohongshu.app.data.repo.PostRepository
 import com.xiaohongshu.app.domain.model.Comment
 import com.xiaohongshu.app.domain.model.Note
 import com.xiaohongshu.app.domain.model.NoteImage
@@ -52,7 +54,7 @@ fun PostDto.toDomain(): Note = Note(
     authorAvatar = authorAvatar,
     title = title,
     content = content,
-    isVideo = type == 1,
+    isVideo = type == PostRepository.POST_TYPE_VIDEO,
     coverUrl = coverImage,
     videoUrl = videoUrl,
     images = images
@@ -136,4 +138,20 @@ fun FollowUserDto.toDomain(): UserBrief = UserBrief(
     nickname = nickname,
     avatar = avatar,
     bio = bio,
+    followed = followed,
+)
+
+fun UserBriefDto.toDomain(): UserBrief = UserBrief(
+    id = id,
+    nickname = nickname,
+    avatar = avatar,
+    bio = bio,
+    followed = followed,
+)
+
+fun PageDto<UserBriefDto>.toUserBriefPage(): Paged<UserBrief> = Paged(
+    items = records.map { it.toDomain() },
+    page = current.toInt(),
+    total = total,
+    pages = pages,
 )

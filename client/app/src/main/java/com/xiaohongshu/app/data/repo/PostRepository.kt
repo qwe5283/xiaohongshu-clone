@@ -119,5 +119,8 @@ class PostRepository(
     companion object {
         /** 首页默认排序。 */
         const val DEFAULT_SORT = SortType.LATEST
+
+        /** 契约 §2.12 `PostVO.type`：1 = 视频。「视频」筛选传它，「全部/图文」缺省不传。 */
+        const val POST_TYPE_VIDEO = 1
     }
 }
