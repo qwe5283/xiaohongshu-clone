@@ -208,6 +208,8 @@ function userBriefVO(u, viewer) {
     nickname: u.nickname,
     avatar: u.avatar,
     bio: u.bio,
+    redId: u.redId,
+    followersCount: u.followersCount,
     followed: viewer ? db.followSet.has(`${viewer.id}:${u.id}`) : false,
   };
 }

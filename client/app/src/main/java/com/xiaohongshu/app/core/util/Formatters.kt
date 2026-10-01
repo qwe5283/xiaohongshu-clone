@@ -102,6 +102,13 @@ object Formatters {
     fun formatBadge(count: Long): String = if (count > 99) "99+" else count.toString()
 
     /**
+     * 统计数字：0 也显示（与 [formatCount] 的「0 → 空串」规则不同，统计行始终显示数字）。
+     * F1/F2 统计行、B3-1 用户行粉丝数共用。
+     */
+    fun formatStatCount(count: Long): String =
+        if (count <= 0) "0" else formatCount(count.coerceAtMost(Int.MAX_VALUE.toLong()).toInt())
+
+    /**
      * 视频时间轴 `mm:ss`（C2-5 seek 态的时间文本、进度条两侧）。
      */
     fun formatVideoTime(millis: Long): String {

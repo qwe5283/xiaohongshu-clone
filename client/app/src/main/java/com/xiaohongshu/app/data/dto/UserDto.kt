@@ -46,6 +46,8 @@ data class UserBriefDto(
     val nickname: String = "",
     val avatar: String = "",
     val bio: String = "",
+    val redId: String = "",
+    val followersCount: Long = 0,
     val followed: Boolean = false,
 )
 

@@ -27,7 +27,7 @@ interface UserApi {
     @GET("api/user/me")
     suspend fun me(): ApiEnvelope<UserDto>
 
-    /** B3-1「用户」页签（契约 §1.8）：昵称/小红书号模糊搜索，带 token 时填充 `followed`。 */
+    /** B3-1「用户」页签（契约 §1.8）：昵称/小红书号/登录账号模糊搜索，带 token 时填充 `followed`。 */
     @GET("api/user/search")
     suspend fun searchUsers(
         @Query("keyword") keyword: String,

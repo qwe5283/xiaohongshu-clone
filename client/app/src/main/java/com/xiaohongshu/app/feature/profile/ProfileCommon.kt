@@ -74,8 +74,7 @@ internal enum class ProfileTab(
 }
 
 /** 统计数字：0 也显示（与列表计数的「0 → 文字标签」规则不同，统计行始终显示数字）。 */
-internal fun statText(count: Long): String =
-    if (count <= 0) "0" else Formatters.formatCount(count.coerceAtMost(Int.MAX_VALUE.toLong()).toInt())
+internal fun statText(count: Long): String = Formatters.formatStatCount(count)
 
 /**
  * F1/F2 页签行（h 44、条目宽 64/86、icon 18；右侧 44×44 搜索框为**视觉占位**）。

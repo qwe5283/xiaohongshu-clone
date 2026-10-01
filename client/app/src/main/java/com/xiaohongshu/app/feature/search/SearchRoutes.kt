@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
@@ -218,8 +219,8 @@ private fun SearchResultScreen(
             modifier = Modifier.statusBarsPadding(),
         )
 
-        if (state.showsNotes) {
-            Box(modifier = Modifier.weight(1f).background(XhsColor.WaterfallBg)) {
+        Box(modifier = Modifier.weight(1f).background(XhsColor.WaterfallBg)) {
+            if (state.showsNotes) {
                 XhsListStateHost(
                     state = state.page,
                     onRetry = onRetry,
@@ -242,17 +243,18 @@ private fun SearchResultScreen(
                         footer = { XhsListFooter(state = state.page) },
                     )
                 }
+            } else {
+                SearchUserList(
+                    state = state.userPage,
+                    followedIds = state.followedUserIds,
+                    selfId = state.selfId,
+                    onUserClick = onUserClick,
+                    onFollowToggle = onFollowToggle,
+                    onRetry = onRetry,
+                    onLoadMore = onLoadMore,
+                )
             }
-        } else {
-            SearchUserList(
-                state = state.userPage,
-                followedIds = state.followedUserIds,
-                selfId = state.selfId,
-                onUserClick = onUserClick,
-                onFollowToggle = onFollowToggle,
-                onRetry = onRetry,
-                onLoadMore = onLoadMore,
-            )
+
         }
     }
 }
@@ -281,7 +283,7 @@ private fun SearchUserList(
         if (nearBottom) onLoadMore()
     }
 
-    Box(modifier = modifier.fillMaxSize().background(XhsColor.Bg)) {
+    Box(modifier = modifier.fillMaxSize()) {
         XhsListStateHost(
             state = state,
             onRetry = onRetry,
@@ -298,7 +300,7 @@ private fun SearchUserList(
                         onFollowToggle = { onFollowToggle(user) },
                     )
                 }
-                item { XhsListFooter(state = state) }
+                item { XhsListFooter(state = state, noMoreText = "无更多用户") }
             }
         }
     }

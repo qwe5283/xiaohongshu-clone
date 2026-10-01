@@ -146,6 +146,8 @@ fun UserBriefDto.toDomain(): UserBrief = UserBrief(
     nickname = nickname,
     avatar = avatar,
     bio = bio,
+    redId = redId,
+    followersCount = followersCount,
     followed = followed,
 )
 

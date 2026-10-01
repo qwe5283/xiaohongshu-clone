@@ -215,6 +215,12 @@ data class UserBrief(
     val nickname: String,
     val avatar: String,
     val bio: String,
+    /** 小红书号（契约 §1.1；空串时展示兜底见 [displayRedId]）。 */
+    val redId: String = "",
+    /** 粉丝数（B3-1 行副文）。 */
+    val followersCount: Long = 0,
     /** 当前用户是否已关注 ta（服务端值；展示态再经 `InteractionStore.followedOf` 合并本地乐观覆盖）。 */
     val followed: Boolean = false,
-)
+) {
+    val displayRedId: String get() = redId.ifBlank { id.toString() }
+}
