@@ -152,8 +152,6 @@ private fun MessageScreen(
             }
         }
 
-        XhsDivider()
-
         // ---- 会话列表：只有「点点」一个入口 ----
         ConversationRow(
             title = "点点",

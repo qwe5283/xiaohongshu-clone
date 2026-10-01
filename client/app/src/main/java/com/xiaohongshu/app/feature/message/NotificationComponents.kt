@@ -211,7 +211,6 @@ internal fun NotificationRow(
             }
         }
 
-        XhsDivider()
     }
 }
 
