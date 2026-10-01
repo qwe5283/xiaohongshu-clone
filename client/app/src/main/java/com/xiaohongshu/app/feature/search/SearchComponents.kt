@@ -5,10 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,9 +31,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -47,11 +54,20 @@ import com.xiaohongshu.app.core.ui.XhsVerticalDivider
 /** B2 输入框占位文案（定稿原文）。 */
 private const val SearchPlaceholder = "搜索你感兴趣的内容"
 
+/** B3-1 结果筛选页签：目前仅驱动第二行高亮，尚未接筛选接口。 */
+internal enum class SearchResultFilter(val label: String) {
+    ALL("全部"),
+    USER("用户"),
+    VIDEO("视频"),
+}
+
 /**
- * B2 / B3-1 共用的搜索行：高 52。
+ * B2 / B3-1 共用的搜索行，外层 Column 承载两行：
  *
- * 结构：返回 22 → 输入框 44（右侧竖分隔 + 相机入口）→「搜索」按钮 56×44。
- * 输入框回车（IME Search）与「搜索」按钮等价：二者都走 [onSubmit]。
+ * - 首行高 52：返回 22 → 输入框 44（右侧竖分隔 + 相机入口）→「搜索」按钮 56×44。
+ *   输入框回车（IME Search）与「搜索」按钮等价：二者都走 [onSubmit]。
+ * - 次行筛选页签（[ResultFilterRow]）：仅搜索结果页传入 [filter] 时显示，
+ *   B2 搜索页保持 [filter] = null，不占位。
  */
 @Composable
 internal fun SearchInputRow(
@@ -60,77 +76,168 @@ internal fun SearchInputRow(
     onSubmit: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    filter: SearchResultFilter? = null,
+    onFilterSelect: (SearchResultFilter) -> Unit = {},
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(SearchRowHeight)
+                .padding(end = Dimens.pagePadding),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.s8),
+        ) {
+            XhsIconButton(
+                iconRes = R.drawable.ic_chevron_left,
+                onClick = onBack,
+                iconSize = SearchBackIconSize,
+                contentDescription = "返回",
+            )
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(Dimens.inputSearch)
+                    .clip(RoundedCornerShape(Dimens.radiusSearchBar))
+                    .background(XhsColor.BgGray)
+                    .padding(start = Dimens.s12, end = Dimens.s8),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.s8),
+            ) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    if (query.isEmpty()) {
+                        Text(
+                            text = SearchPlaceholder,
+                            style = XhsType.searchEntry,
+                            color = XhsColor.Text3,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    BasicTextField(
+                        value = query,
+                        onValueChange = onQueryChange,
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        textStyle = XhsType.searchEntry.copy(color = XhsColor.Text1),
+                        cursorBrush = SolidColor(XhsColor.Text1),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { onSubmit() }),
+                    )
+                }
+
+
+                // 相机入口（原版「拍照搜索」）：本复刻未纳入接口契约，故仅作视觉入口；
+                Icon(
+                    painter = painterResource(R.drawable.ic_scan),
+                    contentDescription = "拍照搜索",
+                    tint = XhsColor.Text2,
+                    modifier = Modifier.size(Dimens.icon20),
+                )
+
+                XhsVerticalDivider(height = Dimens.s16)
+
+                Box(
+                    modifier = Modifier
+                        .width(SearchSubmitWidth)
+                        .height(Dimens.inputSearch)
+                        .clip(RoundedCornerShape(Dimens.radiusPill))
+                        .clickable(onClick = onSubmit),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(text = "搜索", style = XhsType.searchEntry, color = XhsColor.Text1)
+                }
+            }
+
+        }
+
+        if (filter != null) {
+            ResultFilterRow(
+                selected = filter,
+                onSelect = onFilterSelect,
+            )
+        }
+    }
+}
+
+/**
+ * B3-1 搜索结果页第二行筛选页签：行高/间距/标签样式仿首页频道栏（`feature/home` 的 ChannelBar）。
+ *
+ * 与频道栏的差异：选项固定为 [SearchResultFilter] 三项、永不溢出，故省去
+ * 频道栏的横滑 + 右端「渐隐 + 箭头」暗示；下划线取首页顶栏页签的约定——
+ * 选中项红色、未选中透明（频道栏恒为透明）。
+ */
+@Composable
+private fun ResultFilterRow(
+    selected: SearchResultFilter,
+    onSelect: (SearchResultFilter) -> Unit,
+    modifier: Modifier = Modifier.padding(bottom = Dimens.s4),
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(SearchRowHeight)
-            .padding(horizontal = Dimens.pagePadding),
+            .height(Dimens.channelBar)
+            .padding(start = Dimens.s8),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Dimens.s8),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.s12),
     ) {
-        XhsIconButton(
-            iconRes = R.drawable.ic_chevron_left,
-            onClick = onBack,
-            iconSize = SearchBackIconSize,
-            contentDescription = "返回",
-        )
-
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .height(Dimens.inputSearch)
-                .clip(RoundedCornerShape(Dimens.radiusSearchBar))
-                .background(XhsColor.BgGray)
-                .padding(start = Dimens.s12, end = Dimens.s8),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.s8),
-        ) {
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                if (query.isEmpty()) {
-                    Text(
-                        text = SearchPlaceholder,
-                        style = XhsType.searchEntry,
-                        color = XhsColor.Text3,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    textStyle = XhsType.searchEntry.copy(color = XhsColor.Text1),
-                    cursorBrush = SolidColor(XhsColor.Text1),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { onSubmit() }),
-                )
-            }
-
-
-            // 相机入口（原版「拍照搜索」）：本复刻未纳入接口契约，故仅作视觉入口；
-            Icon(
-                painter = painterResource(R.drawable.ic_scan),
-                contentDescription = "拍照搜索",
-                tint = XhsColor.Text2,
-                modifier = Modifier.size(Dimens.icon20),
+        SearchResultFilter.entries.forEach { option ->
+            val isSelected = option == selected
+            UnderlineLabel(
+                text = option.label,
+                textStyle = if (isSelected) XhsType.tabSelected else XhsType.tabUnselected,
+                contentColor = if (isSelected) XhsColor.Text1 else XhsColor.Text2,
+                underlineColor = if (isSelected) XhsColor.Red else Color.Transparent,
+                onClick = { onSelect(option) },
             )
-
-            XhsVerticalDivider(height = Dimens.s16)
-
-            Box(
-                modifier = Modifier
-                    .width(SearchSubmitWidth)
-                    .height(Dimens.inputSearch)
-                    .clip(RoundedCornerShape(Dimens.radiusPill))
-                    .clickable(onClick = onSubmit),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(text = "搜索", style = XhsType.searchEntry, color = XhsColor.Text1)
-            }
         }
+    }
+}
 
+/**
+ * 「文本 + 2dp 下划线」页签，与 `feature/home/HomeBars.kt` 的同名组件一致：
+ * 下划线用 drawBehind 画在文字自身尺寸之下（宽度取 [Dimens.topBarTabUnderlineWidth]，
+ * 无需另行测量），外层 Box 补足 ≥44dp 触控热区；想隐藏下划线时 [underlineColor] 传透明值。
+ *
+ * 重复实现的原因同 [StaggeredLoadMoreEffect]：home 侧为私有组件，跨 feature 复用受 §2 边界规则限制。
+ */
+@Composable
+private fun UnderlineLabel(
+    text: String,
+    textStyle: TextStyle,
+    contentColor: Color,
+    underlineColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .defaultMinSize(minWidth = Dimens.minTouchTarget, minHeight = Dimens.minTouchTarget)
+            .clip(RoundedCornerShape(Dimens.radiusPill))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = textStyle,
+            color = contentColor,
+            maxLines = 1,
+            modifier = Modifier.drawBehind {
+                val underlineHeight = TabUnderlineHeight.toPx()
+                val underlineWidth = Dimens.topBarTabUnderlineWidth.toPx()
+                drawRoundRect(
+                    color = underlineColor,
+                    topLeft = Offset(
+                        x = (size.width - underlineWidth) / 2f,
+                        y = size.height + TabUnderlineGap.toPx(),
+                    ),
+                    size = Size(width = underlineWidth, height = underlineHeight),
+                    cornerRadius = CornerRadius(underlineHeight / 2f), // 高度一半 = 完美体育场形
+                )
+            },
+        )
     }
 }
 
@@ -271,3 +378,7 @@ private val SearchBackIconSize = 22.dp
 private val SearchSubmitWidth = 42.dp
 private val HotKeywordRowHeight = 22.dp
 private val HotKeywordRowGap = Dimens.s16
+
+/** 筛选页签下划线：厚 2、绘于文字底边下方 4（与首页顶栏页签同款）。 */
+private val TabUnderlineHeight = 2.dp
+private val TabUnderlineGap = Dimens.s4

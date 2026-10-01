@@ -14,6 +14,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -120,6 +123,7 @@ private fun SearchScreen(
  * B3-1/B3-2 搜索结果页（推入式，**无底部 Tab**）。
  *
  * 搜索行保留关键词且可编辑：在本页再次提交 → **原地重查**（不新开页面）并把新关键词写入历史。
+ * 搜索行下方多一行筛选页签（全部/用户/视频，仿首页频道栏）：当前仅高亮切换，未接筛选接口。
  * 结果瀑布流与首页同款（无限滚动、四态齐全），空态文案见 §4.7。
  */
 @Composable
@@ -170,6 +174,9 @@ private fun SearchResultScreen(
 ) {
     val grid = rememberLazyStaggeredGridState()
 
+    // 筛选页签目前仅本页 UI 状态（未接筛选接口），用 rememberSaveable 防配置变更丢失
+    var filter by rememberSaveable { mutableStateOf(SearchResultFilter.ALL) }
+
     // 原地重查后回到列表顶部
     LaunchedEffect(state.keyword) {
         if (state.keyword.isNotBlank()) grid.scrollToItem(0)
@@ -192,6 +199,8 @@ private fun SearchResultScreen(
             onQueryChange = onQueryChange,
             onSubmit = onSubmit,
             onBack = onBack,
+            filter = filter,
+            onFilterSelect = { filter = it },
             modifier = Modifier.statusBarsPadding(),
         )
 
