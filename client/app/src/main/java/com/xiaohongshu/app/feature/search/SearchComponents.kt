@@ -253,8 +253,8 @@ private fun UnderlineLabel(
  * B3-1「用户」页签的行（仿 `feature/message/NotificationComponents.kt` 的 G4 关注条目）：
  * 头像 48 @16 → 昵称 15sp → 粉丝数 13sp → 小红书号 13sp → 右侧关注钮；整行点击 → F2。
  *
- * 关注钮用公共的 [XhsFollowPill]（关注/已关注，与详情作者栏同一 D2 状态机）；
- * 外层 ≥44 点击盒与 G4 的 `FollowBackPill` 同款结构（见 [FollowPillSlot]）。
+ * 关注钮用公共的 [XhsFollowPill]（同一 D2 状态机；样式取 C1-1 图文详情顶栏的
+ * 描边胶囊：红字 + 透明底 + 2px 描边，见 [FollowPillSlot]）；
  * [showFollow] = false（命中自己）时不渲染关注钮。
  */
 @Composable
@@ -290,14 +290,16 @@ internal fun SearchUserRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "粉丝 ${Formatters.formatStatCount(user.followersCount)}",
-                    style = XhsType.cardFooter,
-                    color = XhsColor.Text2,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (user.followersCount > 0) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "粉丝 ${Formatters.formatStatCount(user.followersCount)}",
+                        style = XhsType.cardFooter,
+                        color = XhsColor.Text2,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "小红书号：${user.displayRedId}",
@@ -333,7 +335,15 @@ private fun FollowPillSlot(
             .clickable(onClick = onToggle),
         contentAlignment = Alignment.Center,
     ) {
-        XhsFollowPill(followed = followed, onToggle = onToggle)
+        // 描边胶囊样式与 C1-1 图文详情顶栏关注钮完全同款（红字 + 透明底 + 2px 描边）
+        XhsFollowPill(
+            followed = followed,
+            onToggle = onToggle,
+            followFg = XhsColor.Red,
+            followBg = Color.Transparent,
+            followedBg = Color.Transparent,
+            borderWidthPx = 2f,
+        )
     }
 }
 
