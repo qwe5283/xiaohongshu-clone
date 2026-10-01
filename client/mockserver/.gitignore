@@ -1,4 +1,5 @@
 # mock server runtime artefacts
+assets/
 uploads/
 .verify/
 *.log
