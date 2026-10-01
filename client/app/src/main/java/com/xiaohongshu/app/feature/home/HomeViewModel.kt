@@ -184,7 +184,7 @@ class HomeViewModel(
      */
     fun toggleLike(displayed: Note) {
         val raw = rawNoteOf(displayed.id) ?: displayed
-        viewModelScope.launch { interactions.toggleLike(raw) }
+        interactions.toggleLike(raw)
     }
 
     /** 取未合并的服务端原值。合并只用于渲染，绝不回喂给 toggle。 */

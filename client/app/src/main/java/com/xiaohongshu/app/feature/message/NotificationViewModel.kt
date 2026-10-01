@@ -143,9 +143,7 @@ class NotificationListViewModel(
      * 与详情页/他人主页读写同一份覆盖，跨页一致。
      */
     fun toggleFollowBack(item: NotificationItem) {
-        viewModelScope.launch {
-            interactions.toggleFollow(item.senderId, serverValue = false)
-        }
+        interactions.toggleFollow(item.senderId, serverValue = false)
         markRead(item)
     }
 
@@ -159,7 +157,7 @@ class NotificationListViewModel(
      */
     fun toggleCommentLike(item: NotificationItem) {
         val raw = rawCommentOf(item) ?: return
-        viewModelScope.launch { interactions.toggleCommentLike(raw) }
+        interactions.toggleCommentLike(raw)
     }
 
     // ------------------------------------------------------------------ G3 行内回复

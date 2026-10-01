@@ -240,7 +240,7 @@ internal class CommentsController(
     /** 一级评论 ♥（D1）。[commentId] 一定是服务端快照里的 id。 */
     fun toggleCommentLike(commentId: Long) {
         val raw = rawComment(commentId) ?: return
-        scope.launch { store.toggleCommentLike(raw) }
+        store.toggleCommentLike(raw)
     }
 
     /** D3 一级评论：插入列表顶部。 */
@@ -380,22 +380,19 @@ internal abstract class DetailViewModel(
 
     fun toggleLike() {
         val raw = load.value.raw ?: return
-        viewModelScope.launch { interactionStore.toggleLike(raw) }
+        interactionStore.toggleLike(raw)
     }
 
     fun toggleCollect() {
         val raw = load.value.raw ?: return
-        viewModelScope.launch {
-            interactionStore.toggleCollect(raw)
-            // 收藏集合变化 → 通知 F1「收藏」Tab 刷新
-            interactionStore.invalidateCollections()
-        }
+        // 收藏集合变化的通知（F1「收藏」Tab 刷新）由 store 在成功分支内发出
+        interactionStore.toggleCollect(raw)
     }
 
     fun toggleFollow() {
         val raw = load.value.raw ?: return
         if (raw.authorId == sessionManager.currentUserId) return
-        viewModelScope.launch { interactionStore.toggleFollow(raw.authorId, load.value.serverFollowed) }
+        interactionStore.toggleFollow(raw.authorId, load.value.serverFollowed)
     }
 
     fun toggleCommentLike(commentId: Long) = comments.toggleCommentLike(commentId)

@@ -197,7 +197,7 @@ internal class UserProfileViewModel(
 
     /** D2 关注：同一状态机（`InteractionStore.toggleFollow`），基准用**服务端值**。 */
     fun toggleFollow() {
-        viewModelScope.launch { interactions.toggleFollow(userId, _followed.value) }
+        interactions.toggleFollow(userId, _followed.value)
     }
 
     /** D1 点赞：入参为渲染值，先反查 raw 再交给状态机（§4.3）。 */
@@ -206,7 +206,7 @@ internal class UserProfileViewModel(
             ?: collected.state.value.items.firstOrNull { it.id == id }
             ?: liked.state.value.items.firstOrNull { it.id == id }
             ?: return
-        viewModelScope.launch { interactions.toggleLike(raw) }
+        interactions.toggleLike(raw)
     }
 
     private companion object {

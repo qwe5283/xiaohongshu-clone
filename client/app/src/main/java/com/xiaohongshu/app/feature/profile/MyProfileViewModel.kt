@@ -174,7 +174,7 @@ internal class MyProfileViewModel(
      */
     fun toggleLike(id: Long) {
         val raw = rawNote(id) ?: return
-        viewModelScope.launch { interactions.toggleLike(raw) }
+        interactions.toggleLike(raw)
     }
 
     private fun rawNote(id: Long): Note? = notes.state.value.items.firstOrNull { it.id == id }
