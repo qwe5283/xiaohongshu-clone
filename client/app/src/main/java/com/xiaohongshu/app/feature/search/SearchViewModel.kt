@@ -160,7 +160,8 @@ class SearchResultViewModel(
         val tabs = combine(allNotes.state, videoNotes.state, userRows.state) { all, video, userState ->
             Triple(all, video, userState)
         }
-        combine(meta, tabs, interactions.followOverrides, session.state) { (keyword, query, filter), (all, video, userPage), follows, sessionState ->
+        // noteOverrides 只作触发器订阅：点赞覆盖变化时重算 mergeAll，否则卡片红心不刷新（同 HomeViewModel）
+        combine(meta, tabs, interactions.noteOverrides, interactions.followOverrides, session.state) { (keyword, query, filter), (all, video, userPage), _, follows, sessionState ->
             val notesPage = if (filter == SearchResultFilter.VIDEO) video else all
             SearchResultUiState(
                 keyword = keyword,
@@ -229,17 +230,27 @@ class SearchResultViewModel(
         viewModelScope.launch { paged(_filter.value).loadMore() }
     }
 
-    /** D1 点赞（乐观更新 + 失败回滚由 InteractionStore 负责）。 */
+    /**
+     * D1 点赞（乐观更新 + 失败回滚由 InteractionStore 负责）。
+     * [note] 是 UI 传回的合并值，须先换回服务端原值再 toggle（§4.3，同 HomeViewModel）：
+     * `InteractionStore.toggleLike` 用入参作计数/状态基准，传合并值会导致计数永久偏移。
+     */
     fun toggleLike(note: Note) {
-        viewModelScope.launch { interactions.toggleLike(note) }
+        val raw = rawNoteOf(note.id) ?: note
+        interactions.toggleLike(raw)
     }
+
+    /** 取未合并的服务端原值（当前两个瀑布流页签）。合并只用于渲染，绝不回喂给 toggle。 */
+    private fun rawNoteOf(id: Long): Note? =
+        allNotes.state.value.items.firstOrNull { it.id == id }
+            ?: videoNotes.state.value.items.firstOrNull { it.id == id }
 
     /**
      * 「用户」页签的关注/取关（D2 同一状态机）。
      * 服务端基准值传该行的 `followed`（列表项服务端原值），展示态由 [SearchResultUiState.followedUserIds] 合并。
      */
     fun toggleFollow(user: UserBrief) {
-        viewModelScope.launch { interactions.toggleFollow(user.id, user.followed) }
+        interactions.toggleFollow(user.id, user.followed)
     }
 
     // ------------------------------------------------------------------ 内部
