@@ -121,7 +121,7 @@ private fun AiScreen(
                 },
                 actions = {
                     XhsIconButton(
-                        iconRes = R.drawable.ic_more,
+                        iconRes = R.drawable.ic_menu,
                         onClick = { showNewChatSheet = true },
                         contentDescription = "更多",
                     )

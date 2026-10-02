@@ -138,7 +138,7 @@ internal fun SearchInputRow(
 
                 // 相机入口（原版「拍照搜索」）：本复刻未纳入接口契约，故仅作视觉入口；
                 Icon(
-                    painter = painterResource(R.drawable.ic_scan),
+                    painter = painterResource(R.drawable.ic_camera),
                     contentDescription = "拍照搜索",
                     tint = XhsColor.Text2,
                     modifier = Modifier.size(Dimens.icon20),
@@ -375,7 +375,7 @@ internal fun SearchHistorySection(
             )
             // 🗑 清空历史
             XhsIconButton(
-                iconRes = R.drawable.ic_broom,
+                iconRes = R.drawable.ic_delete,
                 onClick = onClear,
                 iconSize = Dimens.icon20,
                 tint = XhsColor.Text2,

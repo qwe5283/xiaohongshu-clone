@@ -94,7 +94,7 @@ private fun MessageScreen(
             title = "消息",
             actions = {
                 XhsIconButton(
-                    iconRes = PlaceholderIconRes,
+                    iconRes = R.drawable.ic_plus_circle,
                     onClick = onCreateClick,
                     contentDescription = "创建",
                 )
