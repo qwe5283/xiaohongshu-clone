@@ -174,6 +174,8 @@ cd client
 
 **已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_share / ic_scan / ic_edit / ic_broom / ic_play / ic_menu / ic_user / ic_user_circle`。
 
+> 2026-10-03 更新：新增 8 个 iconfont 线形图标（24 视口 / 1.8dp / 占位 18~20dp，源 SVG 为 `docs/assets/` 下中文名文件）：`ic_delete`（垃圾桶）、`ic_plus_circle`（圆环＋）、`ic_discover`（指南针）、`ic_image`（图片）、`ic_camera`（相机）、`ic_emoji`（笑脸）、`ic_settings`（齿轮），以及**换代的 `ic_more`**——旧三点版与 `ic_menu` 语义重复已废弃，现为「圆环+三点」（AiRoute 一处引用自动生效）。上表中 AI 面板的「表情 / ＋」、搜索的「拍照相机 / 历史 🗑」、设置的「设置行图标」、评论面板的「emoji」等位置可直接接线。
+
 > 2026-09-15 更新：底 Tab 改为**纯文字无图标**（对齐原版），故 `ic_home`、`ic_notify` 已无用例（文件保留但不再引用）；`ic_assistant` 仍用于首页顶栏点点气泡与 H1 会话页。
 >
 > 2026-09-17 更新（第一批）：新增 `ic_share`、`ic_scan`、`ic_edit`、`ic_broom`、`ic_play` 五个素材并已接线（分享 3 处 / 扫一扫 / 编辑主页 pill / 一键已读 / 视频角标与发布页缩略图），上述清单里对应条目已移除。`ic_heart` / `ic_heart_filled` / `ic_star_filled` / `ic_assistant` 同时修掉了线宽与配对跳动问题。
