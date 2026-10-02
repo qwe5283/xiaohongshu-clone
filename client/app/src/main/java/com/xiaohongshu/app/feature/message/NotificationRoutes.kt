@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.XhsColor
@@ -134,6 +135,7 @@ private fun NotificationListScreen(
                     onRetry = onRetry,
                     // G5-1 空态文案（§4.7 定稿）
                     emptyText = "暂无消息",
+                    emptyPainter = painterResource(R.drawable.ic_no_msg),
                 ) {
                     LazyColumn(
                         state = listState,

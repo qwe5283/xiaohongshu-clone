@@ -85,6 +85,9 @@ object Dimens {
     /** chip·胶囊·按钮·徽标 pill（用 50% 或大值兜底）。 */
     val radiusPill = 999.dp
 
+    /** 空态插画图像。 */
+    val illustrationSize = 120.dp
+
     // ---- 头像档 18 / 24 / 36 / 48 / 108 ----
     val avatarCard = 18.dp   // 卡片脚栏
     val avatarComment = 36.dp

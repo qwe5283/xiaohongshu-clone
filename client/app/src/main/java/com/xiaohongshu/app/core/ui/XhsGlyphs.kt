@@ -87,23 +87,3 @@ fun XhsCheckCircle(
         }
     }
 }
-
-/** 空态插画位：一个虚线边框 + 占位素材，明确表达「待替换矢量插画」。 */
-@Composable
-fun XhsIllustrationSlot(
-    modifier: Modifier = Modifier,
-    width: Dp = 120.dp,
-    height: Dp = 88.dp,
-) {
-    androidx.compose.foundation.layout.Box(
-        modifier = modifier.size(width, height),
-        contentAlignment = androidx.compose.ui.Alignment.Center,
-    ) {
-        androidx.compose.material3.Icon(
-            painter = androidx.compose.ui.res.painterResource(PlaceholderIllustrationRes),
-            contentDescription = null,
-            tint = XhsColor.Text3,
-            modifier = Modifier.size(width * 0.66f, height * 0.66f),
-        )
-    }
-}

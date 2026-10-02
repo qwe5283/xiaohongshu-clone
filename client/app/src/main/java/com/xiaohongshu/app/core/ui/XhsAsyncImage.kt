@@ -40,9 +40,6 @@ val LocalImageLoader = staticCompositionLocalOf<ImageLoader> {
 /** 全项目统一的缺失素材占位（图标与插画共用同一个素材）。 */
 val PlaceholderIconRes = R.drawable.ic_placeholder
 
-/** 空态插画占位。 */
-val PlaceholderIllustrationRes = R.drawable.ic_placeholder_illus
-
 /**
  * 异步图片。
  *

@@ -1,5 +1,6 @@
 package com.xiaohongshu.app.core.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,9 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
@@ -95,18 +99,23 @@ fun XhsInlineLoading(
 fun XhsEmptyState(
     text: String,
     modifier: Modifier = Modifier,
+    painter: Painter = painterResource(R.drawable.ic_no_data),
     illustration: Boolean = true,
     action: (@Composable () -> Unit)? = null,
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(horizontal = Dimens.pagePadding),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         if (illustration) {
-            XhsIllustrationSlot()
+            Image(
+                painter = painter,
+                contentDescription = text,
+                modifier = Modifier.size(Dimens.illustrationSize),
+            )
             Spacer(modifier = Modifier.height(Dimens.s12))
         }
         Text(
@@ -119,6 +128,7 @@ fun XhsEmptyState(
             Spacer(modifier = Modifier.height(Dimens.s16))
             action()
         }
+        Spacer(modifier.height(64.dp))
     }
 }
 
@@ -133,7 +143,7 @@ fun XhsErrorState(
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(horizontal = Dimens.pagePadding),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -214,6 +224,7 @@ fun XhsListStateHost(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     emptyText: String = "还没有笔记，快来发布第一条吧～",
+    emptyPainter: Painter = painterResource(R.drawable.ic_no_data),
     errorText: String = "加载失败，请稍后重试",
     showEmptyIllustration: Boolean = true,
     content: @Composable () -> Unit,
@@ -230,6 +241,7 @@ fun XhsListStateHost(
             // B4-3 空数据
             state.isEmpty -> XhsEmptyState(
                 text = emptyText,
+                painter = emptyPainter,
                 illustration = showEmptyIllustration,
             )
 
