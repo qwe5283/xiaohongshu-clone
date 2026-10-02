@@ -30,16 +30,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.xiaohongshu.app.R
@@ -51,13 +48,13 @@ import com.xiaohongshu.app.core.ui.XhsAsyncImage
 import com.xiaohongshu.app.core.ui.XhsAvatar
 import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.ui.XhsEmptyState
-import com.xiaohongshu.app.core.ui.XhsErrorState
 import com.xiaohongshu.app.core.ui.XhsFollowPill
 import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsInlineLoading
 import com.xiaohongshu.app.core.ui.XhsInteractionAction
 import com.xiaohongshu.app.core.ui.XhsListFooter
 import com.xiaohongshu.app.core.ui.XhsOverlayInputBar
+import com.xiaohongshu.app.core.ui.XhsRetryPill
 import com.xiaohongshu.app.core.ui.XhsSkeletonBar
 import com.xiaohongshu.app.core.ui.XhsSpinner
 import com.xiaohongshu.app.core.util.Formatters
@@ -134,10 +131,12 @@ internal fun NoteDetailScreen(
             // C1-2 加载中
             state.loading -> NoteLoadingContent()
 
-            // C1-3 失败：白底灰字 + 重试（底栏不渲染）
-            state.note == null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                XhsErrorState(message = NoteTexts.LoadFailed, onRetry = onRetry)
-            }
+            // C1-3 失败：插画 + 文案 + 重试（底栏不渲染）
+            state.note == null -> XhsEmptyState(
+                text = NoteTexts.LoadFailed,
+                painter = painterResource(R.drawable.ic_no_network),
+                action = { XhsRetryPill(onRetry = onRetry) },
+            )
 
             else -> {
                 val note = state.note
@@ -184,10 +183,14 @@ internal fun NoteDetailScreen(
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .fillParentMaxHeight(0.24f),
+                                            .fillParentMaxHeight(0.4f),
                                         contentAlignment = Alignment.Center,
                                     ) {
-                                        XhsErrorState(message = NoteTexts.ListFailed, onRetry = onRetryComments)
+                                        XhsEmptyState(
+                                            text = NoteTexts.ListFailed,
+                                            painter = painterResource(R.drawable.ic_no_network),
+                                            action = { XhsRetryPill(onRetry = onRetryComments) },
+                                        )
                                     }
                                 }
 

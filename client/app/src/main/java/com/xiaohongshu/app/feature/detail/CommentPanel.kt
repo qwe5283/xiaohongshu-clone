@@ -39,10 +39,10 @@ import com.xiaohongshu.app.core.list.rememberNearBottom
 import com.xiaohongshu.app.core.ui.XhsAvatar
 import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.ui.XhsEmptyState
-import com.xiaohongshu.app.core.ui.XhsErrorState
 import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsListFooter
 import com.xiaohongshu.app.core.ui.XhsPageLoading
+import com.xiaohongshu.app.core.ui.XhsRetryPill
 import com.xiaohongshu.app.domain.model.Comment
 import com.xiaohongshu.app.domain.model.ReplyGroupState
 
@@ -154,8 +154,11 @@ internal fun CommentPanel(
             contentAlignment = Alignment.Center,
         ) {
             when {
-                state.comments.error != null && !state.comments.hasContent ->
-                    XhsErrorState(message = PanelTexts.ListFailed, onRetry = onRetry)
+                state.comments.error != null && !state.comments.hasContent -> XhsEmptyState(
+                    text = PanelTexts.ListFailed,
+                    painter = painterResource(R.drawable.ic_no_network),
+                    action = { XhsRetryPill(onRetry = onRetry) },
+                )
 
                 state.comments.loading && !state.comments.hasContent -> XhsPageLoading()
 

@@ -92,8 +92,9 @@ fun XhsInlineLoading(
 }
 
 /**
- * 空数据（B4-3 / B5 / B3-2 / C1-4 / C3-2 / G5-1）。
- * [illustration] = true 时展示占位插画（矢量插画待替换）。
+ * 状态页：空数据（B4-3 / B5 / B3-2 / C1-4 / C3-2 / G5-1）与加载失败（B4-2 / C1-3 / G5-3）共用。
+ * 失败态传失败文案与 [painter]（无网络插画），[action] 放 [XhsRetryPill]。
+ * [illustration] = false 时仅文案（如底部小空态）。
  */
 @Composable
 fun XhsEmptyState(
@@ -132,43 +133,26 @@ fun XhsEmptyState(
     }
 }
 
-/** 加载失败 + 重试（B4-2 / C1-3 / G5-3）。 */
+/** 状态页重试胶囊（B4-2 / C1-3 / G5-3）：黑底白字小 pill，放在 [XhsEmptyState] 的 action 槽。 */
 @Composable
-fun XhsErrorState(
-    message: String,
+fun XhsRetryPill(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    buttonText: String = "重试",
-    messageColor: Color = XhsColor.Text2,
+    text: String = "重试",
 ) {
-    Column(
+    Box(
         modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = Dimens.pagePadding),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+            .clip(RoundedCornerShape(Dimens.radiusPill))
+            .background(XhsColor.Text1)
+            .clickable(onClick = onRetry)
+            .padding(horizontal = Dimens.s24, vertical = Dimens.s8),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = message,
-            style = XhsType.meta,
-            color = messageColor,
-            textAlign = TextAlign.Center,
+            text = text,
+            style = XhsType.buttonLabelSmall,
+            color = Color.White,
         )
-        Spacer(modifier = Modifier.height(Dimens.s12))
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(Dimens.radiusPill))
-                .background(XhsColor.Text1)
-                .clickable(onClick = onRetry)
-                .padding(horizontal = Dimens.s24, vertical = Dimens.s8),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = buttonText,
-                style = XhsType.buttonLabelSmall,
-                color = Color.White,
-            )
-        }
     }
 }
 
@@ -226,6 +210,7 @@ fun XhsListStateHost(
     emptyText: String = "还没有笔记，快来发布第一条吧～",
     emptyPainter: Painter = painterResource(R.drawable.ic_no_data),
     errorText: String = "加载失败，请稍后重试",
+    errorPainter: Painter = painterResource(R.drawable.ic_no_network),
     showEmptyIllustration: Boolean = true,
     content: @Composable () -> Unit,
 ) {
@@ -235,8 +220,11 @@ fun XhsListStateHost(
             state.loading && !state.hasContent -> XhsPageLoading()
 
             // B4-2 首次失败（无内容可保留时整页替换）
-            state.error != null && !state.hasContent ->
-                XhsErrorState(message = errorText, onRetry = onRetry)
+            state.error != null && !state.hasContent -> XhsEmptyState(
+                text = errorText,
+                painter = errorPainter,
+                action = { XhsRetryPill(onRetry = onRetry) },
+            )
 
             // B4-3 空数据
             state.isEmpty -> XhsEmptyState(
