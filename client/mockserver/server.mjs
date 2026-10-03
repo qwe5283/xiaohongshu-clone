@@ -1195,9 +1195,10 @@ R('GET', '/api/notification/list', { auth: true }, (ctx) => {
 });
 
 // read-all before read/:id — both are 3 segments
+// ?category= 1/2/3 限定分类（契约变更 #21，与 /list 同一取值口径）；未传或非法值 = 全部
 R('PUT', '/api/notification/read-all', { auth: true }, (ctx) => {
   const category = intParam(ctx.query.get('category'));
-  const allowed = category !== null ? CATEGORY_TYPES[category] : null;
+  const allowed = category !== null ? CATEGORY_TYPES[category] || null : null;
   let n = 0;
   for (const item of db.notifications) {
     if (item.receiverId !== ctx.viewer.id || item.read) continue;

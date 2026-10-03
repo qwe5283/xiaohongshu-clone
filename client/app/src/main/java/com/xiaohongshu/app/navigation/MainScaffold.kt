@@ -16,6 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xiaohongshu.app.core.ui.XhsBottomTabBar
 import com.xiaohongshu.app.di.LocalAppContainer
 import com.xiaohongshu.app.feature.home.HomeRoute
+import com.xiaohongshu.app.feature.message.MarkAllReadSheet
 import com.xiaohongshu.app.feature.message.MessageRoute
 import com.xiaohongshu.app.feature.profile.MyProfileRoute
 import com.xiaohongshu.app.feature.profile.ProfileDrawer
@@ -49,6 +50,7 @@ fun MainScaffold(navigator: AppNavigator) {
     var showPublishSheet by remember { mutableStateOf(false) }
     var drawerOpen by remember { mutableStateOf(false) }
     var logoutVisible by remember { mutableStateOf(false) }
+    var markAllReadVisible by remember { mutableStateOf(false) }
 
     // F6 退出登录 → 回游客首页（A1，带登录悬浮条）。
     // 若停留在「我」Tab，退出后会看到 F1 的游客兜底页而不是首页，与预期落点不符。
@@ -58,6 +60,7 @@ fun MainScaffold(navigator: AppNavigator) {
             showPublishSheet = false
             drawerOpen = false
             logoutVisible = false
+            markAllReadVisible = false
         }
     }
 
@@ -65,7 +68,10 @@ fun MainScaffold(navigator: AppNavigator) {
         Box(modifier = Modifier.weight(1f)) {
             when (selectedTab) {
                 Tabs.HOME -> HomeRoute(navigator)
-                Tabs.MESSAGE -> MessageRoute(navigator)
+                Tabs.MESSAGE -> MessageRoute(
+                    navigator = navigator,
+                    onMarkAllReadRequest = { markAllReadVisible = true },
+                )
                 else -> MyProfileRoute(
                     navigator = navigator,
                     onOpenDrawer = { drawerOpen = true },
@@ -101,6 +107,12 @@ fun MainScaffold(navigator: AppNavigator) {
         visible = showPublishSheet,
         onDismiss = { showPublishSheet = false },
         navigator = navigator,
+    )
+
+    // G6 一键已读确认（G1 顶栏入口）：与发布/退出弹层同款挂在 Tab 栏之上
+    MarkAllReadSheet(
+        visible = markAllReadVisible,
+        onDismiss = { markAllReadVisible = false },
     )
 
     // F4 抽屉与 F6 退出确认挂在 Tab 栏之上（页面内挂载遮罩盖不住底 Tab）。

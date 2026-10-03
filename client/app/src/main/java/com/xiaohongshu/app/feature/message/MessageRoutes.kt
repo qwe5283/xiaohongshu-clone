@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,7 +38,10 @@ import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.Waterfall
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
+import com.xiaohongshu.app.core.net.onFailure
+import com.xiaohongshu.app.core.net.userMessage
 import com.xiaohongshu.app.core.ui.PlaceholderIconRes
+import com.xiaohongshu.app.core.ui.XhsConfirmSheet
 import com.xiaohongshu.app.core.ui.XhsCountBadge
 import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.ui.XhsDotBadge
@@ -48,6 +52,7 @@ import com.xiaohongshu.app.data.dto.NotificationCategory
 import com.xiaohongshu.app.di.LocalAppContainer
 import com.xiaohongshu.app.domain.model.UnreadCounts
 import com.xiaohongshu.app.navigation.AppNavigator
+import kotlinx.coroutines.launch
 
 /**
  * G1 消息页（Tab 根页面）。
@@ -57,9 +62,15 @@ import com.xiaohongshu.app.navigation.AppNavigator
  * [com.xiaohongshu.app.core.notify.UnreadCountCenter.counts]（15s 轮询已在 core 里跑）。
  *
  * 游客拦截：`MainScaffold` 已在点「消息」Tab 时推入登录页，本页只在登录态可达。
+ *
+ * G6 一键已读的入口在本页顶栏（🧹，`ic_plus_circle` 左侧）：作用范围为**全部三分类**
+ * （子页顶栏不再各自带入口；子页改为 **pop 时自动全标已读**，见 [NotificationListRoute]）。
  */
 @Composable
-fun MessageRoute(navigator: AppNavigator) {
+fun MessageRoute(
+    navigator: AppNavigator,
+    onMarkAllReadRequest: () -> Unit,
+) {
     val container = LocalAppContainer.current
     val unread by container.unreadCountCenter.counts.collectAsStateWithLifecycle()
 
@@ -70,6 +81,40 @@ fun MessageRoute(navigator: AppNavigator) {
         // G1 顶栏右上「创建」没有定义任何行为（点按目标 ≥44 由 XhsIconButton 保证），
         // 故此处为**有意的空实现**，仅渲染 ic_placeholder 占位素材。
         onCreateClick = {},
+        // G6 一键已读（入口从 G2/G3/G4 子页移入 G1）：弹层由宿主 MainScaffold 挂载
+        // （页面内挂载遮罩盖不住底 Tab，见 MarkAllReadSheet）
+        onMarkAllReadClick = onMarkAllReadRequest,
+    )
+}
+
+/**
+ * G6 一键已读确认弹层（全部三分类）。
+ *
+ * **挂载约定**：必须由 MainScaffold 挂在底 Tab 栏之后（同 `PublishEntrySheet` / `ProfileLogoutSheet`），
+ * 挂在 G1 页面内遮罩盖不住底部导航。
+ */
+@Composable
+fun MarkAllReadSheet(
+    visible: Boolean,
+    onDismiss: () -> Unit,
+) {
+    val container = LocalAppContainer.current
+    val scope = rememberCoroutineScope()
+
+    XhsConfirmSheet(
+        visible = visible,
+        onConfirm = {
+            // 本地立即全清 + 服务端全量已读；失败由下一次 15s 轮询校正（G5-2 同款异常恢复）
+            container.unreadCountCenter.clearAll()
+            scope.launch {
+                container.notificationRepository.markAllRead(null)
+                    .onFailure { container.toastController.show(it.userMessage()) }
+            }
+        },
+        onDismiss = onDismiss,
+        message = "确认将全部消息标记为已读吗？",
+        confirmText = "一键已读",
+        cancelText = "取消",
     )
 }
 
@@ -80,19 +125,27 @@ private fun MessageScreen(
     onEntryClick: (NotificationCategory) -> Unit,
     onConversationClick: () -> Unit,
     onCreateClick: () -> Unit,
+    onMarkAllReadClick: () -> Unit,
 ) {
     // 三入口卡宽 =(W−32)/3：三等分、无间隙、仅 16 页边距（禁止写死像素宽）
     val screenWidthDp = LocalConfiguration.current.screenWidthDp.toFloat()
     val entryWidth = Waterfall.entryCardWidth(screenWidthDp).dp
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(XhsColor.Bg),
     ) {
+        Column(modifier = Modifier.fillMaxSize()) {
         XhsTopBar(
             title = "消息",
             actions = {
+                // 🧹 一键已读（G6，全部三分类；确认弹层由宿主挂载）
+                XhsIconButton(
+                    iconRes = R.drawable.ic_broom,
+                    onClick = onMarkAllReadClick,
+                    contentDescription = "一键已读",
+                )
                 XhsIconButton(
                     iconRes = R.drawable.ic_plus_circle,
                     onClick = onCreateClick,
@@ -161,6 +214,7 @@ private fun MessageScreen(
             pinned = true,
             onClick = onConversationClick,
         )
+        }
     }
 }
 

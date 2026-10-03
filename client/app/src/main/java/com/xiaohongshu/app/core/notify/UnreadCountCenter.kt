@@ -107,6 +107,14 @@ class UnreadCountCenter(
         }
     }
 
+    /**
+     * G1 一键已读（入口移入 G1 后作用范围为**全部三分类**）：本地立即全清，
+     * 服务端结果以下次轮询为准。
+     */
+    fun clearAll() {
+        _counts.value = UnreadCounts.Empty
+    }
+
     companion object {
         /** 轮询间隔（「通知」规范：每 15 秒）。 */
         const val POLL_INTERVAL_MS = 15_000L

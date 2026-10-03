@@ -17,12 +17,14 @@ import com.xiaohongshu.app.data.repo.CommentRepository
 import com.xiaohongshu.app.data.repo.NotificationRepository
 import com.xiaohongshu.app.domain.model.Comment
 import com.xiaohongshu.app.domain.model.NotificationItem
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * G3「回复」的遮罩输入状态（C1-5 `XhsOverlayInputBar` 同款；同一时刻只弹一个）。
@@ -126,13 +128,21 @@ class NotificationListViewModel(
         markRead(item)
     }
 
-    /** G6 一键已读：当前列表全部置已读 + 本分类角标清零。 */
+    /**
+     * 一键已读：当前列表全部置已读 + 本分类角标清零。
+     *
+     * 被「子页 pop 时自动全标已读」复用——调用后页面随即销毁，请求必须挂
+     * [NonCancellable] 才不会被 viewModelScope 的取消波及。列表已全读时直接跳过（省请求）。
+     */
     fun markAllRead() {
+        if (list.state.value.items.none { !it.read }) return
         list.mutate { items -> items.map { if (it.read) it else it.copy(read = true) } }
         unreadCounts.clearCategory(category.value)
         viewModelScope.launch {
-            repository.markAllRead(category).onFailure { toasts.show(it.userMessage()) }
-            // 失败时本地已乐观清零，角标由下一次 15s 轮询校正（G5-2 同款异常恢复）
+            withContext(NonCancellable) {
+                repository.markAllRead(category).onFailure { toasts.show(it.userMessage()) }
+                // 失败时本地已乐观清零，角标由下一次 15s 轮询校正（G5-2 同款异常恢复）
+            }
         }
     }
 
