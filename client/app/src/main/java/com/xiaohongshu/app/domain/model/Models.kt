@@ -167,6 +167,8 @@ data class NotificationItem(
     val createdAt: Long,
     /** 被回复的评论正文（type=4 楼中楼时非空；G3 行内预览「被回复的评论」）。 */
     val replyContent: String = "",
+    /** type=4 时 = 该楼中楼回复所属的一级评论 id（回复时应作 `parentId`，契约 §3.1）。 */
+    val rootCommentId: Long = 0,
 ) {
     /** 关注类通知没有关联笔记，不渲染缩略图。 */
     val hasThumbnail: Boolean get() = postCoverUrl.isNotBlank()

@@ -216,12 +216,15 @@ function userBriefVO(u, viewer) {
 
 function notificationVO(n) {
   const sender = db.usersById.get(n.senderId);
-  // type=4（回复评论）：被回复的评论正文 = 该回复 parentId 指向的父评论内容（父评论被删则不带）
+  // type=4（回复评论）：commentId 是该楼中楼回复自身；其 parentId 即一级评论（根）。
+  // rootCommentId 供客户端按契约 §3.1 回复时作 parentId；被回复评论已删则两者皆为空。
   let replyContent = '';
+  let rootCommentId = 0;
   if (n.type === 4 && n.commentId) {
     const reply = db.commentsById.get(n.commentId);
     const parent = reply && reply.parentId ? db.commentsById.get(reply.parentId) : null;
     replyContent = parent ? parent.content : '';
+    rootCommentId = parent ? parent.id : 0;
   }
   return {
     id: n.id,
@@ -235,6 +238,7 @@ function notificationVO(n) {
     postTitle: n.postTitle || '',
     postCoverImage: n.postCoverImage || '',
     commentId: n.commentId || 0,
+    rootCommentId,
     content: n.content || '',
     replyContent,
     read: !!n.read,
@@ -900,14 +904,18 @@ R('POST', '/api/comment/create', { auth: true }, (ctx) => {
   if (content.length > 500) return E(5001, '评论不能超过 500 个字符');
   const post = db.postsById.get(postId);
   if (!post) return E(2001, '笔记不存在');
-  const parentId = intParam(b.parentId) || 0;
-  const replyUserId = intParam(b.replyUserId) || 0;
+  const parentIdRaw = intParam(b.parentId) || 0;
+  let replyUserId = intParam(b.replyUserId) || 0;
   let parent = null;
-  if (parentId) {
-    parent = db.commentsById.get(parentId);
+  if (parentIdRaw) {
+    parent = db.commentsById.get(parentIdRaw);
     if (!parent) return E(3001, '评论不存在');
     if (parent.status !== 1) return E(3002, '评论已删除');
   }
+  // 契约 §3.1：回复时 parentId 必须是一级评论 id。调用方若传了楼中楼回复 id，
+  // 与 Java 后端（CommentServiceImpl#createComment）一致地拍平到根评论，且 replyUserId 空时兜底为被回复者
+  const parentId = parent ? (parent.parentId || parent.id) : parentIdRaw;
+  if (parent && !replyUserId) replyUserId = parent.userId;
   db.counters.comment += 1;
   const created = Date.now();
   const c = {

@@ -21,6 +21,8 @@ data class NotificationDto(
     val postTitle: String = "",
     val postCoverImage: String = "",
     val commentId: Long = 0,
+    /** type=4 时 `commentId` 是楼中楼回复自身；此字段才是它的一级评论（根）id（契约 §3.1 回复用）。 */
+    val rootCommentId: Long = 0,
     val content: String = "",
     /** 被回复的评论正文（type=4 回复评论时返回；G3 楼中楼预览行数据源）。 */
     val replyContent: String = "",

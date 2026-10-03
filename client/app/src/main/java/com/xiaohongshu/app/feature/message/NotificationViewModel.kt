@@ -177,8 +177,10 @@ class NotificationListViewModel(
     /**
      * G3「发送」：成功后 Toast「回复成功」+ 自动已读 + 收起遮罩；失败回填已输入内容可重试（D3）。
      *
-     * 字段映射（契约 §3.1）：`parentId` = 一级评论 id、`replyUserId` = 被回复者 id，
-     * 此处用 **`commentId` → `parentId`**、**`senderId` → `replyUserId`**。
+     * 字段映射：契约 §3.1 要求回复时 `parentId` = **一级评论 id**、`replyUserId` = 被回复者 id。
+     * `NotificationItem.commentId` 在 type=4 时是楼中楼回复**自身**的 id，不能直接作 `parentId`，
+     * 故用 **`rootCommentId` → `parentId`**（type=3 时 rootCommentId=0，退回 `commentId`，它本就是一级评论）、
+     * **`senderId` → `replyUserId`**，语义即「在该通知对应的一级评论下回复该通知的发送者」。
      */
     fun sendReply(text: String) {
         // 遮罩不带字数计数（对齐 C1-5），发送前按契约 §3.1 上限截断
@@ -186,7 +188,7 @@ class NotificationListViewModel(
         val current = _replyOverlay.value
         val item = current.item ?: return
         if (current.sending || content.isBlank()) return
-        val parentId = item.commentId
+        val parentId = if (item.rootCommentId > 0) item.rootCommentId else item.commentId
         if (item.postId <= 0 || parentId <= 0) {
             toasts.show("该消息无法回复")
             return

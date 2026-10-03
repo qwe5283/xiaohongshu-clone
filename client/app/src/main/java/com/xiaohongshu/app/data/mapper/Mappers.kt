@@ -118,6 +118,7 @@ fun NotificationDto.toDomain(): NotificationItem = NotificationItem(
     read = read,
     createdAt = Formatters.parseApiTime(createTime),
     replyContent = replyContent,
+    rootCommentId = rootCommentId,
 )
 
 fun PageDto<NotificationDto>.toNotificationPage(): Paged<NotificationItem> = Paged(
