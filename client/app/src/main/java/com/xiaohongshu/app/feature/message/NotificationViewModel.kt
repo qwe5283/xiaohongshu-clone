@@ -25,21 +25,25 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * G3「回复」的行内展开状态（同一时刻只展开一行）。
+ * G3「回复」的遮罩输入状态（C1-5 `XhsOverlayInputBar` 同款；同一时刻只弹一个）。
  *
- * 为什么放在 ViewModel 而不是 `remember`：切到详情页再回来时，行内输入态不该回跳；
- * 且「发送中」要驱动该行的按钮态（I3 按钮级加载）。
+ * 为什么放在 ViewModel 而不是 `remember`：切到详情页再回来时遮罩不该闪回；
+ * 「发送中」要驱动发送钮禁用（I3），失败要回填已输入内容（D3 保留）。
  */
-data class InlineReplyState(
-    /** 展开输入框的条目 id；null = 无展开。 */
-    val targetId: Long? = null,
-    val text: String = "",
+data class ReplyOverlayState(
+    /** 弹遮罩的通知条目；null = 关闭。 */
+    val item: NotificationItem? = null,
+    /** 发送失败回填：写回已输入内容，保证 D3「失败内容保留」。 */
+    val initialText: String = "",
     val sending: Boolean = false,
 ) {
-    val isOpen: Boolean get() = targetId != null
+    val isOpen: Boolean get() = item != null
+
+    /** 占位与 C1-5 同款「回复 @昵称：」。 */
+    val placeholder: String get() = "回复 @${item?.senderNickname.orEmpty()}："
 
     companion object {
-        val Idle = InlineReplyState()
+        val Idle = ReplyOverlayState()
     }
 }
 
@@ -47,7 +51,7 @@ data class InlineReplyState(
 data class NotificationListUiState(
     val category: NotificationCategory = NotificationCategory.LIKE_COLLECT,
     val page: PagedState<NotificationItem> = PagedState(),
-    val reply: InlineReplyState = InlineReplyState(),
+    val replyOverlay: ReplyOverlayState = ReplyOverlayState(),
     /** D2：已关注（合并本地乐观态后）的发送者 id —— G4「回关 / 已关注」按此渲染。 */
     val followedSenders: Set<Long> = emptySet(),
     /** D1：已点赞（合并本地乐观态后）的评论 id —— G3 ♡ 按此渲染激活态。 */
@@ -81,18 +85,18 @@ class NotificationListViewModel(
     /** 供 UI 挂载分页副作用（`PagedListEffect` 需要具体的 [PagedList] 实例）。 */
     val paged: PagedList<NotificationItem> get() = list
 
-    private val _reply = MutableStateFlow(InlineReplyState.Idle)
+    private val _replyOverlay = MutableStateFlow(ReplyOverlayState.Idle)
 
     val state: StateFlow<NotificationListUiState> = combine(
         list.state,
-        _reply,
+        _replyOverlay,
         interactions.followOverrides,
         interactions.commentOverrides,
-    ) { page, reply, follows, commentLikes ->
+    ) { page, replyOverlay, follows, commentLikes ->
         NotificationListUiState(
             category = category,
             page = page,
-            reply = reply,
+            replyOverlay = replyOverlay,
             followedSenders = followedSendersOf(page.items, follows),
             likedCommentIds = likedCommentIdsOf(page.items, commentLikes),
         )
@@ -160,55 +164,49 @@ class NotificationListViewModel(
         interactions.toggleCommentLike(raw)
     }
 
-    // ------------------------------------------------------------------ G3 行内回复
+    // ------------------------------------------------------------------ G3 遮罩回复（C1-5 同款）
 
     fun openReply(item: NotificationItem) {
-        _reply.value = InlineReplyState(targetId = item.id)
+        _replyOverlay.value = ReplyOverlayState(item = item)
     }
 
-    fun closeReply() {
-        _reply.value = InlineReplyState.Idle
-    }
-
-    /** 评论正文 ≤500（契约 §3.1），超出部分直接截断。 */
-    fun onReplyChange(text: String) {
-        _reply.value = _reply.value.copy(text = text.take(MAX_REPLY_LENGTH))
+    fun dismissReply() {
+        _replyOverlay.value = ReplyOverlayState.Idle
     }
 
     /**
-     * G3「发送」：成功后 Toast「回复成功」+ 自动已读 + 收起输入框；失败保留输入内容可重试。
+     * G3「发送」：成功后 Toast「回复成功」+ 自动已读 + 收起遮罩；失败回填已输入内容可重试（D3）。
      *
-     * 字段映射（模型字段不足处，按交付说明的约定映射，未新增契约字段）：
-     * `NotificationItem` 只为评论/回复类通知携带 `postId` / `commentId`（触发通知的那条评论）与
-     * `senderId`（评论者）。契约 §3.1 要求 `parentId` = 一级评论 id、`replyUserId` = 被回复者 id，
-     * 故此处用 **`commentId` → `parentId`**、**`senderId` → `replyUserId`**，
-     * 语义即「在该通知对应的评论下回复该通知的发送者」。
+     * 字段映射（契约 §3.1）：`parentId` = 一级评论 id、`replyUserId` = 被回复者 id，
+     * 此处用 **`commentId` → `parentId`**、**`senderId` → `replyUserId`**。
      */
-    fun sendReply(item: NotificationItem) {
-        val text = _reply.value.text.trim()
-        val current = _reply.value
-        if (current.sending || current.targetId != item.id || text.isBlank()) return
+    fun sendReply(text: String) {
+        // 遮罩不带字数计数（对齐 C1-5），发送前按契约 §3.1 上限截断
+        val content = text.trim().take(MAX_REPLY_LENGTH)
+        val current = _replyOverlay.value
+        val item = current.item ?: return
+        if (current.sending || content.isBlank()) return
         val parentId = item.commentId
         if (item.postId <= 0 || parentId <= 0) {
             toasts.show("该消息无法回复")
             return
         }
-        _reply.value = current.copy(sending = true)
+        _replyOverlay.value = current.copy(sending = true)
         viewModelScope.launch {
             val result = comments.createReply(
                 postId = item.postId,
                 parentId = parentId,
                 replyUserId = item.senderId,
-                content = text,
+                content = content,
             )
             if (result is ApiResult.Ok) {
                 toasts.show("回复成功")
                 markRead(item)
-                _reply.value = InlineReplyState.Idle
+                _replyOverlay.value = ReplyOverlayState.Idle
             } else {
-                // 失败保留输入内容，输入框恢复可用（I2：Toast 反馈）
+                // 失败回填已输入内容，遮罩保持打开可重试（I2：Toast 反馈）
                 toasts.show(result.userMessage())
-                _reply.value = current.copy(sending = false)
+                _replyOverlay.value = current.copy(sending = false, initialText = content)
             }
         }
     }

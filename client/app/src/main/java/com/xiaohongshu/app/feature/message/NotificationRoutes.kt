@@ -23,6 +23,7 @@ import com.xiaohongshu.app.core.ui.XhsConfirmSheet
 import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsListFooter
 import com.xiaohongshu.app.core.ui.XhsListStateHost
+import com.xiaohongshu.app.core.ui.XhsOverlayInputBar
 import com.xiaohongshu.app.core.ui.XhsTopBar
 import com.xiaohongshu.app.data.dto.NotificationCategory
 import com.xiaohongshu.app.di.LocalAppContainer
@@ -33,8 +34,9 @@ import com.xiaohongshu.app.navigation.AppNavigator
 /**
  * G2/G3/G4 通知列表（推入式，一个路由按 [category] 区分）+ G5 四态 + G6 一键已读。
  *
- * 登录态：三入口都在 G1（登录态可达）里，本页只在登录态进入；行内的写操作（G3 ♡ / 回复、
+ * 登录态：三入口都在 G1（登录态可达）里，本页只在登录态进入；行上的写操作（G3 ♡ / 回复、
  * G4 回关）仍统一走 `LoginGate.runOrDefer`（§4.4），会话失效时由全局 I1 处理。
+ * G3 回复输入用页面级遮罩（C1-5 `XhsOverlayInputBar` 同款），不再行内展开。
  */
 @Composable
 fun NotificationListRoute(
@@ -67,16 +69,13 @@ fun NotificationListRoute(
         },
         onAvatarClick = { item -> navigator.toUserProfile(item.senderId) },
         // G3 的「回复」是写操作，与 ♡ / 回关一样过登录拦截（§4.4）
-        onReplyToggle = { item ->
-            val toggle = {
-                if (state.reply.targetId == item.id) vm.closeReply() else vm.openReply(item)
-            }
-            if (!gate.runOrDefer(toggle)) navigator.toLogin()
+        onReplyClick = { item ->
+            if (!gate.runOrDefer { vm.openReply(item) }) navigator.toLogin()
         },
-        onReplyChange = vm::onReplyChange,
-        onReplySend = { item ->
-            if (!gate.runOrDefer { vm.sendReply(item) }) navigator.toLogin()
+        onReplySend = { text ->
+            if (!gate.runOrDefer { vm.sendReply(text) }) navigator.toLogin()
         },
+        onReplyDismiss = vm::dismissReply,
         onCommentLike = { item ->
             if (!gate.runOrDefer { vm.toggleCommentLike(item) }) navigator.toLogin()
         },
@@ -96,9 +95,9 @@ private fun NotificationListScreen(
     onBack: () -> Unit,
     onRowClick: (NotificationItem) -> Unit,
     onAvatarClick: (NotificationItem) -> Unit,
-    onReplyToggle: (NotificationItem) -> Unit,
-    onReplyChange: (String) -> Unit,
-    onReplySend: (NotificationItem) -> Unit,
+    onReplyClick: (NotificationItem) -> Unit,
+    onReplySend: (String) -> Unit,
+    onReplyDismiss: () -> Unit,
     onCommentLike: (NotificationItem) -> Unit,
     onFollowBack: (NotificationItem) -> Unit,
     onMarkAllRead: () -> Unit,
@@ -145,14 +144,11 @@ private fun NotificationListScreen(
                             NotificationRow(
                                 item = item,
                                 category = state.category,
-                                reply = state.reply,
                                 followed = item.senderId in state.followedSenders,
                                 commentLiked = item.commentId in state.likedCommentIds,
                                 onRowClick = { onRowClick(item) },
                                 onAvatarClick = { onAvatarClick(item) },
-                                onReplyToggle = { onReplyToggle(item) },
-                                onReplyChange = onReplyChange,
-                                onReplySend = { onReplySend(item) },
+                                onReplyClick = { onReplyClick(item) },
                                 onCommentLike = { onCommentLike(item) },
                                 onFollowBack = { onFollowBack(item) },
                             )
@@ -171,6 +167,17 @@ private fun NotificationListScreen(
             message = "确认将全部消息标记为已读吗？",
             confirmText = "一键已读",
             cancelText = "取消",
+        )
+
+        // G3 遮罩式回复输入（C1-5 同款）：点遮罩 / 系统返回 / 收起键盘取消；失败回填已输入内容
+        XhsOverlayInputBar(
+            visible = state.replyOverlay.isOpen,
+            placeholder = state.replyOverlay.placeholder,
+            initialText = state.replyOverlay.initialText,
+            onSend = onReplySend,
+            onDismiss = onReplyDismiss,
+            sendDisabledOverride = state.replyOverlay.sending,
+            dismissOnKeyboardHide = true,
         )
     }
 }

@@ -8,7 +8,6 @@ package com.xiaohongshu.app.feature.message
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -19,14 +18,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,8 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.xiaohongshu.app.R
@@ -46,11 +39,9 @@ import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
 import com.xiaohongshu.app.core.ui.XhsAsyncImage
 import com.xiaohongshu.app.core.ui.XhsAvatar
-import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.ui.XhsDotBadge
 import com.xiaohongshu.app.core.ui.XhsFilterChip
 import com.xiaohongshu.app.core.ui.XhsIconButton
-import com.xiaohongshu.app.core.ui.XhsPrimaryButton
 import com.xiaohongshu.app.core.util.Formatters
 import com.xiaohongshu.app.data.dto.NotificationCategory
 import com.xiaohongshu.app.data.dto.NotificationType
@@ -67,14 +58,11 @@ import com.xiaohongshu.app.domain.model.NotificationItem
 internal fun NotificationRow(
     item: NotificationItem,
     category: NotificationCategory,
-    reply: InlineReplyState,
     followed: Boolean,
     commentLiked: Boolean,
     onRowClick: () -> Unit,
     onAvatarClick: () -> Unit,
-    onReplyToggle: () -> Unit,
-    onReplyChange: (String) -> Unit,
-    onReplySend: () -> Unit,
+    onReplyClick: () -> Unit,
     onCommentLike: () -> Unit,
     onFollowBack: () -> Unit,
 ) {
@@ -101,9 +89,9 @@ internal fun NotificationRow(
             Row(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = Dimens.pagePadding, top = Dimens.s12, bottom = Dimens.s12)
-                    // 已读整行变淡（opacity:.5）；行内回复输入展开时不再变淡，避免输入区被压暗
-                    .alpha(if (item.read && !(reply.isOpen && reply.targetId == item.id)) ReadRowAlpha else 1f),
+                .padding(end = Dimens.pagePadding, top = Dimens.s12, bottom = Dimens.s12)
+                // 已读整行变淡（opacity:.5）；回复输入走页面级遮罩（C1-5 同款），不受行变淡影响
+                .alpha(if (item.read) ReadRowAlpha else 1f),
             ) {
                 Box(modifier = Modifier.clickable(onClick = onAvatarClick)) {
                     XhsAvatar(url = item.senderAvatar, size = Dimens.avatarConversation)
@@ -180,12 +168,12 @@ internal fun NotificationRow(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(Dimens.s12),
                         ) {
-                            // 「回复」→ 行内展开输入 + 发送（再点一次收起）
-                            RowActionSlot(onClick = onReplyToggle) {
+                            // 「回复」→ 弹页面级遮罩输入（C1-5 同款），发送/取消由遮罩承担
+                            RowActionSlot(onClick = onReplyClick) {
                                 XhsFilterChip(
                                     text = "回复",
                                     selected = false,
-                                    onClick = onReplyToggle,
+                                    onClick = onReplyClick,
                                 )
                             }
                             // ♡ 点赞该条评论（乐观更新 + 失败回滚在 InteractionStore 内）
@@ -195,17 +183,6 @@ internal fun NotificationRow(
                                 tint = if (commentLiked) XhsColor.Red else XhsColor.Text2,
                                 iconSize = Dimens.icon20,
                                 contentDescription = "点赞评论",
-                            )
-                        }
-
-                        if (reply.isOpen && reply.targetId == item.id) {
-                            Spacer(modifier = Modifier.height(Dimens.s8))
-                            InlineReplyBar(
-                                nickname = item.senderNickname,
-                                text = reply.text,
-                                sending = reply.sending,
-                                onTextChange = onReplyChange,
-                                onSend = onReplySend,
                             )
                         }
                     }
@@ -297,76 +274,6 @@ private fun RowActionSlot(
         contentAlignment = Alignment.Center,
     ) {
         content()
-    }
-}
-
-/**
- * G3 行内回复输入（展开在本行内，不弹遮罩面板）。
- * 占位文案与 C1-5 同款「回复 @昵称：」；「发送」用 [XhsPrimaryButton]（按钮级加载 I3）。
- */
-@Composable
-private fun InlineReplyBar(
-    nickname: String,
-    text: String,
-    sending: Boolean,
-    onTextChange: (String) -> Unit,
-    onSend: () -> Unit,
-) {
-    val canSend = text.isNotBlank() && !sending
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            // 消费点击：点输入区不应触发整行跳转
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = {},
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .heightIn(min = Dimens.inputPillDetail)
-                .clip(RoundedCornerShape(Dimens.radiusPill))
-                .background(XhsColor.BgGray)
-                .padding(horizontal = Dimens.s12),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            if (text.isEmpty()) {
-                Text(
-                    text = "回复 @$nickname：",
-                    style = XhsType.inputPlaceholder,
-                    color = XhsColor.Text3,
-                    maxLines = 1,
-                )
-            }
-            BasicTextField(
-                value = text,
-                onValueChange = onTextChange,
-                singleLine = true,
-                enabled = !sending,
-                textStyle = XhsType.body.copy(color = XhsColor.Text1),
-                cursorBrush = SolidColor(XhsColor.Text1),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { if (canSend) onSend() }),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-
-        Spacer(modifier = Modifier.width(Dimens.s8))
-
-        XhsPrimaryButton(
-            text = "发送",
-            onClick = onSend,
-            enabled = canSend,
-            loading = sending,
-            loadingText = "发送中...",
-            height = Dimens.buttonSendHeight,
-            fillWidth = false,
-            containerColor = XhsColor.Red,
-            modifier = Modifier.width(Dimens.buttonSendWidth),
-        )
     }
 }
 
