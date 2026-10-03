@@ -58,6 +58,7 @@ internal fun HomeTopBar(
     onLeftAction: () -> Unit,
     onSearchClick: () -> Unit,
     modifier: Modifier = Modifier,
+    divider: Boolean = true,
 ) {
     Column(
         modifier = modifier
@@ -124,7 +125,7 @@ internal fun HomeTopBar(
                 )
             }
         }
-        XhsDivider()
+        if (divider) XhsDivider()
     }
 }
 

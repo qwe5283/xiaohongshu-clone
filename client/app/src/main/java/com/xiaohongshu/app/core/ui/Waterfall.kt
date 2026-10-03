@@ -166,7 +166,8 @@ fun WaterfallCard(
  *
  * 各页面（B1/B3/B5/F1/F2）共用本组件；页面级差异通过 [header] / [footer] 槽位注入。
  *
- * 现状：[footer] 被全部调用方注入 [XhsListFooter] 作分页页脚（加载中/没有更多了）；[header] 暂无使用方，为「列表顶部随滚动内容」预留。
+ * 现状：[footer] 被全部调用方注入 [XhsListFooter] 作分页页脚（加载中/没有更多了）；
+ * [header] 由首页「发现」页注入频道栏（B1：随瀑布流滚动的首项，向下浏览时移出视口）。
  */
 @Composable
 fun PostWaterfall(

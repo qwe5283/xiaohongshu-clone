@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
@@ -16,6 +17,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -31,7 +36,10 @@ import com.xiaohongshu.app.domain.model.Note
 import com.xiaohongshu.app.navigation.AppNavigator
 
 /**
- * A1/B1/B4/B5 首页：顶栏 + 频道栏 + 双列瀑布流（关注 / 发现两页签）。
+ * A1/B1/B4/B5 首页：顶栏 + 双列瀑布流（关注 / 发现两页签）。
+ *
+ * 频道栏（B1）仅「发现」页有，作为瀑布流首项随内容滚动——向下浏览时移出视口；
+ * 「关注」页不显示频道栏。
  *
  * 底 Tab 与 ＋ 按钮由 `MainScaffold` 持有，本页不渲染（A1/B1 的 tabbar 不在本组件内）；
  * 游客态的登录悬浮条则由本页渲染（A1：悬浮在瀑布流之上、底 Tab 之上）。
@@ -126,12 +134,6 @@ private fun HomeScreen(
             onSearchClick = onSearchClick,
         )
 
-        ChannelBar(
-            channels = HomeChannels,
-            selected = state.channel,
-            onSelect = onChannelSelect,
-        )
-
         Box(modifier = Modifier.weight(1f).background(XhsColor.WaterfallBg)) {
             XhsListStateHost(
                 state = state.page,
@@ -158,6 +160,33 @@ private fun HomeScreen(
                         bottom = if (loggedIn) Dimens.waterfallMargin
                         else Dimens.waterfallMargin + HomeGuestBarReserved,
                     ),
+                    // 频道栏是瀑布流首项（仅发现页）：随内容滚动，向下浏览时移出视口。
+                    // 白底用 drawBehind 向下多画 waterfallGap——verticalItemSpacing 是
+                    // 项间统一间距、无法按项免除——以吃掉它与第一行卡片之间的缝，底缘贴合卡片；
+                    // 内容同步下移 gap/2，让词条在 44dp 的白条（40 + 缝）里视觉居中
+                    header = if (state.tab == HomeTab.DISCOVER) {
+                        {
+                            ChannelBar(
+                                channels = HomeChannels,
+                                selected = state.channel,
+                                onSelect = onChannelSelect,
+                                modifier = Modifier
+                                    .bleedHorizontally(Dimens.waterfallMargin)
+                                    .drawBehind {
+                                        drawRect(
+                                            color = XhsColor.Bg,
+                                            size = Size(
+                                                width = size.width,
+                                                height = size.height + Dimens.waterfallGap.toPx(),
+                                            ),
+                                        )
+                                    }
+                                    .offset(y = Dimens.waterfallGap / 2),
+                            )
+                        }
+                    } else {
+                        null
+                    },
                     footer = { XhsListFooter(state = state.page) },
                 )
             }
@@ -203,6 +232,18 @@ private fun StaggeredLoadMoreEffect(
 
 /** 距底预加载项数（B4-4：滚动距底约 600px，本项目按项数近似为 6 项）。 */
 private const val PRELOAD_ITEM_COUNT = 6
+
+/**
+ * 让瀑布流 header 逃出横向 contentPadding（waterfallMargin）：测量放宽两侧 inset、
+ * 整体反向平移 inset，[ChannelBar] 的右渐隐才能贴到屏幕右缘。占位尺寸仍守约束。
+ */
+private fun Modifier.bleedHorizontally(inset: Dp): Modifier = layout { measurable, constraints ->
+    val insetPx = inset.roundToPx()
+    val placeable = measurable.measure(
+        constraints.copy(maxWidth = constraints.maxWidth + insetPx * 2),
+    )
+    layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(-insetPx, 0) }
+}
 
 /**
  * 卡片点击回传整条 Note（`core/ui/Waterfall.kt` 的 `onNoteClick: (Note) -> Unit`），
