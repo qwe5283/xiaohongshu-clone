@@ -90,6 +90,8 @@ fun AuthRoute(navigator: AppNavigator) {
         // A6：VM 先弹 Toast「登录成功」，再 popLogin() 弹回来源页并补跑被拦截的动作。
         // **不自己 popBackStack**：popLogin() 内部是「consumePending() + popBackStack()」。
         onSubmit = { vm.submit(onSuccess = navigator::popLogin) },
+        // 未勾协议时按钮禁用（canSubmit=false），点击落到 AuthScreen 的兜底层弹引导 Toast。
+        onAgreementBlocked = { container.toastController.show(AgreementRequiredToast) },
     )
 }
 
@@ -106,6 +108,7 @@ private fun AuthScreen(
     onBack: () -> Unit,
     onHelp: () -> Unit,
     onSubmit: () -> Unit,
+    onAgreementBlocked: () -> Unit,
 ) {
     AuthScaffold(
         // 登录态：左 ← + 右上「帮助」，无居中标题；注册态：左 ← + 居中「注册小红书」
@@ -176,13 +179,17 @@ private fun AuthScreen(
         }
 
         Spacer(modifier = Modifier.height(Dimens.s24))
-        // A5-2：按钮禁用 +「登录中.../注册中...」；未勾选协议时禁用（与合并前同一口径）
+        // A5-2：按钮禁用 +「登录中.../注册中...」；未勾选协议时禁用（与合并前同一口径）。
+        // 禁用态由按钮自己兜住点击（onBlockedClick）弹引导 Toast——不走「禁用 clickable
+        // 点击穿透到外层」的路子，实机上事件穿透行为不稳定。提交中不回调（loading 态
+        // 点击无意义，提示反而误导）。
         XhsPrimaryButton(
             text = if (state.isRegister) RegisterLabel else LoginLabel,
             onClick = onSubmit,
             enabled = state.canSubmit,
             loading = state.submitting,
             loadingText = if (state.isRegister) RegisterSubmitLabel else LoginSubmitLabel,
+            onBlockedClick = onAgreementBlocked,
             containerColor = XhsColor.Red,
         )
 

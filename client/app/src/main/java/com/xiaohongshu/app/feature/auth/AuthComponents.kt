@@ -178,6 +178,10 @@ private const val AgreementUserDoc = "《用户协议》"
 private const val AgreementConjunction = "和"
 private const val AgreementPrivacyDoc = "《隐私政策》"
 
+/** 未勾选协议时点击禁用的登录/注册按钮：全局 Toast 引导文案（书名号名称与勾选行同源）。 */
+internal const val AgreementRequiredToast =
+    "请阅读并同意" + AgreementUserDoc + AgreementConjunction + AgreementPrivacyDoc
+
 /**
  * A3/A4 协议勾选行（小圆圈 + 「我已阅读并同意《用户协议》和《隐私政策》」）。
  *

@@ -36,6 +36,10 @@ import com.xiaohongshu.app.core.design.XhsType
 /**
  * 主操作按钮（A3/A4 登录注册、E2 发布、B4-2 重试）。
  * 全圆角胶囊、黑底白字；加载中显示「登录中...」并禁用（A5-2）。
+ *
+ * [onBlockedClick]：非激活态（[enabled] = false）时按钮**自己**兜住点击并回调——保持禁用
+ * 视觉但可点，用于「未勾协议时点击登录/注册弹引导 Toast」。不传则与普通禁用按钮一致
+ * （完全不可点）。loading 态即使传了也不回调。
  */
 @Composable
 fun XhsPrimaryButton(
@@ -45,6 +49,7 @@ fun XhsPrimaryButton(
     enabled: Boolean = true,
     loading: Boolean = false,
     loadingText: String? = null,
+    onBlockedClick: (() -> Unit)? = null,
     height: Dp = 44.dp,
     containerColor: Color = XhsColor.Text1,
     contentColor: Color = Color.White,
@@ -58,7 +63,10 @@ fun XhsPrimaryButton(
             .height(height)
             .clip(RoundedCornerShape(Dimens.radiusPill))
             .background(if (active) containerColor else containerColor.copy(alpha = 0.45f))
-            .clickable(enabled = active, onClick = onClick),
+            .clickable(
+                enabled = active || onBlockedClick != null,
+                onClick = { if (active) onClick() else if (!loading) onBlockedClick?.invoke() },
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
