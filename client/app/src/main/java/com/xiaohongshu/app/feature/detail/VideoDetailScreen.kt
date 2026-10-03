@@ -7,6 +7,7 @@ import android.widget.VideoView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,7 +71,7 @@ import kotlinx.coroutines.delay
  * 视频**不侵入**状态栏与底栏两条黑区：两条黑区在媒体区之外，用 inset padding 撑出来。
  *
  * 播放器：框架 `VideoView`（内部即 MediaPlayer）用 `AndroidView` 包装，零新依赖；
- * 不自动播放以外的控制（无暂停按钮，行为未定义），循环播放，`onDispose` 释放。
+ * 自动播放 + 循环；短按媒体区切换播放/暂停（暂停时中央显示半透明 ▶），`onDispose` 释放。
  */
 
 /** C2-1 实测：作者行 48 / 标题行 46（`Dimens` 无对应档位，就地声明并标注来源）。 */
@@ -89,6 +90,10 @@ private const val PROGRESS_TRACK_ALPHA = 0.35f
 
 /** seek 态时间文本与进度条之间的 gap（C2-5，10dp）。 */
 private val SeekTimeGap = 10.dp
+
+/** 暂停时中央 ▶：尺寸与透明度无实测值，就地声明（半透明白）。 */
+private val PausedPlayIconSize = 72.dp
+private const val PAUSED_PLAY_ICON_ALPHA = 0.5f
 
 /** 顶/底渐变遮罩的“subtle”强度（只要求感观，无实测值）。 */
 private const val SCRIM_TOP_ALPHA = 0.45f
@@ -246,9 +251,27 @@ private fun VideoMediaArea(
                     },
                     onDragCancel = { seeking = false },
                 )
+            }
+            // 短按切换播放/暂停（与拖动 seek 并存：未过触摸阈值即抬手 = 短按；
+            // 面板打开时点击归「关闭面板」的遮罩，不切换播放）
+            .pointerInput(note.videoUrl, panelOpen) {
+                if (panelOpen) return@pointerInput
+                detectTapGestures { player.togglePlayPause() }
             },
     ) {
         VideoSurface(videoUrl = note.videoUrl, player = player, modifier = Modifier.fillMaxSize())
+
+        // 暂停时中央半透明 ▶（面板打开时不显示：媒体区让位给「点遮罩关面板」）
+        if (!panelOpen && player.prepared && !player.isPlaying) {
+            Icon(
+                painter = painterResource(R.drawable.ic_play),
+                contentDescription = null,
+                tint = Color.White.copy(alpha = PAUSED_PLAY_ICON_ALPHA),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(PausedPlayIconSize),
+            )
+        }
 
         if (!panelOpen) {
             // 顶/底渐变遮罩（叠加控件的可读性）
@@ -400,7 +423,7 @@ private fun VideoSurface(
 /**
  * 播放器状态（不放进 ViewModel：MediaPlayer 与视图生命周期绑定，随组合进出）。
  *
- * 进度/时长/seek 全部经**显式持有的 MediaPlayer** 读写（采用框架播放器 + MediaPlayer，
+ * 进度/时长/seek/播放暂停 全部经**显式持有的 MediaPlayer** 读写（采用框架播放器 + MediaPlayer，
  * 不引入 media3/ExoPlayer）。
  */
 internal class VideoPlayerState {
@@ -408,6 +431,8 @@ internal class VideoPlayerState {
     private var mediaPlayer: MediaPlayer? = null
 
     var prepared by mutableStateOf(false)
+        private set
+    var isPlaying by mutableStateOf(false)
         private set
     var durationMs by mutableLongStateOf(0L)
         private set
@@ -420,11 +445,26 @@ internal class VideoPlayerState {
         durationMs = runCatching { mediaPlayer?.duration?.toLong() ?: 0L }.getOrDefault(0L)
         positionMs = 0L
         prepared = true
+        isPlaying = true
         view.start()
     }
 
     fun onError() {
         prepared = false
+        isPlaying = false
+    }
+
+    /** 短按切换播放/暂停（未 prepared / 已出错时 no-op）。 */
+    fun togglePlayPause() {
+        val player = mediaPlayer ?: return
+        if (!prepared) return
+        if (isPlaying) {
+            runCatching { player.pause() }
+            isPlaying = false
+        } else {
+            runCatching { player.start() }
+            isPlaying = true
+        }
     }
 
     fun syncPosition() {
@@ -447,6 +487,7 @@ internal class VideoPlayerState {
         runCatching { view.stopPlayback() }
         mediaPlayer = null
         prepared = false
+        isPlaying = false
     }
 }
 
