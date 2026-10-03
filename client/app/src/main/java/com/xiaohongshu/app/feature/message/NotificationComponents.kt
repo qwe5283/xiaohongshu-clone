@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
@@ -148,6 +149,29 @@ internal fun NotificationRow(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
+                    }
+
+                    // G3 楼中楼（type=4）：正文与操作行之间预览「被回复的评论」
+                    if (item.type == NotificationType.REPLY_COMMENT && item.replyContent.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(Dimens.s4))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            // 竖的体育场形引导条：，圆角取宽的一半（percent=50）即完整半圆端点
+                            Box(
+                                modifier = Modifier
+                                    .size(width = 3.dp, height = 16.dp)
+                                    .clip(RoundedCornerShape(percent = 50))
+                                    .background(XhsColor.Text3),
+                            )
+                            Spacer(modifier = Modifier.width(Dimens.s4))
+                            Text(
+                                text = item.replyContent,
+                                style = XhsType.meta,
+                                color = XhsColor.Text2,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
 
                     if (category == NotificationCategory.COMMENT) {

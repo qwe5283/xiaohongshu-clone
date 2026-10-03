@@ -22,6 +22,8 @@ data class NotificationDto(
     val postCoverImage: String = "",
     val commentId: Long = 0,
     val content: String = "",
+    /** 被回复的评论正文（type=4 回复评论时返回；G3 楼中楼预览行数据源）。 */
+    val replyContent: String = "",
     /** 是否已读（后端 VO 字段名为 `read`）。 */
     val read: Boolean = false,
     val createTime: String = "",

@@ -315,10 +315,12 @@
   "type": 1, "typeText": "赞了你的笔记",
   "postId": 10, "postTitle": "笔记标题", "postCoverImage": "https://...",
   "commentId": 0, "content": "",
+  "replyContent": "",
   "read": false, "createTime": "2026-09-14T10:16:00"
 }
 ```
 > G2 缩略图 = `postCoverImage`；`typeText` 建议后端返回中文（如「赞了你的笔记」「收藏了你的笔记」「赞了你的评论」「评论了你的笔记」「回复了你的评论」「关注了你」）。客户端在 `typeText` 为空时按 `type` 本地兜底。
+> `replyContent` = 被回复的评论正文，仅 `type=4`（回复评论）返回，其余类型为空串；G3 楼中楼行在正文与操作行之间预览该条（竖体育场形引导条 + 单行截断）。
 > 已读条目整行变淡；未读左侧 8dp 红点；点条目 → 先 `read/{id}` 再跳 C1-1（`postId`）；点头像 → F2（`senderId`）。
 > 自己操作自己不产生通知（后端保证）。
 

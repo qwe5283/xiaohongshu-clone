@@ -216,6 +216,13 @@ function userBriefVO(u, viewer) {
 
 function notificationVO(n) {
   const sender = db.usersById.get(n.senderId);
+  // type=4（回复评论）：被回复的评论正文 = 该回复 parentId 指向的父评论内容（父评论被删则不带）
+  let replyContent = '';
+  if (n.type === 4 && n.commentId) {
+    const reply = db.commentsById.get(n.commentId);
+    const parent = reply && reply.parentId ? db.commentsById.get(reply.parentId) : null;
+    replyContent = parent ? parent.content : '';
+  }
   return {
     id: n.id,
     receiverId: n.receiverId,
@@ -229,6 +236,7 @@ function notificationVO(n) {
     postCoverImage: n.postCoverImage || '',
     commentId: n.commentId || 0,
     content: n.content || '',
+    replyContent,
     read: !!n.read,
     createTime: n.createTime,
   };

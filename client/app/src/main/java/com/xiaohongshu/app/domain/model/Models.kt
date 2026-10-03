@@ -165,6 +165,8 @@ data class NotificationItem(
     val content: String,
     val read: Boolean,
     val createdAt: Long,
+    /** 被回复的评论正文（type=4 楼中楼时非空；G3 行内预览「被回复的评论」）。 */
+    val replyContent: String = "",
 ) {
     /** 关注类通知没有关联笔记，不渲染缩略图。 */
     val hasThumbnail: Boolean get() = postCoverUrl.isNotBlank()

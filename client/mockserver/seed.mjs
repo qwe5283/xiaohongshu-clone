@@ -658,13 +658,33 @@ export function buildDb({ publicBase, now = Date.now() } = {}) {
   ];
   // postIds used by admin notifications must be admin's own notes (ids 1..6)
   const adminPostIds = db.posts.filter((p) => p.userId === 1).map((p) => p.id);
+  // type=4（楼中楼回复）必须指向一条真实回复，notificationVO 才能反查到被回复的父评论：
+  // 本笔记该发件人的回复 → 本笔记任意回复 → 接收者其他笔记上该发件人的回复 → 接收者其他笔记上的任意回复
+  // →（都无楼中楼时）本笔记该发件人的任意评论（此时 replyContent 为空、客户端预览行隐藏）。
+  const pickComment = (receiverId, postId, senderId, type) => {
+    if (type !== 4) return db.comments.find((x) => x.postId === postId && x.userId === senderId);
+    const onPost = (x) => x.postId === postId;
+    const onReceiverPost = (x) => {
+      const p = db.postsById.get(x.postId);
+      return p ? p.userId === receiverId : false;
+    };
+    return (
+      db.comments.find((x) => onPost(x) && x.userId === senderId && x.parentId) ||
+      db.comments.find((x) => onPost(x) && x.parentId) ||
+      db.comments.find((x) => x.parentId && x.userId === senderId && onReceiverPost(x)) ||
+      db.comments.find((x) => x.parentId && onReceiverPost(x)) ||
+      db.comments.find((x) => onPost(x) && x.userId === senderId)
+    );
+  };
   for (let i = 0; i < adminPlan.length; i++) {
     const [type, senderId, postSlot, read, ageMin] = adminPlan[i];
-    const postId = type === 6 ? 0 : adminPostIds[postSlot % adminPostIds.length];
+    let postId = type === 6 ? 0 : adminPostIds[postSlot % adminPostIds.length];
     let commentId = 0;
     let content = '';
     if (type === 3 || type === 4) {
-      const c = db.comments.find((x) => x.postId === (postId || 1) && x.userId === senderId);
+      const c = pickComment(1, postId || 1, senderId, type);
+      // type=4 兜底可能换到了接收者的另一篇笔记，postId 跟着评论走，保证跳转和 commentId 一致
+      if (type === 4 && c) postId = c.postId;
       commentId = c ? c.id : 0;
       content = c ? c.content : COMMENT_POOL[i % COMMENT_POOL.length];
     } else if (type === 5) {
@@ -688,11 +708,12 @@ export function buildDb({ publicBase, now = Date.now() } = {}) {
   const u2PostIds = db.posts.filter((p) => p.userId === 2).map((p) => p.id);
   for (let i = 0; i < user2Plan.length; i++) {
     const [type, senderId, postSlot, read, ageMin] = user2Plan[i];
-    const postId = type === 6 ? 0 : u2PostIds[postSlot % u2PostIds.length];
+    let postId = type === 6 ? 0 : u2PostIds[postSlot % u2PostIds.length];
     let commentId = 0;
     let content = '';
     if (type === 3 || type === 4) {
-      const c = db.comments.find((x) => x.postId === (postId || 1) && x.userId === senderId);
+      const c = pickComment(2, postId || 1, senderId, type);
+      if (type === 4 && c) postId = c.postId;
       commentId = c ? c.id : 0;
       content = c ? c.content : COMMENT_POOL[i % COMMENT_POOL.length];
     }
