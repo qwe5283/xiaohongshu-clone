@@ -1,12 +1,12 @@
 package com.xiaohongshu.app.feature.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -87,10 +87,11 @@ internal fun HomeTopBar(
                 }
             }
 
+            // 24 视觉间隙拆成两侧各半的触控内边距（UnderlineLabel.hitAreaPadding），
+            // 热区在间隙中线贴合，文字位置不变
             Row(
                 modifier = Modifier.align(Alignment.Center),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimens.s24),
             ) {
                 UnderlineLabel(
                     text = "关注",
@@ -98,6 +99,7 @@ internal fun HomeTopBar(
                     contentColor = if (tab == HomeTab.FOLLOWING) XhsColor.Text1 else XhsColor.Text2,
                     underlineColor = if (tab == HomeTab.FOLLOWING) XhsColor.Red else Color.Transparent,
                     onClick = { onTabSelect(HomeTab.FOLLOWING) },
+                    hitAreaPadding = PaddingValues(end = Dimens.s24 / 2),
                 )
                 UnderlineLabel(
                     text = "发现",
@@ -105,6 +107,7 @@ internal fun HomeTopBar(
                     contentColor = if (tab == HomeTab.DISCOVER) XhsColor.Text1 else XhsColor.Text2,
                     underlineColor = if (tab == HomeTab.DISCOVER) XhsColor.Red else Color.Transparent,
                     onClick = { onTabSelect(HomeTab.DISCOVER) },
+                    hitAreaPadding = PaddingValues(start = Dimens.s24 / 2),
                 )
             }
 
@@ -254,6 +257,9 @@ internal fun GuestLoginBar(
  * 下划线用 `drawBehind` 画在文字自身尺寸之下（宽度＝文字实际宽度，无需再测量），
  * 外层 Box 补足 ≥44dp 触控热区。
  *
+ * `hitAreaPadding` 垫在 clickable 之内：热区随它向外扩张，但文字仍在不含它的
+ * 44dp 最小触控区内居中，可在不改变视觉布局的前提下让相邻热区贴合。
+ *
  * 想隐藏下划线时为 `underlineColor` 传入透明值。
  */
 @Composable
@@ -264,13 +270,15 @@ private fun UnderlineLabel(
     underlineColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    hitAreaPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .defaultMinSize(minWidth = Dimens.minTouchTarget, minHeight = Dimens.minTouchTarget)
             .clip(RoundedCornerShape(Dimens.radiusPill))
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .padding(hitAreaPadding)
+            .defaultMinSize(minWidth = Dimens.minTouchTarget, minHeight = Dimens.minTouchTarget),
         contentAlignment = Alignment.Center,
     ) {
         Text(

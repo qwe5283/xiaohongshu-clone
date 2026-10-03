@@ -232,7 +232,7 @@ fun XhsCountBadge(
     ) {
         Text(
             text = com.xiaohongshu.app.core.util.Formatters.formatBadge(count),
-            style = XhsType.s(11, emphasis = true),
+            style = XhsType.s(10),
             color = XhsColor.OnBadge,
         )
     }

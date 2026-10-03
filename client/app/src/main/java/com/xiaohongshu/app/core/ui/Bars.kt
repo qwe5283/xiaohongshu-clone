@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -209,6 +210,9 @@ fun XhsBottomTabBar(
  *
  * [badgeCount] > 0 时数字角标贴在**文字右上角**——原版此处是同一位置的 8×8 红点
  * （dump：点右缘超文字右缘 4dp、点下缘超文字上缘 4dp）；有具体未读数时用数字角标。
+ *
+ * 内层 Box 用**选中态样式的隐形占位文字**撑出固定尺寸槽（选中 17sp 加粗 > 未选中 16sp）：
+ * 切换选中态只改写覆盖其上的真实文字，角标挂在槽右上角，位置不随选中态挪动。
  */
 @Composable
 private fun BottomTabItem(
@@ -226,20 +230,28 @@ private fun BottomTabItem(
             .clickable { onSelect(index) },
         contentAlignment = Alignment.Center,
     ) {
-        // 内层 Box 由文字撑开，角标才挂得上「文字右上角」而不是整格右上角
+        // 占位文字负责尺寸（两态中更大的选中态），真实文字负责外观，二者分离
         Box {
+            Text(
+                text = label,
+                style = XhsType.bottomTabSelected,
+                color = Color.Transparent,
+                maxLines = 1,
+                modifier = Modifier.clearAndSetSemantics { },
+            )
             Text(
                 text = label,
                 style = if (selected) XhsType.bottomTabSelected else XhsType.bottomTabUnselected,
                 color = if (selected) XhsColor.Text1 else XhsColor.Text2,
                 maxLines = 1,
+                modifier = Modifier.align(Alignment.Center),
             )
             if (badgeCount > 0) {
                 XhsCountBadge(
                     count = badgeCount,
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .offset(x = Dimens.s4, y = (-10).dp),
+                        .offset(x = Dimens.s4, y = (-6).dp),
                 )
             }
         }
