@@ -149,6 +149,7 @@ const val CODE_POST_NOT_FOUND = 2001
 const val CODE_POST_DELETED = 2002
 const val CODE_IMAGE_LIMIT = 2004
 const val CODE_NEED_MEDIA = 2005
+const val CODE_VIDEO_COVER_REQUIRED = 2006
 const val CODE_PARAM_ERROR = 5001
 
 /** 命名化错误码，供业务分支判断（[CODE_*] 常量保留给拦截器与低层使用）。 */
@@ -163,6 +164,7 @@ object Code {
     const val NO_PERMISSION_POST = 2003
     const val IMAGE_LIMIT = CODE_IMAGE_LIMIT
     const val NEED_MEDIA = CODE_NEED_MEDIA
+    const val VIDEO_COVER_REQUIRED = CODE_VIDEO_COVER_REQUIRED
     const val COMMENT_NOT_FOUND = 3001
     const val COMMENT_DELETED = 3002
     const val UPLOAD_FAILED = 4001

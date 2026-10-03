@@ -68,9 +68,9 @@ internal val MediaThumbSize: Dp = Dimens.s32 * 3
 private val AddTileBorderWidth: Dp = Dimens.hairline * 2
 
 /**
- * E2 媒体条：已选媒体缩略（可 × 删除）+ 虚线 ＋ 添加框（§7 E2）。
+ * E2 媒体条（图文态）：已选图片缩略（可 × 删除）+ 虚线 ＋ 添加框（§7 E2）。
  *
- * 图片/视频可共存；顺序即最终入库顺序（`PublishDraft.remoteImageUrls` 按此顺序取 URL）。
+ * 视频不走本条（两态互斥，契约 §2 变更 #20）：视频态由 [VideoMediaStrip] 呈现。
  *
  * @param editable E5-1 提交中传 false：隐藏 × 与 ＋（E5-1 的缩略图同样无 × / 无 ＋），
  *   同时避免上传过程中增删媒体导致 `updateMedia(index)` 写错下标。
@@ -103,8 +103,81 @@ internal fun MediaStrip(
 }
 
 /**
+ * E2 媒体条（视频态）：固定双槽「视频 / 封面」+ 槽下脚注，**无** ＋ 添加框（契约 §2 变更 #20）。
+ *
+ * - 点视频槽 → 换视频（换后由调用方重截首帧生成新封面）；
+ * - 点封面槽 → 换封面（仅替换封面，视频不动）；
+ * - 视频槽右上 × → 退回图文态（封面图保留为唯一图片）；封面槽**无** ×。
+ */
+@Composable
+internal fun VideoMediaStrip(
+    video: DraftMedia,
+    cover: DraftMedia,
+    onReplaceVideo: () -> Unit,
+    onReplaceCover: () -> Unit,
+    onExitVideoMode: () -> Unit,
+    modifier: Modifier = Modifier,
+    editable: Boolean = true,
+    contentPadding: PaddingValues = PaddingValues(horizontal = Dimens.pagePadding),
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(contentPadding),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.s8),
+    ) {
+        MediaSlot(
+            item = video,
+            caption = "视频",
+            editable = editable,
+            removable = true,
+            onClick = onReplaceVideo,
+            onRemove = onExitVideoMode,
+        )
+        MediaSlot(
+            item = cover,
+            caption = "封面",
+            editable = editable,
+            removable = false,
+            onClick = onReplaceCover,
+            onRemove = onExitVideoMode,
+        )
+    }
+}
+
+/** 视频态单槽：缩略 + 槽下脚注（captionSub 灰字居中）。 */
+@Composable
+private fun MediaSlot(
+    item: DraftMedia,
+    caption: String,
+    editable: Boolean,
+    removable: Boolean,
+    onClick: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        MediaThumb(
+            item = item,
+            onRemove = onRemove,
+            editable = editable,
+            removable = removable,
+            onClick = if (editable) onClick else null,
+        )
+        Spacer(modifier = Modifier.height(Dimens.s4))
+        Text(
+            text = caption,
+            style = XhsType.captionSub,
+            color = XhsColor.Text2,
+        )
+    }
+}
+
+/**
  * 单个媒体缩略：本地文件预览（§4.5 的 `XhsAsyncImage` 走 OkHttp，无法读 `file://`/本地路径，
  * 故本地文件在 `LocalMediaThumb` 就地解码）+ 右上 × 删除 + 视频 ▶ 角标 + 上传中/失败覆盖层。
+ *
+ * @param removable 是否显示右上 ×（视频态封面槽固定无 ×）；默认随 [editable]。
+ * @param onClick 槽位整体点击（视频态换视频/换封面）；null = 无点击（图文态缩略）。
  */
 @Composable
 internal fun MediaThumb(
@@ -112,12 +185,15 @@ internal fun MediaThumb(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
     editable: Boolean = true,
+    removable: Boolean = editable,
+    onClick: (() -> Unit)? = null,
 ) {
     Box(
         modifier = modifier
             .size(MediaThumbSize)
             .clip(RoundedCornerShape(Dimens.radiusCard))
-            .background(XhsColor.PlaceholderBg),
+            .background(XhsColor.PlaceholderBg)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
     ) {
         when {
             // E3 生成配图：已是远端 URL（契约 §2.11 直接返回可入库 URL）
@@ -174,8 +250,8 @@ internal fun MediaThumb(
             }
         }
 
-        // × 删除：热区 44（§4.1），视觉为 20dp 半透明圆底 + 12dp 图标
-        if (editable) {
+        // × 删除：热区 44（§4.1），视觉为 20dp 半透明圆底 + 12dp 图标；封面槽（removable=false）无 ×
+        if (editable && removable) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)

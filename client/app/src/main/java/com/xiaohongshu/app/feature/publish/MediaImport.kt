@@ -3,6 +3,8 @@ package com.xiaohongshu.app.feature.publish
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -37,10 +39,11 @@ internal const val MediaReadFailedToast = "媒体读取失败，请重试"
 /**
  * E1 / E2 共用的媒体获取能力（I4 + §7 E1「从相册选择 / 拍摄」）。
  *
- * 两条来源：
+ * 三条来源：
  * - [pickFromGallery] 系统照片选择器（`PickMultipleVisualMedia`，**多选、无需运行时权限**）；
  * - [takePhoto] 相机：先要 CAMERA 运行时权限（**全项目唯一运行时权限**），
- *   授权后经 `FileProvider` 写入 `cache/captures/` 再交给系统相机（`TakePicture`）。
+ *   授权后经 `FileProvider` 写入 `cache/captures/` 再交给系统相机（`TakePicture`）；
+ * - [pickVideo] / [pickImage] 视频/封面的**单选**替换（E2 视频态双槽专用）。
  *
  * 选到的 `content://` URI 会**立即拷贝到 `cache/publish/`** 落盘为真实文件：
  * ① 照片选择器的读权限不跨进程重启，落盘后与 URI 生命周期解耦；
@@ -52,18 +55,26 @@ internal class MediaAcquisition(
     val pickFromGallery: () -> Unit,
     /** 拍摄（内部处理权限申请与落盘）。 */
     val takePhoto: () -> Unit,
+    /** E2 视频态：单选替换视频。 */
+    val pickVideo: () -> Unit = {},
+    /** E2 视频态：单选替换封面。 */
+    val pickImage: () -> Unit = {},
 )
 
 /**
  * @param onAcquired 已落盘的媒体（相册多选为一批，拍摄为单个），调用方负责并入 [PublishDraft]
  * @param onCameraDenied 相机权限被拒（此时已弹 Toast，调用方只需决定「是否留在 E1」）
  * @param onFailure 媒体落盘失败
+ * @param onVideoPicked 视频槽单选落盘（E2 视频态换视频）
+ * @param onImagePicked 封面槽单选落盘（E2 视频态换封面）
  */
 @Composable
 internal fun rememberMediaAcquisition(
     onAcquired: (List<DraftMedia>) -> Unit,
     onCameraDenied: () -> Unit,
     onFailure: (String) -> Unit,
+    onVideoPicked: (DraftMedia) -> Unit = {},
+    onImagePicked: (DraftMedia) -> Unit = {},
 ): MediaAcquisition {
     val context = LocalContext.current
     val toasts = LocalAppContainer.current.toastController
@@ -125,6 +136,27 @@ internal fun rememberMediaAcquisition(
         }
     }
 
+    // ---- E2 视频态双槽的单选替换：视频槽（仅视频）/ 封面槽（仅图片）----
+    val pickVideoLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val imported = withContext(Dispatchers.IO) { copyToCacheDir(context, uri) }
+            if (imported == null) onFailure(MediaReadFailedToast) else onVideoPicked(imported)
+        }
+    }
+
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val imported = withContext(Dispatchers.IO) { copyToCacheDir(context, uri) }
+            if (imported == null) onFailure(MediaReadFailedToast) else onImagePicked(imported)
+        }
+    }
+
     return MediaAcquisition(
         pickFromGallery = {
             galleryLauncher.launch(
@@ -139,42 +171,74 @@ internal fun rememberMediaAcquisition(
             // 已授权直接进相机；否则走 I4 权限申请（首次触发系统弹窗）
             if (granted) launchCamera() else permissionLauncher.launch(Manifest.permission.CAMERA)
         },
+        pickVideo = {
+            pickVideoLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly),
+            )
+        },
+        pickImage = {
+            pickImageLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+            )
+        },
     )
 }
 
 // ---------------------------------------------------------------- 落盘辅助
 
-/** 一次媒体并入的结果（用于 §7 E2/E4 的「超出上限 → Toast」）。 */
+/** 一次图片批次并入的结果（用于「超出上限 → Toast」）。 */
 internal data class MediaAcceptance(
     /** 实际并入草稿的条数。 */
     val accepted: Int,
     /** 图片超出 9 张上限。 */
     val imageOverflow: Boolean,
-    /** 视频超出 1 个上限。 */
-    val videoOverflow: Boolean,
 )
 
 /**
- * 把新选中的媒体并入草稿，**累计**校验「图 ≤9、视频 ≤1（可共存）」。
+ * 把新选中的一批媒体按**图文态**并入草稿：只收图片、累计 ≤9，超出部分丢弃。
  *
- * 放在这里而不是各调用点：E1（相册多选可直接选到多个视频）与 E2「＋」都必须做同一套裁剪，
- * 否则 E1 会出现「选了 2 个视频后静默什么都不做」的空洞。
+ * 含视频的批次不走这里（两态互斥）：E1 相册混选 / E2「＋」选到视频时，
+ * 由调用方走「截首帧 → [PublishDraft.enterVideoMode]」（E2 另有二次确认）。
  */
-internal fun PublishDraft.acceptMedia(items: List<DraftMedia>): MediaAcceptance {
+internal fun PublishDraft.acceptImages(items: List<DraftMedia>): MediaAcceptance {
     val images = items.filterNot { it.isVideo }
-    val videos = items.filter { it.isVideo }
     val imageCapacity = (PublishDraft.MAX_IMAGE - imageCount).coerceAtLeast(0)
-    val videoCapacity = (PublishDraft.MAX_VIDEO - videoCount).coerceAtLeast(0)
 
-    val accepted = images.take(imageCapacity) + videos.take(videoCapacity)
+    val accepted = images.take(imageCapacity)
     if (accepted.isNotEmpty()) addMedia(accepted)
 
     return MediaAcceptance(
         accepted = accepted.size,
         imageOverflow = images.size > imageCapacity,
-        videoOverflow = videos.size > videoCapacity,
     )
 }
+
+/**
+ * 抽取视频**首帧**落盘为封面图（`cache/publish/cover_*.jpg`，JPEG 90）。
+ *
+ * 契约 §2 变更 #20：视频笔记必须携带封面，客户端默认用首帧填充；
+ * 换视频时同样经此重截。解码失败（损坏/不支持的编码）返回 null，调用方 Toast 并停留在原状态。
+ */
+internal suspend fun extractVideoCover(context: Context, videoLocalPath: String): DraftMedia? =
+    withContext(Dispatchers.IO) {
+        runCatching {
+            val retriever = MediaMetadataRetriever()
+            try {
+                retriever.setDataSource(videoLocalPath)
+                val frame = retriever.getFrameAtTime(0L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                    ?: return@runCatching null
+                val target = File(mediaDir(context), "cover_${UUID.randomUUID()}.jpg")
+                target.outputStream().use { frame.compress(Bitmap.CompressFormat.JPEG, 90, it) }
+                if (target.length() <= 0L) null else DraftMedia(
+                    localPath = target.absolutePath,
+                    isVideo = false,
+                    mimeType = MIME_JPEG,
+                )
+            } finally {
+                retriever.release()
+            }
+        }.getOrNull()
+    }
 
 private const val MIME_JPEG = "image/jpeg"
 private const val CACHE_MEDIA_DIR = "publish"

@@ -156,30 +156,6 @@ fun XhsRetryPill(
     }
 }
 
-/** 表单错误条（E4）：表单上方，浅灰底深字；与 H3-2 的红色 Error 气泡分工不同。 */
-@Composable
-fun XhsFormErrorBar(
-    message: String,
-    modifier: Modifier = Modifier,
-) {
-    if (message.isBlank()) return
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
-            .background(XhsColor.BgGray)
-            .padding(horizontal = Dimens.s12, vertical = Dimens.s8),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = message,
-            style = XhsType.s(12),
-            color = XhsColor.Text1,
-            textAlign = TextAlign.Center,
-        )
-    }
-}
-
 /** 骨架条（C1-2 标题/正文骨架）。[widthFraction] 为父宽占比。 */
 @Composable
 fun XhsSkeletonBar(

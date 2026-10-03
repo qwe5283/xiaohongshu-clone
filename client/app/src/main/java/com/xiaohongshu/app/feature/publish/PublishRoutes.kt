@@ -1,11 +1,15 @@
 package com.xiaohongshu.app.feature.publish
 
 /**
- * WS-Publish 入口：E1 发布入口弹层 / E2 表单（含 E4 错误条、E5-1 提交中、E5-2 成功、E7 放弃确认）/
- * E3 写文字。
+ * WS-Publish 入口：E1 发布入口弹层 / E2 表单（含 E5-1 提交中、E5-2 成功、E7 放弃确认；
+ * 校验/提交失败一律 Toast，原 E4 错误条已废弃）/ E3 写文字。
+ *
+ * 媒体结构两态互斥（契约 §2 变更 #20）：图文态（1–9 图）与视频态（1 视频 + 1 封面，
+ * 封面默认视频首帧）。E1 混选 → 只保留一个视频直接进视频态；E2 图文态选到视频 →
+ * XhsConfirmSheet 二次确认后切换。
  *
  * 只有这三个 `*Route` / `*Sheet` 是包外可见入口（签名固定，`AppNavHost` 与 `MainScaffold` 直接调用）；
- * 其余实现散落在同目录的 [MediaImport]（相册/相机/权限）、[PublishComponents]（媒体条与表单控件）、
+ * 其余实现散落在同目录的 [MediaImport]（相册/相机/权限/首帧截取）、[PublishComponents]（媒体条与表单控件）、
  * [PublishViewModel]、[WriteTextViewModel] 中。
  */
 
@@ -27,11 +31,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,13 +50,13 @@ import com.xiaohongshu.app.core.publish.PublishDraft
 import com.xiaohongshu.app.core.ui.SheetAction
 import com.xiaohongshu.app.core.ui.XhsActionSheet
 import com.xiaohongshu.app.core.ui.XhsConfirmSheet
-import com.xiaohongshu.app.core.ui.XhsFormErrorBar
 import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsPublishButton
 import com.xiaohongshu.app.core.ui.XhsTopBar
 import com.xiaohongshu.app.di.LocalAppContainer
 import com.xiaohongshu.app.di.appViewModel
 import com.xiaohongshu.app.navigation.AppNavigator
+import kotlinx.coroutines.launch
 
 // ==================================================================== E1 发布入口
 
@@ -89,6 +95,8 @@ fun PublishEntrySheet(
     navigator: AppNavigator,
 ) {
     val container = LocalAppContainer.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val session by container.sessionManager.state.collectAsStateWithLifecycle()
     val draft = container.publishDraft
 
@@ -100,13 +108,31 @@ fun PublishEntrySheet(
         onAcquired = { items ->
             // 每次进入发布流程都从干净草稿开始（避免上一轮残留串味）
             draft.reset()
-            val result = draft.acceptMedia(items)
-            if (result.imageOverflow) container.toastController.show(MsgImageLimit)
-            if (result.videoOverflow) container.toastController.show(MsgVideoLimit)
-            // 一张都没收下（例如只选了多个视频）→ 留在 E1：无素材笔记不允许创建
-            if (result.accepted > 0) {
-                onDismiss()
-                navigator.toPublishForm()
+            val videos = items.filter { it.isVideo }
+            if (videos.isEmpty()) {
+                // 图文态：1–9 张图片，超出上限丢弃 + Toast
+                val result = draft.acceptImages(items)
+                if (result.imageOverflow) container.toastController.show(MsgImageLimit)
+                if (result.accepted > 0) {
+                    onDismiss()
+                    navigator.toPublishForm()
+                }
+            } else {
+                // 混选/纯视频 → 视频态：**仅保留一个视频**，首帧即封面（契约 §2 变更 #20）；
+                // 同批的图片与多余视频丢弃（多视频 Toast 提示）
+                if (videos.size > 1) container.toastController.show(MsgVideoLimit)
+                val video = videos.first()
+                scope.launch {
+                    val cover = extractVideoCover(context, video.localPath)
+                    if (cover == null) {
+                        // 首帧截取失败：留在 E1，不产生半成品草稿
+                        container.toastController.show(MsgCoverGenerateFailed)
+                    } else {
+                        draft.enterVideoMode(video, cover)
+                        onDismiss()
+                        navigator.toPublishForm()
+                    }
+                }
             }
         },
         // I4：拒绝时 Toast 已在 MediaAcquisition 内弹出，弹层保持打开 = 「回 E1」
@@ -148,14 +174,16 @@ private val AddMediaActions = listOf(
 )
 
 /**
- * E2 发布表单（含 E4 错误条 / E5-1 提交中 / E5-2 成功 / E7 放弃确认）。
+ * E2 发布表单（含 E5-1 提交中 / E5-2 成功 / E7 放弃确认；校验失败 Toast）。
  *
- * 媒体已在草稿里（E1 相册/拍摄 或 E3 配图），本页只做编辑与提交；
+ * 媒体已在草稿里（E1 相册/拍摄、E3 配图或 E1 混选进视频态），本页只做编辑与提交；
  * **无**话题 / 位置 / 可见范围。
  */
 @Composable
 fun PublishFormRoute(navigator: AppNavigator) {
     val container = LocalAppContainer.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val vm: PublishViewModel = appViewModel {
         PublishViewModel(
             draft = it.publishDraft,
@@ -169,20 +197,43 @@ fun PublishFormRoute(navigator: AppNavigator) {
     // 组合期读取草稿的 SnapshotStateList → 增删媒体自动重组
     val media = vm.media.toList()
 
+    // 校验/提交失败 → Toast（原 E4 错误条废弃），显示后即清空
+    LaunchedEffect(error) {
+        if (error.isNotEmpty()) {
+            container.toastController.show(error)
+            vm.clearError()
+        }
+    }
+
     val acquisition = rememberMediaAcquisition(
         onAcquired = vm::onMediaAcquired,
         onCameraDenied = { },
         onFailure = { container.toastController.show(it) },
+        // 视频槽换视频：重截**新视频**首帧为新封面（③）
+        onVideoPicked = { video ->
+            scope.launch {
+                val cover = extractVideoCover(context, video.localPath)
+                if (cover == null) {
+                    container.toastController.show(MsgCoverGenerateFailed)
+                } else {
+                    vm.replaceVideo(video, cover)
+                }
+            }
+        },
+        // 封面槽换封面：仅替换封面图，视频不动（③）
+        onImagePicked = vm::replaceCover,
     )
 
     PublishFormScreen(
         title = vm.title,
         content = vm.content,
         media = media,
-        error = error,
+        video = vm.video,
+        cover = vm.cover,
         submitting = submitting,
         showDiscardConfirm = vm.showDiscardConfirm,
         showAddMediaSheet = vm.showAddMediaSheet,
+        showVideoSwitchConfirm = vm.showVideoSwitchConfirm,
         onTitleChange = vm::onTitleChange,
         onContentChange = vm::onContentChange,
         onRemoveMedia = vm::removeMedia,
@@ -196,6 +247,24 @@ fun PublishFormRoute(navigator: AppNavigator) {
             vm.dismissAddMediaSheet()
             acquisition.takePhoto()
         },
+        onReplaceVideo = acquisition.pickVideo,
+        onReplaceCover = acquisition.pickImage,
+        onExitVideoMode = vm::exitVideoMode,
+        // ② 确认切换：截首帧 → 清图片进视频态；失败 Toast 留在图文态。
+        // pending 经**组合参数**传入（组合期捕获）：XhsConfirmSheet 确认行先 onDismiss 再
+        // onConfirm，onDismiss（cancelSwitchToVideo）会清空 pendingVideo，点击时再读 VM 必得 null
+        videoSwitchPending = vm.pendingVideo,
+        onVideoSwitchConfirm = { pending ->
+            scope.launch {
+                val cover = extractVideoCover(context, pending.localPath)
+                if (cover == null) {
+                    container.toastController.show(MsgCoverGenerateFailed)
+                } else {
+                    vm.confirmSwitchToVideo(pending, cover)
+                }
+            }
+        },
+        onVideoSwitchDismiss = vm::cancelSwitchToVideo,
         onBack = vm::onBackPressed,
         // E5-2：成功 → Route 负责导航（一次性事件走回调，规范 §3）
         onPublish = { vm.submit(onSuccess = navigator::toMain) },
@@ -213,10 +282,12 @@ private fun PublishFormScreen(
     title: String,
     content: String,
     media: List<DraftMedia>,
-    error: String,
+    video: DraftMedia?,
+    cover: DraftMedia?,
     submitting: Boolean,
     showDiscardConfirm: Boolean,
     showAddMediaSheet: Boolean,
+    showVideoSwitchConfirm: Boolean,
     onTitleChange: (String) -> Unit,
     onContentChange: (String) -> Unit,
     onRemoveMedia: (Int) -> Unit,
@@ -224,6 +295,12 @@ private fun PublishFormScreen(
     onAddMediaDismiss: () -> Unit,
     onPickFromGallery: () -> Unit,
     onTakePhoto: () -> Unit,
+    onReplaceVideo: () -> Unit,
+    onReplaceCover: () -> Unit,
+    onExitVideoMode: () -> Unit,
+    videoSwitchPending: DraftMedia?,
+    onVideoSwitchConfirm: (DraftMedia) -> Unit,
+    onVideoSwitchDismiss: () -> Unit,
     onBack: () -> Unit,
     onPublish: () -> Unit,
     onDiscardConfirm: () -> Unit,
@@ -235,6 +312,7 @@ private fun PublishFormScreen(
         when {
             submitting -> Unit
             showAddMediaSheet -> onAddMediaDismiss()
+            showVideoSwitchConfirm -> onVideoSwitchDismiss()
             showDiscardConfirm -> onDiscardDismiss()
             else -> onBack()
         }
@@ -263,23 +341,25 @@ private fun PublishFormScreen(
                 },
             )
 
-            // E4：错误条在页面顶部，已选媒体/已填内容一律保留
-            XhsFormErrorBar(
-                message = error,
-                modifier = Modifier.padding(
-                    horizontal = Dimens.pagePadding,
-                    vertical = Dimens.s8,
-                ),
-            )
-
-            // 已选媒体：缩略可 × 删除、＋ 继续添加（图 ≤9、视频 ≤1，可共存）
-            // E5-1 提交中：不可增删（E5-1 的缩略图同样无 × / 无 ＋）
-            MediaStrip(
-                media = media,
-                onRemove = onRemoveMedia,
-                onAdd = onAddMediaClick,
-                editable = !submitting,
-            )
+            // 媒体条两态（契约 §2 变更 #20）：视频态双槽（视频/封面）+ 脚注、无 ＋；
+            // 图文态缩略 + ＋。E5-1 提交中均不可增删（E5-1 的缩略图同样无 × / 无 ＋）
+            if (video != null && cover != null) {
+                VideoMediaStrip(
+                    video = video,
+                    cover = cover,
+                    onReplaceVideo = onReplaceVideo,
+                    onReplaceCover = onReplaceCover,
+                    onExitVideoMode = onExitVideoMode,
+                    editable = !submitting,
+                )
+            } else {
+                MediaStrip(
+                    media = media,
+                    onRemove = onRemoveMedia,
+                    onAdd = onAddMediaClick,
+                    editable = !submitting,
+                )
+            }
 
             Column(
                 modifier = Modifier.padding(
@@ -324,6 +404,16 @@ private fun PublishFormScreen(
                 }
             },
             onDismiss = onAddMediaDismiss,
+        )
+
+        // ②：图文态选到视频 → 二次确认「清除已选图片、切换为视频笔记」。
+        // onConfirm 用组合期捕获的 [videoSwitchPending]（组件内部先 onDismiss 清 VM 态再 onConfirm）
+        XhsConfirmSheet(
+            visible = showVideoSwitchConfirm,
+            message = MsgVideoSwitchConfirm,
+            confirmText = "切换",
+            onConfirm = { videoSwitchPending?.let(onVideoSwitchConfirm) },
+            onDismiss = onVideoSwitchDismiss,
         )
 
         // E7：遮罩 + 底部确认/取消（与 F6/G6 同款结构）
