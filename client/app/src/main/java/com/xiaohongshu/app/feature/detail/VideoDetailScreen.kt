@@ -1,5 +1,6 @@
 package com.xiaohongshu.app.feature.detail
 
+import android.app.Activity
 import android.media.MediaPlayer
 import android.net.Uri
 import android.view.ViewGroup
@@ -45,10 +46,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
 import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
@@ -124,6 +127,9 @@ internal fun VideoDetailScreen(
     onLoadMore: () -> Unit,
     onRetryComments: () -> Unit,
 ) {
+    // 深色沉浸：状态栏图标切白（黑底上系统默认的深色图标不可见）
+    ImmersiveDarkSystemBars()
+
     Box(modifier = Modifier.fillMaxSize().background(XhsColor.Black)) {
         Column(modifier = Modifier.fillMaxSize()) {
             // 状态栏区保持黑色，视频不侵入
@@ -194,6 +200,29 @@ internal fun VideoDetailScreen(
             sendDisabledOverride = state.overlay.sending,
             dismissOnKeyboardHide = true,
         )
+    }
+}
+
+/**
+ * 深色沉浸页的系统栏外观：状态栏/导航栏图标切白色（三键导航的深色图标在黑底上不可见），
+ * 退出页面时恢复进入前的取值——其余页面沿用 `enableEdgeToEdge` 跟随系统的默认外观。
+ */
+@Composable
+private fun ImmersiveDarkSystemBars() {
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val controller = (view.context as? Activity)
+            ?.window
+            ?.let { WindowCompat.getInsetsController(it, view) }
+            ?: return@DisposableEffect onDispose {}
+        val prevStatus = controller.isAppearanceLightStatusBars
+        val prevNavigation = controller.isAppearanceLightNavigationBars
+        controller.isAppearanceLightStatusBars = false
+        controller.isAppearanceLightNavigationBars = false
+        onDispose {
+            controller.isAppearanceLightStatusBars = prevStatus
+            controller.isAppearanceLightNavigationBars = prevNavigation
+        }
     }
 }
 
