@@ -1,5 +1,6 @@
 package com.xiaohongshu.app.feature.home
 
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xiaohongshu.app.core.interact.InteractionStore
@@ -52,7 +53,8 @@ data class HomeUiState(
  *
  * 关键取舍：
  * - **两个 Tab 各自一个 [PagedList]**：切换页签不能丢对方的已加载数据；
- * - 瀑布流的滚动位置由 Compose 侧两个 `LazyStaggeredGridState` 保持（见 HomeRoute）；
+ * - 瀑布流的滚动状态也由本 VM 持有（[discoverGrid]/[followingGrid]），
+ *   导航往返不丢 lane 记忆（原因见其文档）；
  * - 渲染数据一律经 `InteractionStore.mergeAll`（§4.3：从详情页点赞返回后赞数不能跳回去）；
  * - 游客点「关注」：关注流是登录态数据（契约 §2.8 🔒），此时**不发请求**，直接给 B5 空态，
  *   避免 401 触发全局「会话过期 → 推入登录页」。
@@ -66,6 +68,20 @@ class HomeViewModel(
 
     private val _tab = MutableStateFlow(HomeTab.DISCOVER)
     private val _channel = MutableStateFlow(HomeChannels.first())
+
+    /**
+     * 两个页签的瀑布流滚动状态。
+     *
+     * 持有在 VM 而非 Composable 侧 `rememberLazyStaggeredGridState`：后者随导航存档重建，
+     * 但 `LazyStaggeredGridState.Saver` 只存每栏首可见项的索引/偏移，不存内部按 item 记忆的
+     * lane 分配表；从详情页等推入页返回后上滑时，分栏只能被逐个"猜"回，卡片左右跳变
+     * （上游 issuetracker.google.com/issues/384144789，foundation 1.10.4 仍未修复）。
+     * 本 VM 挂在 MAIN 返回栈条目上，推入子页、切底 Tab 都不销毁，同一 state 实例连同
+     * lane 记忆完整保留，顺带保住底 Tab 往返的滚动位置。代价：进程被杀后回列表顶部
+     * （原 Saver 路径恢复后同样跳变，不算退化）。
+     */
+    val discoverGrid = LazyStaggeredGridState()
+    val followingGrid = LazyStaggeredGridState()
 
     private val discover = PagedList<Note>(
         keyOf = { it.id },

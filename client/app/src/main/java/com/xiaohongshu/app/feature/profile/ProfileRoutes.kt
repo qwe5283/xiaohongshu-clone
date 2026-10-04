@@ -78,6 +78,7 @@ fun MyProfileRoute(navigator: AppNavigator, onOpenDrawer: () -> Unit) {
         onRetry = vm::retry,
         onLogin = navigator::toLogin,
         listFor = vm::listOf,
+        gridFor = vm::gridFor,
     )
 }
 
@@ -135,6 +136,7 @@ fun UserProfileRoute(
         },
         onRetry = vm::retry,
         listFor = vm::listOf,
+        gridFor = vm::gridFor,
     )
 }
 

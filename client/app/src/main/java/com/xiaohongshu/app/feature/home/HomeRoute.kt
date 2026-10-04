@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -73,6 +72,8 @@ fun HomeRoute(navigator: AppNavigator) {
 
     HomeScreen(
         state = state,
+        discoverGrid = vm.discoverGrid,
+        followingGrid = vm.followingGrid,
         loggedIn = session.loggedIn,
         onTabSelect = vm::selectTab,
         onChannelSelect = vm::selectChannel,
@@ -91,10 +92,12 @@ fun HomeRoute(navigator: AppNavigator) {
     )
 }
 
-/** 无状态内容层：状态全部来自 [HomeUiState]，方便 Preview 与单测视线。 */
+/** 无状态内容层：状态全部来自 [HomeUiState] 与调用方（含 VM 持有的滚动状态），方便 Preview 与单测视线。 */
 @Composable
 private fun HomeScreen(
     state: HomeUiState,
+    discoverGrid: LazyStaggeredGridState,
+    followingGrid: LazyStaggeredGridState,
     loggedIn: Boolean,
     onTabSelect: (HomeTab) -> Unit,
     onChannelSelect: (String) -> Unit,
@@ -107,9 +110,8 @@ private fun HomeScreen(
     onLoadMore: () -> Unit,
     onLogin: () -> Unit,
 ) {
-    // 两个页签各持一个滚动状态：切换页签时两者都在组合中，滚动位置互不影响
-    val discoverGrid = rememberLazyStaggeredGridState()
-    val followingGrid = rememberLazyStaggeredGridState()
+    // 两个页签各持一份滚动状态，由 HomeViewModel 持有（构造见其文档）：推入子页、
+    // 切底 Tab 返回后同一实例原位恢复，不丢 lane 记忆；切页签时两者都常驻，互不影响
     val grid: LazyStaggeredGridState = when (state.tab) {
         HomeTab.DISCOVER -> discoverGrid
         HomeTab.FOLLOWING -> followingGrid

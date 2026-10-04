@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -151,6 +151,8 @@ fun SearchResultRoute(
 
     SearchResultScreen(
         state = state,
+        allGrid = vm.allGrid,
+        videoGrid = vm.videoGrid,
         onQueryChange = vm::onQueryChange,
         onSubmit = vm::submit,
         onFilterSelect = vm::selectFilter,
@@ -175,6 +177,8 @@ fun SearchResultRoute(
 @Composable
 private fun SearchResultScreen(
     state: SearchResultUiState,
+    allGrid: LazyStaggeredGridState,
+    videoGrid: LazyStaggeredGridState,
     onQueryChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onFilterSelect: (SearchResultFilter) -> Unit,
@@ -187,9 +191,8 @@ private fun SearchResultScreen(
     onRetry: () -> Unit,
     onLoadMore: () -> Unit,
 ) {
-    // 「全部/视频」各自一份网格滚动态：切页签不互相带走滚动位置
-    val allGrid = rememberLazyStaggeredGridState()
-    val videoGrid = rememberLazyStaggeredGridState()
+    // 「全部/视频」各自一份网格滚动态，由 SearchResultViewModel 持有（构造见其文档）：
+    // 从本页推入笔记详情返回后同一实例原位恢复，不丢 lane 记忆；切页签互不带走滚动位置
     val grid = if (state.filter == SearchResultFilter.VIDEO) videoGrid else allGrid
 
     // 原地重查、或切到笔记页签时，回到列表顶部

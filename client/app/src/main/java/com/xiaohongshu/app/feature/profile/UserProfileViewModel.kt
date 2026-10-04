@@ -1,5 +1,6 @@
 package com.xiaohongshu.app.feature.profile
 
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xiaohongshu.app.core.interact.InteractionStore
@@ -77,6 +78,16 @@ internal class UserProfileViewModel(
     private val _tab = MutableStateFlow(ProfileTab.NOTES)
     private val _author = MutableStateFlow(User.Empty.copy(id = userId))
     private val _followed = MutableStateFlow(false)
+
+    /**
+     * 各 Tab 的瀑布流滚动状态。持有在 VM 而非 Composable 侧 `rememberLazyStaggeredGridState`
+     * 的原因见 `HomeViewModel.discoverGrid` 文档（Saver 不存 lane 记忆，从本页推入笔记详情
+     * 返回后上滑会跳栏；上游 issuetracker.google.com/issues/384144789）。本 VM 随本页的
+     * 返回栈条目生死（key 带 userId），推入子页不销毁，返回即原位恢复。
+     */
+    val notesGrid = LazyStaggeredGridState()
+    val collectedGrid = LazyStaggeredGridState()
+    val likedGrid = LazyStaggeredGridState()
 
     /** F2「笔记」Tab（契约 §2.6，公开）。 */
     private val notes = PagedList<Note>(
@@ -187,6 +198,13 @@ internal class UserProfileViewModel(
         ProfileTab.NOTES -> notes
         ProfileTab.COLLECTED -> collected
         ProfileTab.LIKED -> liked
+    }
+
+    /** 当前 Tab 的瀑布流滚动状态（与 [listOf] 同一套分发的 VM 持有实例）。 */
+    fun gridFor(tab: ProfileTab): LazyStaggeredGridState = when (tab) {
+        ProfileTab.NOTES -> notesGrid
+        ProfileTab.COLLECTED -> collectedGrid
+        ProfileTab.LIKED -> likedGrid
     }
 
     fun retry() {

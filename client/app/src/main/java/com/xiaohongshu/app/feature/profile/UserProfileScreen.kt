@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,15 +47,10 @@ internal fun UserProfileScreen(
     onLikeClick: (Note) -> Unit,
     onRetry: () -> Unit,
     listFor: (ProfileTab) -> PagedList<Note>,
+    gridFor: (ProfileTab) -> LazyStaggeredGridState,
 ) {
-    val notesGrid = rememberLazyStaggeredGridState()
-    val collectedGrid = rememberLazyStaggeredGridState()
-    val likedGrid = rememberLazyStaggeredGridState()
-    fun gridFor(tab: ProfileTab): LazyStaggeredGridState = when (tab) {
-        ProfileTab.NOTES -> notesGrid
-        ProfileTab.COLLECTED -> collectedGrid
-        ProfileTab.LIKED -> likedGrid
-    }
+    // 各 Tab 的滚动状态由 VM 持有（构造见 UserProfileViewModel）：从本页推入笔记详情
+    // 返回后同一实例原位恢复，不丢 lane 记忆；切页签时各 state 常驻，互不影响
 
     // 懒加载：只有展示过的 Tab 才挂载分页副作用（挂载即首刷一次，之后常驻）
     var visited by remember { mutableStateOf(setOf(state.tab)) }

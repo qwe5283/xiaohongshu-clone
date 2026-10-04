@@ -1,5 +1,6 @@
 package com.xiaohongshu.app.feature.profile
 
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xiaohongshu.app.core.interact.InteractionStore
@@ -69,6 +70,16 @@ internal class MyProfileViewModel(
 ) : ViewModel() {
 
     private val _tab = MutableStateFlow(ProfileTab.NOTES)
+
+    /**
+     * 三个 Tab 的瀑布流滚动状态。持有在 VM 而非 Composable 侧 `rememberLazyStaggeredGridState`
+     * 的原因见 `HomeViewModel.discoverGrid` 文档（Saver 不存 lane 记忆，导航往返后上滑会跳栏；
+     * 上游 issuetracker.google.com/issues/384144789）。本 VM 挂在 MAIN 返回栈条目上，
+     * 推入子页、切底 Tab 都不销毁。
+     */
+    val notesGrid = LazyStaggeredGridState()
+    val collectedGrid = LazyStaggeredGridState()
+    val likedGrid = LazyStaggeredGridState()
 
     /** F1「笔记」Tab 数据源（契约 §2.7 `GET /api/post/my`，🔒）。 */
     private val notes = PagedList<Note>(
@@ -159,6 +170,13 @@ internal class MyProfileViewModel(
         ProfileTab.NOTES -> notes
         ProfileTab.COLLECTED -> collected
         ProfileTab.LIKED -> liked
+    }
+
+    /** 当前 Tab 的瀑布流滚动状态（与 [listOf] 同一套分发的 VM 持有实例）。 */
+    fun gridFor(tab: ProfileTab): LazyStaggeredGridState = when (tab) {
+        ProfileTab.NOTES -> notesGrid
+        ProfileTab.COLLECTED -> collectedGrid
+        ProfileTab.LIKED -> likedGrid
     }
 
     /** B4-2 首次失败后的「重试」。 */

@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -69,16 +68,10 @@ internal fun MyProfileScreen(
     onRetry: () -> Unit,
     onLogin: () -> Unit,
     listFor: (ProfileTab) -> PagedList<Note>,
+    gridFor: (ProfileTab) -> LazyStaggeredGridState,
 ) {
-    // 三个 Tab 各持一个滚动状态：切页签互不影响
-    val notesGrid = rememberLazyStaggeredGridState()
-    val collectedGrid = rememberLazyStaggeredGridState()
-    val likedGrid = rememberLazyStaggeredGridState()
-    fun gridFor(tab: ProfileTab): LazyStaggeredGridState = when (tab) {
-        ProfileTab.NOTES -> notesGrid
-        ProfileTab.COLLECTED -> collectedGrid
-        ProfileTab.LIKED -> likedGrid
-    }
+    // 三个 Tab 的滚动状态由 VM 持有（构造见 MyProfileViewModel）：推入子页、切底 Tab
+    // 返回后同一实例原位恢复，不丢 lane 记忆；切页签时三者都常驻，互不影响
 
     // 懒加载：只有「已展示过」的 Tab 才挂载分页副作用 —— 挂载即首刷一次，
     // 之后随页面常驻，页签来回切换不会重复请求（三 Tab 懒加载）。

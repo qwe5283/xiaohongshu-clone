@@ -1,5 +1,6 @@
 package com.xiaohongshu.app.feature.search
 
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.xiaohongshu.app.core.interact.InteractionStore
@@ -129,6 +130,16 @@ class SearchResultViewModel(
     private val _keyword = MutableStateFlow(initialKeyword)
     private val _query = MutableStateFlow(initialKeyword)
     private val _filter = MutableStateFlow(SearchResultFilter.ALL)
+
+    /**
+     * 「全部/视频」两页签的瀑布流滚动状态。持有在 VM 而非 Composable 侧
+     * `rememberLazyStaggeredGridState` 的原因见 `HomeViewModel.discoverGrid` 文档
+     * （Saver 不存 lane 记忆，从本页推入笔记详情返回后上滑会跳栏；
+     * 上游 issuetracker.google.com/issues/384144789）。本 VM 随本页返回栈条目生死，
+     * 推入子页不销毁。「用户」页签是普通列表，不需要。
+     */
+    val allGrid = LazyStaggeredGridState()
+    val videoGrid = LazyStaggeredGridState()
 
     private val allNotes = PagedList<Note>(
         keyOf = { it.id },
