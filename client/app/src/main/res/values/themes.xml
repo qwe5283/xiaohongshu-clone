@@ -6,6 +6,8 @@
       状态栏由 Activity 的 enableEdgeToEdge + 各页面 WindowInsets 处理（沉浸式视频页自行置黑）。
     -->
     <style name="Theme.Xiaohongshu" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenBackground">@android:color/white</item>
         <item name="android:windowBackground">@android:color/white</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
