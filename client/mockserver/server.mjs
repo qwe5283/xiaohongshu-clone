@@ -15,7 +15,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { generateImage, clampSize } from './png.mjs';
 import { buildDb, recomputeUserStats, fmt, NOTIFICATION_TYPE_TEXT, HOT_KEYWORDS, CATEGORY_TYPES } from './seed.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -61,16 +60,27 @@ const CORS_HEADERS = {
  * ========================================================================== */
 let db = buildDb({ publicBase: PUBLIC_BASE });
 
-/* image bytes cache — the seed reuses the same URLs hundreds of times */
-const imgCache = new Map();
-const IMG_CACHE_MAX = 160;
-function cachedImage(key, producer) {
-  const hit = imgCache.get(key);
-  if (hit) return hit;
-  const buf = producer();
-  imgCache.set(key, buf);
-  if (imgCache.size > IMG_CACHE_MAX) imgCache.delete(imgCache.keys().next().value);
-  return buf;
+/* Placeholder artwork is served by Lorem Picsum (https://picsum.photos). Seed data
+ * points straight at it; the /img and /avatar routes redirect there, and
+ * POST /api/post/text-image fetches one photo so the returned /files/{id} URL
+ * keeps working without the client ever talking to the internet itself. */
+const PICSUM = 'https://picsum.photos';
+const picsumUrl = (seed, w, h) => `${PICSUM}/seed/${encodeURIComponent(seed)}/${w}/${h}`;
+
+/** Clamp a requested size and cap the total pixel budget (keeps the redirect targets sane). */
+function clampSize(w, h, defW = 800, defH = 600, maxPixels = 1200 * 1200) {
+  let W = Number.parseInt(w, 10);
+  let H = Number.parseInt(h, 10);
+  if (!Number.isFinite(W) || W <= 0) W = defW;
+  if (!Number.isFinite(H) || H <= 0) H = defH;
+  W = Math.min(1200, Math.max(8, Math.round(W)));
+  H = Math.min(1200, Math.max(8, Math.round(H)));
+  if (W * H > maxPixels) {
+    const k = Math.sqrt(maxPixels / (W * H));
+    W = Math.max(8, Math.floor(W * k));
+    H = Math.max(8, Math.floor(H * k));
+  }
+  return [W, H];
 }
 
 /** Best-effort: recreate assets/sample.mp4 with ffmpeg if the committed asset is missing. */
@@ -465,6 +475,9 @@ function dimsForUrl(url) {
     const w = Number.parseInt(u.searchParams.get('w') || '', 10);
     const h = Number.parseInt(u.searchParams.get('h') || '', 10);
     if (w > 0 && h > 0) return [w, h];
+    // Lorem Picsum: /seed/{seed}/{w}/{h} or plain /{w}/{h}
+    const pm = /^\/(?:seed\/[^/]+)?\/(\d+)\/(\d+)\/?$/.exec(u.pathname);
+    if (pm) return [Number.parseInt(pm[1], 10), Number.parseInt(pm[2], 10)];
     const m = /^\/files\/(.+)$/.exec(u.pathname);
     if (m) {
       const rec = db.files.get(decodeURIComponent(m[1]));
@@ -859,20 +872,30 @@ R('GET', '/api/post/text-image/generate', {}, (ctx) => {
   const text = ctx.query.get('text');
   if (!text) return E(5002, '参数缺失');
   if (Array.from(text).length > 20) return E(5001, '文本不能超过 20 个字');
-  const [w, h] = [800, 1200];
-  const buf = cachedImage(`gen|${w}x${h}|${text}`, () => generateImage(w, h, `textimg:${text}`, 'text'));
-  return { status: 200, buf, contentType: 'image/png' };
+  // Lorem Picsum cannot rasterise glyphs — the text only picks the photo deterministically.
+  return { status: 302, location: picsumUrl(`textimg:${text}`, 800, 1200), cache: true };
 });
 
-R('POST', '/api/post/text-image', {}, (ctx) => {
+R('POST', '/api/post/text-image', {}, async (ctx) => {
   const b = ctx.json || {};
   const text = typeof b.text === 'string' ? b.text : '';
   if (!text.trim()) return E(5002, '参数缺失');
   const clipped = Array.from(text).slice(0, 100).join('');
   const w = 800;
   const h = 1200;
-  const png = generateImage(w, h, `textimg:${clipped}`, 'text');
-  const stored = storeFile(png, `text-image-${Date.now()}.png`, 'image/png');
+  let bytes;
+  let mime = 'image/jpeg';
+  try {
+    const resp = await fetch(picsumUrl(`textimg:${clipped}`, w, h), { redirect: 'follow', signal: AbortSignal.timeout(15000) });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    mime = (resp.headers.get('content-type') || mime).split(';')[0];
+    bytes = Buffer.from(await resp.arrayBuffer());
+  } catch (err) {
+    console.error('[mock] text-image: Lorem Picsum fetch failed:', err.message || err);
+    return E(500, '生成配图失败，无法访问 Lorem Picsum');
+  }
+  const ext = EXT_BY_MIME[mime] || '.jpg';
+  const stored = storeFile(bytes, `text-image-${Date.now()}${ext}`, mime);
   return J({ url: stored.url, width: w, height: h }, '生成成功');
 });
 
@@ -1235,16 +1258,14 @@ R('GET', '/img', {}, (ctx) => {
   const [w, h] = clampSize(ctx.query.get('w'), ctx.query.get('h'), 800, 600);
   const seed = ctx.query.get('seed') || `${w}x${h}`;
   const text = ctx.query.get('text') || '';
-  const buf = cachedImage(`img|${w}x${h}|${seed}|${text}`, () => generateImage(w, h, seed, text ? 'text' : 'post'));
-  return { status: 200, buf, contentType: 'image/png', cache: true };
+  return { status: 302, location: picsumUrl(text ? `${seed}:${text}` : seed, w, h), cache: true };
 });
 
 R('GET', '/avatar', {}, (ctx) => {
   const size = Number.parseInt(ctx.query.get('size') || '200', 10);
   const s = clampSize(size, size, 200, 200, 512 * 512)[0];
   const seed = ctx.query.get('seed') || 'avatar';
-  const buf = cachedImage(`avatar|${s}|${seed}`, () => generateImage(s, s, `avatar:${seed}`, 'avatar'));
-  return { status: 200, buf, contentType: 'image/png', cache: true };
+  return { status: 302, location: picsumUrl(`avatar:${seed}`, s, s), cache: true };
 });
 
 R('GET', '/files/:id', {}, (ctx) => {
@@ -1425,6 +1446,16 @@ async function handle(req, res) {
   }
   if (!out) {
     sendJson(ctx, 200, ok(null));
+    return;
+  }
+  if (out.location !== undefined) {
+    ctx.status = out.status || 302;
+    ctx.res.writeHead(ctx.status, {
+      ...CORS_HEADERS,
+      Location: out.location,
+      'Cache-Control': out.cache ? 'public, max-age=86400' : 'no-store',
+    });
+    ctx.res.end();
     return;
   }
   if (out.buf !== undefined) {

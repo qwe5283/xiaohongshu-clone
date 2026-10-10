@@ -1,7 +1,21 @@
 // In-memory seed database for the Xiaohongshu clone mock server.
 // Everything is deterministic: rebuilding yields identical data (ids, counts, times
 // are anchored to "now" so the feed always looks fresh).
-import { hash32, mulberry32 } from './png.mjs';
+
+/** Deterministic PRNG (mulberry32) — drives the seeded metric spread below. */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function next() {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Placeholder images come from Lorem Picsum — the same seed always yields the same photo. */
+const PICSUM = 'https://picsum.photos';
 
 const HOUR = 3600 * 1000;
 const DAY = 24 * HOUR;
@@ -343,8 +357,8 @@ export function buildDb({ publicBase, now = Date.now() } = {}) {
     followSet: new Set(),
     commentLikeSet: new Set(),
     counters: { user: 0, post: 0, comment: 0, image: 0, notification: 0, file: 0 },
-    imgUrl: (w, h, seed) => `${BASE}/img?w=${w}&h=${h}&seed=${encodeURIComponent(seed)}`,
-    avatarUrl: (seed, size = 200) => `${BASE}/avatar?seed=${encodeURIComponent(seed)}&size=${size}`,
+    imgUrl: (w, h, seed) => `${PICSUM}/seed/${encodeURIComponent(seed)}/${w}/${h}`,
+    avatarUrl: (seed, size = 200) => `${PICSUM}/seed/${encodeURIComponent(seed)}/${size}/${size}`,
     videoUrl: () => `${BASE}/video/sample.mp4`,
   };
 
