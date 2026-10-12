@@ -416,7 +416,7 @@ private fun NoteBody(note: Note, modifier: Modifier = Modifier) {
     }
 }
 
-/** 评论区行内输入行：头像 +「说点什么...」胶囊 h 40。 */
+/** 评论区行内输入行：头像 +「说点什么...」胶囊 h 40。未登录（头像为空）用 launcher 图标衍生的灰度默认头像。 */
 @Composable
 private fun InlineCommentInputRow(
     myAvatar: String,
@@ -429,7 +429,15 @@ private fun InlineCommentInputRow(
             .padding(horizontal = DetailContentPadding, vertical = Dimens.s8),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        XhsAvatar(url = myAvatar, size = Dimens.avatarComment)
+        XhsAvatar(
+            url = myAvatar,
+            size = Dimens.avatarComment,
+            fallbackPainter = if (myAvatar.isBlank()) {
+                painterResource(R.drawable.ic_avatar_fallback)
+            } else {
+                null
+            },
+        )
         Spacer(modifier = Modifier.width(Dimens.s8))
         CommentInputPill(
             placeholder = placeholder,

@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -48,6 +49,7 @@ val PlaceholderIconRes = R.drawable.ic_placeholder
  *
  * @param targetWidthDp/targetHeightDp 期望显示尺寸，用于下采样；不传则按 1080px 封顶。
  * @param showGlyphOnFailure true 时在失败占位上叠加 [PlaceholderIconRes] 字形（图标类场景用）。
+ * @param fallbackPainter URL 为空时的兜底图（如未登录的默认头像）；加载失败仍走占位字形。
  */
 @Composable
 fun XhsAsyncImage(
@@ -59,6 +61,7 @@ fun XhsAsyncImage(
     clip: Shape? = null,
     showGlyphOnFailure: Boolean = true,
     alignment: Alignment = Alignment.Center,
+    fallbackPainter: Painter? = null,
 ) {
     val loader = LocalImageLoader.current
     val density = LocalDensity.current
@@ -86,6 +89,14 @@ fun XhsAsyncImage(
                 alignment = alignment,
                 modifier = Modifier.fillMaxSize(),
             )
+        } else if (url.isBlank() && fallbackPainter != null) {
+            Image(
+                painter = fallbackPainter,
+                contentDescription = null,
+                contentScale = contentScale,
+                alignment = alignment,
+                modifier = Modifier.fillMaxSize(),
+            )
         } else if (showGlyphOnFailure) {
             Icon(
                 painter = painterResource(PlaceholderIconRes),
@@ -99,12 +110,14 @@ fun XhsAsyncImage(
 
 /**
  * 圆形头像。头像档：18 / 24 / 36 / 48 / 108（取值见 [Dimens]）。
- * 缺图时用统一占位素材，不用「默认头像」第二套资源。
+ * 缺图（URL 加载失败）时用统一占位素材，不用「默认头像」第二套资源；
+ * 未登录（URL 为空）的默认头像走 [fallbackPainter]，调用方按需传入。
  *
  * @param borderWidthPx 描边宽度，单位为**物理像素**：发丝线传 1f 即可（1dp 在
  *   高密度屏约合 3px，视觉过粗）；0 表示不描边。描边画在头像外沿、贴着裁剪圆，
  *   可见宽度即该值，且不改变组件占位尺寸。
  * @param borderColor 描边颜色，仅 [borderWidthPx] > 0 时生效。
+ * @param fallbackPainter URL 为空时显示的默认头像。
  */
 @Composable
 fun XhsAvatar(
@@ -113,6 +126,7 @@ fun XhsAvatar(
     modifier: Modifier = Modifier,
     borderWidthPx: Float = Dimens.avatarBorderWidthPx,
     borderColor: Color = XhsColor.DotInactive,
+    fallbackPainter: Painter? = null,
 ) {
     Box(
         modifier = modifier
@@ -142,6 +156,7 @@ fun XhsAvatar(
             targetHeightDp = size,
             clip = CircleShape,
             showGlyphOnFailure = true,
+            fallbackPainter = fallbackPainter,
         )
     }
 }

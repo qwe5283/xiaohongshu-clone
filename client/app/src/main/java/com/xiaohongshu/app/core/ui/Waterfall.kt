@@ -71,6 +71,7 @@ fun WaterfallCard(
                 url = note.coverUrl.ifBlank { note.images.firstOrNull()?.url.orEmpty() },
                 modifier = Modifier.fillMaxWidth(),
                 contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                showGlyphOnFailure = false,
             )
             if (note.isVideo) {
                 // 视频角标 20×20，右上 inset 10
