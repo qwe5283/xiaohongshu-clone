@@ -190,12 +190,28 @@ private class NavControllerNavigator(
         navController.popBackStack()
     }
 
+    /**
+     * 统一推入出口，双重防连点（修复转场 300ms 窗口内连点导致重复压栈）：
+     * 1. RESUMED 守卫：推入转场进行时新栈顶被压在 STARTED、要等动画播完才 RESUMED，
+     *    而旧页此刻仍在组合中可被点中——窗口期点击一律丢弃（返回转场不受影响，露出的页面立即 RESUMED）；
+     * 2. launchSingleTop 兜底：目标与栈顶同目的地时不重复压栈。注意它按路由模板匹配，
+     *    同路由不同参数会替换参数而非压栈——目前不存在此类链路，将来要加「笔记 A → 笔记 B」
+     *    这类同路由连环跳时，需为该入口改回普通 navigate。
+     */
+    private fun navigateChecked(route: String) {
+        val current = navController.currentBackStackEntry ?: return
+        if (current.lifecycle.currentState != Lifecycle.State.RESUMED) return
+        navController.navigate(route) { launchSingleTop = true }
+    }
+
     override fun toMain() {
         navController.popBackStack(Routes.MAIN, inclusive = false)
     }
 
     override fun toLogin() {
-        navController.navigate(Routes.AUTH)
+        // 不走 navigateChecked：I1 的 401 重定向可能在转场窗口内到达，被守卫吞掉会把用户
+        // 困在已清空会话的页面上；连点重复推入由 launchSingleTop 兜住（目标恒为 AUTH）。
+        navController.navigate(Routes.AUTH) { launchSingleTop = true }
     }
 
     override fun popLogin() {
@@ -204,15 +220,15 @@ private class NavControllerNavigator(
     }
 
     override fun toSearch() {
-        navController.navigate(Routes.SEARCH)
+        navigateChecked(Routes.SEARCH)
     }
 
     override fun toSearchResult(keyword: String) {
-        navController.navigate(Routes.searchResult(keyword))
+        navigateChecked(Routes.searchResult(keyword))
     }
 
     override fun toNoteDetail(postId: Long) {
-        navController.navigate(Routes.noteDetail(postId))
+        navigateChecked(Routes.noteDetail(postId))
     }
 
     override fun toNote(postId: Long, isVideo: Boolean) {
@@ -220,34 +236,34 @@ private class NavControllerNavigator(
     }
 
     override fun toVideoDetail(postId: Long) {
-        navController.navigate(Routes.videoDetail(postId))
+        navigateChecked(Routes.videoDetail(postId))
     }
 
     override fun toUserProfile(userId: Long) {
-        navController.navigate(Routes.userProfile(userId))
+        navigateChecked(Routes.userProfile(userId))
     }
 
     override fun toEditProfile() {
-        navController.navigate(Routes.EDIT_PROFILE)
+        navigateChecked(Routes.EDIT_PROFILE)
     }
 
     override fun toSettings() {
-        navController.navigate(Routes.SETTINGS)
+        navigateChecked(Routes.SETTINGS)
     }
 
     override fun toNotifications(category: NotificationCategory) {
-        navController.navigate(Routes.notifications(category.value))
+        navigateChecked(Routes.notifications(category.value))
     }
 
     override fun toAi() {
-        navController.navigate(Routes.AI)
+        navigateChecked(Routes.AI)
     }
 
     override fun toPublishForm() {
-        navController.navigate(Routes.PUBLISH_FORM)
+        navigateChecked(Routes.PUBLISH_FORM)
     }
 
     override fun toWriteText() {
-        navController.navigate(Routes.WRITE_TEXT)
+        navigateChecked(Routes.WRITE_TEXT)
     }
 }

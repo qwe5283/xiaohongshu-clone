@@ -26,7 +26,7 @@ object Transitions {
     const val DURATION_MS = 300
 
     /** 退场/回场的位移比例：只走全幅的 1/4，保留前后层次；取 1f 就是旧页整屏滑出。 */
-    private const val PARALLAX = 0.25f
+    private const val PARALLAX = 0f
 
     private val spec: FiniteAnimationSpec<IntOffset> =
         tween(DURATION_MS, easing = FastOutSlowInEasing)
