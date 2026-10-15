@@ -1,16 +1,19 @@
 # xhs-mock-server
 
-Zero-dependency Node.js mock server for the **小红书 (Xiaohongshu) clone Android client**.
+Node.js mock server for the **小红书 (Xiaohongshu) clone Android client**.
 
 It implements **every endpoint** of [`client/docs/API契约-v2.md`](../docs/API契约-v2.md) (the client's
-authoritative contract), including the three mock-only additions the contract marks as `[新增]`
+authoritative contract), including the mock-only additions the contract marks as `[新增]`
 (following feed, hot keywords, `like/posts/{userId}`, `text-image`, AI suggestions, the notification
-category filter, `collected`/`followed` flags) — plus uploads, range-request video streaming, fault
-injection and latency simulation.
+category filter, `collected`/`followed` flags) — plus the IM 私信 module (§12: chat REST + the
+`/ws/chat` WebSocket push channel), uploads, range-request video streaming, fault injection and
+latency simulation.
 
-**No npm dependencies, no `npm install`.** Node core only (`node:http`, `node:zlib`, `node:crypto`,
-`node:fs`, `node:path`, `node:url`, `node:buffer`, and the built-in `fetch` for the one Lorem Picsum
-proxy call). State lives in memory and is re-seeded on every startup.
+**One npm dependency: [`ws`](https://www.npmjs.com/package/ws)** (the WebSocket server for §12) —
+run `npm install` once after cloning. Everything else is Node core (`node:http`, `node:zlib`,
+`node:crypto`, `node:fs`, `node:path`, `node:url`, `node:buffer`, and the built-in `fetch` for the
+one Lorem Picsum proxy call). State lives in memory and is re-seeded on every startup; live
+WebSocket connections live outside the db and survive `_reset` (userIds are stable).
 
 **Placeholder images come from [Lorem Picsum](https://picsum.photos)** — seed data (covers, post
 images, avatars, backgrounds) points straight at `https://picsum.photos/seed/{seed}/{w}/{h}`, so
@@ -22,7 +25,8 @@ images, avatars, backgrounds) points straight at `https://picsum.photos/seed/{se
 
 ```bash
 cd client/mockserver
-npm start                 # → node server.mjs, listens on http://localhost:8787
+npm install                 # first time only — installs ws
+npm start                 # → node server.mjs, listens on http://localhost:8787 (WS: /ws/chat)
 ```
 
 or directly:
@@ -208,6 +212,50 @@ Unread counts are **derived live**, so reading a notification immediately moves 
 `answer` contains real `\n` and `「• 」` bullets. `notes` is topic-matched on 6 themes
 (咖啡 / 徒步 / 穿搭 / 彩妆 / 职场 / 美食) and falls back to the 3 hottest notes; it is never empty.
 
+### IM 私信 chat (contract §12) — REST
+
+| Method | Path | Auth | Params / body | `data` |
+|---|---|---|---|---|
+| GET | `/api/chat/conversations` | 🔒 | `pageNum,pageSize` | `IPage<ConversationVO>` (only conversations with ≥1 message, last-message-time desc) |
+| GET | `/api/chat/{conversationId}/messages` | 🔒 | `pageNum,pageSize` | `IPage<ChatMessageVO>` (**id ascending**; higher pageNum = older) |
+| POST | `/api/chat/conversations` | 🔒 | `{peerId}` | `ConversationVO` (idempotent per user pair; `8002` for self) |
+| POST | `/api/chat/{conversationId}/messages` | 🔒 | `{content,clientId}` | `ChatMessageVO` (`clientId` deduped → same message returned; `8003` empty/>500 chars) |
+| PUT | `/api/chat/{conversationId}/read` | 🔒 | — | `{updated:N}` (marks peer's messages read; 0 when re-reported) |
+
+`ConversationVO` is viewer-relative: `peerId/peerNickname/peerAvatar` describe *the other member*;
+`unreadCount` counts only **peer-sent unread** messages. Non-members get `8001` on messages/read/send.
+
+### IM 私信 chat (contract §12) — WebSocket
+
+`ws://<host>:<port>/ws/chat?token=<JWT>` — token is validated **during the handshake**
+(missing/unknown token → the upgrade is rejected with `HTTP 401`). Text frames are UTF-8 JSON:
+`{"type":"...","ts":<epoch ms>,"data":{...}}`.
+
+| type | direction | data | when |
+|---|---|---|---|
+| `hello` | S→C | `{userId}` | first frame after the connection is accepted |
+| `ping` | C→S | `{}` | client heartbeat (30s); server answers `pong` |
+| `pong` | S→C | `{}` | heartbeat reply |
+| `chat.msg` | S→C | `ChatMessageVO` | new message, pushed to every live connection of the **recipient** (multi-device) |
+| `chat.read` | S→C | `{conversationId,readerId}` | read receipt, pushed to the online peer when `PUT .../read` marks messages |
+| `notify.unread` | S→C | `{unreadCount,likeUnread,commentUnread,followUnread}` | notification unread changed (like/collect/comment/follow side-effects and read/read-all), same shape as `GET /api/notification/unread-count` |
+| `error` | S→C | `{code,message}` | malformed/unknown frame — the connection is **not** dropped |
+
+Notes:
+* The WS registry lives outside the db (`wsByUser`), so `POST /api/_reset` does **not** disconnect
+  anyone; pushes after a reset reflect the re-seeded state.
+* The server terminates a connection idle for **90s** (no frames either way).
+* Runtime notifications: like / collect / follow now create the type-1/2/6 notification rows the
+  contract §7.5 always required (the original mock only created comment notifications at runtime) —
+  and each such side-effect also pushes `notify.unread` to the affected user when online.
+
+Quick check with a one-liner (from this directory, `ws` is installed):
+
+```bash
+node -e "const WebSocket=require('ws');const ws=new WebSocket('ws://localhost:8787/ws/chat?token=<JWT>');ws.on('message',m=>console.log(m.toString()))"
+# → {"type":"hello","ts":...,"data":{"userId":1}}
+```
+
 ### Mock media, health, reset
 
 | Method | Path | Auth | Params | Returns |
@@ -238,7 +286,8 @@ Returned as `{"code":<n>,"message":"…","data":null,…}`. HTTP is `401` for `1
 | **1006** | Token 已过期 (HTTP 401) | 3001 / 3002 | 评论不存在 / 已删除 |
 | **1007** | Token 无效 (HTTP 401) | 4001 | 文件上传失败 / 文件过大 |
 | 500 操作失败 | | 5001 / 5002 | 参数错误 / 参数缺失 |
-| 6003 | 不能关注自己 | | |
+| 6003 | 不能关注自己 | 8001 | 会话不存在（含非成员访问） |
+| 8002 | 不能给自己发私信 | 8003 | 消息内容不合法（空 / >500 字） |
 
 ---
 
@@ -315,6 +364,12 @@ Deterministic (ids, counts and relationships are stable across restarts; timesta
 * **Social graph**: `admin` follows users 2, 6, 7 (3 following / 8 followers), has **12 liked and 8
   collected notes** (`likedPostCount` / `collectedPostCount`) → the 「赞过」/「收藏」 tabs and the F1
   widget cards are non-empty. `testuser` has 0 of everything.
+* **IM 私信 (§12)**: 5 single-chat conversations among the login-able accounts, 25 messages total,
+  contents matching each persona (穿搭 / 咖啡 / 爬山 / 做饭), spread from ~3 days ago to a few hours
+  ago. `admin` has unread: **2 in the admin↔user1 conversation, 1 in admin↔user2** (G1 red-dot and
+  entering-the-chat read-report flows are testable). `testuser` has **no** conversations (empty
+  conversation list testable). Message ids ascend within a conversation, so ascending id = ascending
+  time as the contract requires.
 * **Received counters** (`likeCount`/`collectCount`/`likeAndCollectCount`) are derived by summing the
   counters of each user's own notes, so they grow when other people like or collect them. `admin`:
   `likeCount` 28247, `collectCount` 8572, `likeAndCollectCount` 36819.
@@ -412,8 +467,11 @@ Read this before filing a bug against the mock.
     returns `4001 文件过大` rather than buffering unbounded input.
 12. **`_reset` keeps sessions and uploaded files.** Tokens stay valid across a reset so the running
     app does not get logged out mid-demo; the DB itself (users/posts/comments/likes/follows/
-    notifications) is rebuilt from scratch. A full process restart does invalidate tokens
-    (sessions are in memory) and preserves uploaded files (mirrored to `uploads/`).
+    notifications/chat) is rebuilt from scratch. A full process restart does invalidate tokens
+    (sessions are in memory) and preserves uploaded files (mirrored to `uploads/`). Live WebSocket
+    connections are **not** dropped by a reset (they live outside the db).
+13. **Chat state is re-seeded by `_reset`**, so messages you sent before a reset disappear —
+    expected mock behaviour, same as posts/comments. `clientId` dedupe is likewise in-memory only.
 
 ## Files
 
@@ -421,9 +479,10 @@ Read this before filing a bug against the mock.
 client/mockserver/
 ├── server.mjs      # HTTP server: routing, auth, multipart, range requests, fault injection,
 │                   #   Lorem Picsum redirects + the one proxied text-image fetch
-├── seed.mjs        # deterministic in-memory DB (users, 50 posts, comments, notifications);
-│                   #   builds the picsum placeholder URLs
-├── package.json    # name/type/scripts only — zero dependencies
+│                   #   + IM chat REST (§12) and the /ws/chat WebSocket push channel
+├── seed.mjs        # deterministic in-memory DB (users, 50 posts, comments, notifications,
+│                   #   5 chat conversations / 25 messages); builds the picsum placeholder URLs
+├── package.json    # name/type/scripts + single dependency: ws
 ├── README.md
 ├── .gitignore      # ignores uploads/ and runtime artefacts
 ├── assets/

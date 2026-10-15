@@ -251,6 +251,60 @@ const HOT_KEYWORDS = [
   '平价好物', '一个人的旅行',
 ];
 
+/* ================================================================== *
+ * IM 私信种子（契约 §12）—— 单聊 + 文本消息
+ *
+ * 5 个单聊会话，全部落在可登录账号之间；testuser (id 5) 一个会话都没有
+ * （空态可测）。admin (id 1) 留了未读：admin↔user1 里 user1 发来 2 条未读、
+ * admin↔user2 里 user2 发来 1 条未读（G1 角标可测）。
+ * 消息内容贴合各用户人设（穿搭/咖啡/爬山/做饭），来回对话。
+ * CHAT_SEED[i] = [aId, bId, [ [senderId, content, read], ... ]]
+ *   senderId：这条消息是谁发的；read：对收件人而言是否已读。
+ * 时间从几天前到几小时前递增（同 addChatMsg 内按序推算）。
+ * ================================================================== */
+const CHAT_SEED = [
+  // admin ↔ user1（用户A：穿搭控 / 咖啡因依赖 / 周末爬山）
+  [1, 2, [
+    [2, '管理员好！看你主页有篇通勤穿搭的笔记，外套是哪个牌子的呀？', true],
+    [1, '是一件国产小众品牌的西装外套，肩线很利落，链接我找找发你。', true],
+    [2, '好耶！顺便问下小个子穿长外套会不会压身高，我 158 有点犹豫。', true],
+    [1, '选短款或者腰带收腰的就行，158 完全能穿，露出脚踝是关键。', true],
+    [2, '学到了！那周末我穿这套去爬山拍照，山里降温正好加一层。', true],
+    [2, '对了，山上哪里能拍到日出呀？想拍一组穿搭+日出的照片。', false],
+    [2, '上次看你发的山顶照片绝了，机位方便透露吗？', false],
+  ]],
+  // admin ↔ user2（用户C：爱做饭 / 一人食）
+  [1, 3, [
+    [3, '管理员，你笔记里那家可颂是什么配方呀，我烤了两次都翻车。', true],
+    [1, '黄油一定要够冷，开酥前冷藏 20 分钟再操作，别心急。', true],
+    [3, '收到！我周末再试一次，成功了好请你吃（虽然隔空）。', true],
+    [3, '另外一人食的番茄牛腩面我也做了，牛腩炖了 60 分钟果然烂乎。', true],
+    [3, '下次出一期空气炸锅菜谱呗，我的炸锅快落灰了。', false],
+  ]],
+  // admin ↔ user3（用户E：程序员 / 户外）
+  [1, 4, [
+    [4, '周末的徒步路线带我一个呗，我看了你笔记里那条 8 公里的。', true],
+    [1, '可以啊，周六早 8 点公交终点站集合，记得带 1.5L 水。', true],
+    [4, '好嘞！登山杖我有了，头灯也翻出来了，就是鞋还没买。', true],
+    [1, '鞋一定要提前买好磨合一下，别穿新鞋上山。', true],
+  ]],
+  // user1 ↔ user2（穿搭 × 做饭）
+  [2, 3, [
+    [2, '你那个 15 分钟晚餐系列太实用了，我照着做了三次。', true],
+    [3, '哈哈哈被打卡了！你是哪个城市的呀，买菜方便吗？', true],
+    [2, '上海的，楼下就是菜场。主要是下班晚，快手续最要紧。', true],
+    [3, '懂！后面我整理一篇「冰箱常备清单」，照着买就永远有得做。', true],
+  ]],
+  // user2 ↔ user3（做饭 × 爬山）
+  [3, 4, [
+    [3, '周末去爬山的话带什么吃的比较顶饿呀？', true],
+    [4, '我一般带饭团 + 香蕉 + 一袋坚果，山顶再冲一杯热咖啡。', true],
+    [3, '热咖啡？!你带炉子上山吗，也太讲究了。', true],
+    [4, '哈哈一套手冲装备才 400 克，山顶喝咖啡的快乐你想象不到。', true],
+    [3, '行，下次徒步我负责吃的，你负责咖啡，成交！', true],
+  ]],
+];
+
 const NOTIFICATION_TYPE_TEXT = {
   1: '赞了你的笔记',
   2: '收藏了你的笔记',
@@ -356,7 +410,13 @@ export function buildDb({ publicBase, now = Date.now() } = {}) {
     collectSet: new Set(),
     followSet: new Set(),
     commentLikeSet: new Set(),
-    counters: { user: 0, post: 0, comment: 0, image: 0, notification: 0, file: 0 },
+    chatConversations: [],
+    chatConversationById: new Map(),
+    chatConversationByPair: new Map(), // "minId:maxId" -> conversation
+    chatMessages: [],
+    chatMessagesByConv: new Map(), // conversationId -> ChatMessage[] (id 升序)
+    chatClientIdIndex: new Map(), // `${conversationId}:${senderId}:${clientId}` -> message (幂等去重)
+    counters: { user: 0, post: 0, comment: 0, image: 0, notification: 0, file: 0, chatConversation: 0, chatMessage: 0 },
     imgUrl: (w, h, seed) => `${PICSUM}/seed/${encodeURIComponent(seed)}/${w}/${h}`,
     avatarUrl: (seed, size = 200) => `${PICSUM}/seed/${encodeURIComponent(seed)}/${size}/${size}`,
     videoUrl: () => `${BASE}/video/sample.mp4`,
@@ -745,6 +805,55 @@ export function buildDb({ publicBase, now = Date.now() } = {}) {
     const p = db.postsById.get(n.postId);
     n.postCoverImage = p ? p.coverImage : '';
     n.postTitle = p ? p.title : '';
+  }
+
+  /* ---------------- chat (契约 §12 IM 私信) ---------------- */
+  // 时间锚定：第一个会话的最早消息在 3 天前，每个会话内部按消息条数等距递增，
+  // 越往后（会话序号越大）整体越接近"现在"，最后一个会话的最后一条落在几小时前。
+  let chatMsgAt = now - 3 * DAY;
+  for (let ci = 0; ci < CHAT_SEED.length; ci++) {
+    const [aId, bId, msgs] = CHAT_SEED[ci];
+    db.counters.chatConversation += 1;
+    const conv = {
+      id: db.counters.chatConversation,
+      userAId: aId, // 会话两端（a < b 约定仅用于 pair key，语义上无方向）
+      userBId: bId,
+      createTime: fmt(new Date(chatMsgAt)),
+      lastMessageId: 0,
+      lastMessageContent: '',
+      lastMessageTime: '',
+      lastMessageMs: 0,
+    };
+    db.chatConversations.push(conv);
+    db.chatConversationById.set(conv.id, conv);
+    db.chatConversationByPair.set(`${Math.min(aId, bId)}:${Math.max(aId, bId)}`, conv);
+    const list = [];
+    db.chatMessagesByConv.set(conv.id, list);
+    // 每条消息间隔 = 会话总跨度 / 条数；跨度随会话序号收窄，末条贴近"几小时前"
+    const convSpan = Math.max(1, Math.round((3 * DAY - ci * 11 * HOUR) - 2 * HOUR));
+    const step = Math.max(5 * MIN, Math.floor(convSpan / Math.max(1, msgs.length)));
+    for (let mi = 0; mi < msgs.length; mi++) {
+      const [senderId, content, read] = msgs[mi];
+      const atMs = chatMsgAt + mi * step;
+      db.counters.chatMessage += 1;
+      const msg = {
+        id: db.counters.chatMessage,
+        conversationId: conv.id,
+        senderId,
+        content,
+        type: 1,
+        read: !!read, // 对收件人的已读标记（"对方发来且我未读"才有未读计数）
+        createTime: fmt(new Date(atMs)),
+        _createdMs: atMs,
+      };
+      list.push(msg);
+      db.chatMessages.push(msg);
+      conv.lastMessageId = msg.id;
+      conv.lastMessageContent = msg.content;
+      conv.lastMessageTime = msg.createTime;
+      conv.lastMessageMs = atMs;
+    }
+    chatMsgAt += step; // 下一个会话从本会话之后开始，保证会话间时间也大体递增
   }
 
   recomputeUserStats(db);

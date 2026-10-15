@@ -14,6 +14,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { WebSocketServer } from 'ws';
 
 import { buildDb, recomputeUserStats, fmt, NOTIFICATION_TYPE_TEXT, HOT_KEYWORDS, CATEGORY_TYPES } from './seed.mjs';
 
@@ -558,6 +559,188 @@ function aiReply(message) {
 }
 
 /* ========================================================================== *
+ * IM chat (契约 §12) — VOs, WS registry, push helpers
+ * ========================================================================== */
+const CHAT_WS_PATH = '/ws/chat';
+const WS_IDLE_TIMEOUT_MS = 90 * 1000; // 服务端 90s 无任何帧 → 主动断开
+
+/** Connection registry lives HERE (not in db): db is re-seeded, WS sockets are runtime. */
+const wsByUser = new Map(); // userId -> Set<WebSocket>
+
+function chatMessageVO(m) {
+  return {
+    id: m.id,
+    conversationId: m.conversationId,
+    senderId: m.senderId,
+    content: m.content,
+    type: m.type,
+    createTime: m.createTime,
+  };
+}
+
+/** ConversationVO from "me"'s perspective (peer = the other member). */
+function conversationVO(conv, meId) {
+  const peer = db.usersById.get(conv.userAId === meId ? conv.userBId : conv.userAId);
+  const peerId = peer ? peer.id : 0;
+  let unread = 0;
+  for (const m of db.chatMessagesByConv.get(conv.id) || []) {
+    if (m.senderId !== meId && !m.read) unread += 1;
+  }
+  return {
+    id: conv.id,
+    peerId,
+    peerNickname: peer ? peer.nickname : '',
+    peerAvatar: peer ? peer.avatar : '',
+    lastMessageContent: conv.lastMessageContent,
+    lastMessageTime: conv.lastMessageTime,
+    unreadCount: unread,
+  };
+}
+
+/** Members of a conversation as a pair key "minId:maxId" (single-chat uniqueness). */
+const convPairKey = (aId, bId) => `${Math.min(aId, bId)}:${Math.max(aId, bId)}`;
+
+/** Fire-and-forget frame push to every live connection of one user (multi-device). */
+function pushToUser(userId, type, data) {
+  const sockets = wsByUser.get(userId);
+  if (!sockets || sockets.size === 0) return;
+  const payload = JSON.stringify({ type, ts: Date.now(), data });
+  for (const sock of sockets) {
+    try {
+      if (sock.readyState === 1 /* OPEN */) sock.send(payload);
+    } catch (err) {
+      console.warn(`[mock] ws push to user ${userId} failed:`, err.message || err);
+    }
+  }
+}
+
+/** notify.unread frame — data is the same shape as GET /api/notification/unread-count (§7.1). */
+function pushNotifyUnread(userId) {
+  try {
+    pushToUser(userId, 'notify.unread', unreadCounts(userId));
+  } catch {
+    /* never let a push break the main flow */
+  }
+}
+
+/** chat.msg frame to the conversation peer(s) of the sender. */
+function pushChatMessage(conv, msg) {
+  for (const memberId of [conv.userAId, conv.userBId]) {
+    if (memberId !== msg.senderId) pushToUser(memberId, 'chat.msg', chatMessageVO(msg));
+  }
+}
+
+/* ------------------------------ WS handling ------------------------------ */
+function wsSend(sock, type, data) {
+  try {
+    sock.send(JSON.stringify({ type, ts: Date.now(), data }));
+    sock._lastSeen = Date.now(); // 任何方向的帧都算活跃（契约 §12.7「90s 无任何帧」）
+  } catch {
+    /* ignore */
+  }
+}
+
+function wsRegister(userId, sock) {
+  let set = wsByUser.get(userId);
+  if (!set) {
+    set = new Set();
+    wsByUser.set(userId, set);
+  }
+  set.add(sock);
+}
+
+function wsUnregister(sock) {
+  for (const [userId, set] of wsByUser) {
+    set.delete(sock);
+    if (set.size === 0) wsByUser.delete(userId);
+  }
+}
+
+function attachChatSocket(sock, userId) {
+  sock._userId = userId;
+  sock._lastSeen = Date.now();
+  wsRegister(userId, sock);
+  wsSend(sock, 'hello', { userId }); // 鉴权通过后的首帧
+
+  // 服务端 90s 无任何帧（收或发）→ 主动断开该连接
+  const idleTimer = setInterval(() => {
+    if (Date.now() - sock._lastSeen > WS_IDLE_TIMEOUT_MS) {
+      try {
+        sock.terminate();
+      } catch {
+        /* ignore */
+      }
+    }
+  }, 15 * 1000);
+
+  const cleanup = () => {
+    clearInterval(idleTimer);
+    wsUnregister(sock);
+  };
+  sock.on('close', cleanup);
+  sock.on('error', cleanup);
+
+  sock.on('message', (raw) => {
+    sock._lastSeen = Date.now();
+    let frame = null;
+    try {
+      frame = JSON.parse(String(raw));
+    } catch {
+      wsSend(sock, 'error', { code: 5001, message: '帧不是合法 JSON' });
+      return;
+    }
+    if (!frame || typeof frame !== 'object' || typeof frame.type !== 'string') {
+      wsSend(sock, 'error', { code: 5001, message: '帧缺少 type 字段' });
+      return;
+    }
+    if (frame.type === 'ping') {
+      wsSend(sock, 'pong', {});
+      return;
+    }
+    // 本版 WS 只做服务端→客户端下行；其余客户端→服务端帧一律应答 error（不踢连接）
+    wsSend(sock, 'error', { code: 5001, message: `未知帧类型: ${frame.type}` });
+  });
+}
+
+/** HTTP upgrade handler — only /ws/chat is upgraded, everything else is destroyed. */
+function handleUpgrade(req, socket, head) {
+  let url;
+  try {
+    url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  } catch {
+    socket.write('HTTP/1.1 400 Bad Request\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+  if (url.pathname !== CHAT_WS_PATH) {
+    // 不是 WS 路径的升级请求：直接掐掉（HTTP 路由仍由 handle() 处理普通请求）
+    socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+  // 握手期鉴权：token 在 db.sessions 查（同 resolveAuth 语义，但它吃 req 的
+  // Authorization 头，WS 这边从 URL query 里取）
+  const token = (url.searchParams.get('token') || '').trim();
+  let userId = null;
+  if (token && token !== 'expired-token' && token !== 'invalid-token') {
+    const s = db.sessions.get(token);
+    if (s) {
+      const user = db.usersById.get(s.userId);
+      if (user && user.status === 1) userId = user.id;
+    }
+  }
+  if (userId === null) {
+    // 契约 §12.7：无效/缺 token → 拒绝握手（HTTP 401）
+    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+  wss.handleUpgrade(req, socket, head, (sock) => attachChatSocket(sock, userId));
+}
+
+const wss = new WebSocketServer({ noServer: true });
+
+/* ========================================================================== *
  * routes
  * ========================================================================== */
 const routes = [];
@@ -976,6 +1159,7 @@ R('POST', '/api/comment/create', { auth: true }, (ctx) => {
       postCoverImage: post.coverImage,
       postTitle: post.title,
     });
+    pushNotifyUnread(targetUserId); // WS: 被评论者/被回复者的未读数变化
   }
   return J(commentVO(c, ctx.viewer), '评论成功');
 });
@@ -1036,6 +1220,24 @@ R('POST', '/api/like/post/:postId', { auth: true }, (ctx) => {
   db.postLikes.unshift({ userId: ctx.viewer.id, postId: p.id, createTime: fmt(new Date()) });
   p.likeCount += 1;
   recomputeUserStats(db);
+  // 通知 + WS 推送（§7.5 type=1「赞了你的笔记」，自己赞自己不产生）
+  if (p.userId !== ctx.viewer.id) {
+    db.counters.notification += 1;
+    db.notifications.push({
+      id: db.counters.notification,
+      receiverId: p.userId,
+      senderId: ctx.viewer.id,
+      type: 1,
+      postId: p.id,
+      commentId: 0,
+      content: '',
+      read: false,
+      createTime: fmt(new Date()),
+      postCoverImage: p.coverImage,
+      postTitle: p.title,
+    });
+    pushNotifyUnread(p.userId);
+  }
   return J({ liked: true, message: '点赞成功' });
 });
 
@@ -1051,6 +1253,25 @@ R('POST', '/api/like/comment/:commentId', { auth: true }, (ctx) => {
   }
   db.commentLikeSet.add(key);
   c.likeCount += 1;
+  // 通知 + WS 推送（§7.5 type=5「赞了你的评论」，自己赞自己不产生）
+  if (c.userId !== ctx.viewer.id) {
+    const p = db.postsById.get(c.postId);
+    db.counters.notification += 1;
+    db.notifications.push({
+      id: db.counters.notification,
+      receiverId: c.userId,
+      senderId: ctx.viewer.id,
+      type: 5,
+      postId: c.postId,
+      commentId: c.id,
+      content: '',
+      read: false,
+      createTime: fmt(new Date()),
+      postCoverImage: p?.coverImage ?? '',
+      postTitle: p?.title ?? '',
+    });
+    pushNotifyUnread(c.userId);
+  }
   return J({ liked: true, message: '点赞成功' });
 });
 
@@ -1094,6 +1315,24 @@ R('POST', '/api/collect/post/:postId', { auth: true }, (ctx) => {
   db.collects.unshift({ userId: ctx.viewer.id, postId: p.id, createTime: fmt(new Date()) });
   p.collectCount += 1;
   recomputeUserStats(db);
+  // 通知 + WS 推送（§7.5 type=2「收藏了你的笔记」，自己收藏自己不产生）
+  if (p.userId !== ctx.viewer.id) {
+    db.counters.notification += 1;
+    db.notifications.push({
+      id: db.counters.notification,
+      receiverId: p.userId,
+      senderId: ctx.viewer.id,
+      type: 2,
+      postId: p.id,
+      commentId: 0,
+      content: '',
+      read: false,
+      createTime: fmt(new Date()),
+      postCoverImage: p.coverImage,
+      postTitle: p.title,
+    });
+    pushNotifyUnread(p.userId);
+  }
   return J({ collected: true, message: '收藏成功' });
 });
 
@@ -1131,6 +1370,22 @@ R('POST', '/api/follow/:userId', { auth: true }, (ctx) => {
   db.followSet.add(key);
   db.follows.push({ id: db.follows.length + 1, followerId: ctx.viewer.id, followingId: target.id, createTime: fmt(new Date()) });
   recomputeUserStats(db);
+  // 关注产生 type=6 通知 → 被关注者未读数变化经 WS 推送
+  db.counters.notification += 1;
+  db.notifications.push({
+    id: db.counters.notification,
+    receiverId: target.id,
+    senderId: ctx.viewer.id,
+    type: 6,
+    postId: 0,
+    commentId: 0,
+    content: '',
+    read: false,
+    createTime: fmt(new Date()),
+    postCoverImage: '',
+    postTitle: '',
+  });
+  pushNotifyUnread(target.id);
   return J({ followed: true, message: '关注成功' });
 });
 
@@ -1229,6 +1484,7 @@ R('PUT', '/api/notification/read-all', { auth: true }, (ctx) => {
     item.read = true;
     n += 1;
   }
+  if (n > 0) pushNotifyUnread(ctx.viewer.id); // WS: 通知接收者的未读数变化
   return J({ updated: n }, '已全部标记为已读');
 });
 
@@ -1237,7 +1493,9 @@ R('PUT', '/api/notification/read/:id', { auth: true }, (ctx) => {
   const n = id === null ? null : db.notifications.find((x) => x.id === id);
   if (!n) return E(5001, '通知不存在');
   if (n.receiverId !== ctx.viewer.id) return E(5001, '无权操作此通知');
+  const wasUnread = !n.read;
   n.read = true;
+  if (wasUnread) pushNotifyUnread(ctx.viewer.id); // WS: 通知接收者的未读数变化
   return J(notificationVO(n), '已标记为已读');
 });
 
@@ -1252,6 +1510,135 @@ R('POST', '/api/ai/chat', { auth: true }, (ctx) => {
 });
 
 R('GET', '/api/ai/suggestions', { auth: true }, () => J(AI_SUGGESTIONS));
+
+/* ---------------------------------- chat --------------------------------- */
+// 契约 §12 —— 会话只在有消息后才出现在双方列表里（§12.2/12.4）
+const convHasMessages = (conv) => (db.chatMessagesByConv.get(conv.id) || []).length > 0;
+const isConvMember = (conv, userId) => conv.userAId === userId || conv.userBId === userId;
+
+// §12.2 会话列表（lastMessageTime 倒序，只返回有消息的）
+R('GET', '/api/chat/conversations', { auth: true }, (ctx) => {
+  const me = ctx.viewer.id;
+  const list = db.chatConversations
+    .filter((c) => isConvMember(c, me) && convHasMessages(c))
+    .sort((a, b) => b.lastMessageMs - a.lastMessageMs);
+  const page = paginate(list, ctx.query);
+  page.records = page.records.map((c) => conversationVO(c, me));
+  return J(page);
+});
+
+// §12.3 历史消息（id 升序 = 时间正序；pageNum 越大越新）
+R('GET', '/api/chat/:conversationId/messages', { auth: true }, (ctx) => {
+  const id = intParam(ctx.params.conversationId);
+  const conv = id === null ? null : db.chatConversationById.get(id);
+  if (!conv || !isConvMember(conv, ctx.viewer.id)) return E(8001, '会话不存在');
+  const list = db.chatMessagesByConv.get(conv.id) || [];
+  const page = paginate(list, ctx.query);
+  page.records = page.records.map(chatMessageVO);
+  return J(page);
+});
+
+// §12.4 创建/获取会话（幂等：同一对用户复用同一会话）
+R('POST', '/api/chat/conversations', { auth: true }, (ctx) => {
+  const b = ctx.json || {};
+  if (b.peerId === undefined || b.peerId === null || String(b.peerId).trim() === '') return E(5002, '参数缺失');
+  const peerId = intParam(b.peerId);
+  if (peerId === null) return E(5001, '参数错误');
+  if (peerId === ctx.viewer.id) return E(8002, '不能给自己发私信');
+  const peer = db.usersById.get(peerId);
+  if (!peer) return E(1001, '用户不存在');
+  const key = convPairKey(ctx.viewer.id, peerId);
+  let conv = db.chatConversationByPair.get(key);
+  if (!conv) {
+    db.counters.chatConversation += 1;
+    conv = {
+      id: db.counters.chatConversation,
+      userAId: Math.min(ctx.viewer.id, peerId),
+      userBId: Math.max(ctx.viewer.id, peerId),
+      createTime: fmt(new Date()),
+      lastMessageId: 0,
+      lastMessageContent: '',
+      lastMessageTime: '',
+      lastMessageMs: 0,
+    };
+    db.chatConversations.push(conv);
+    db.chatConversationById.set(conv.id, conv);
+    db.chatConversationByPair.set(key, conv);
+    db.chatMessagesByConv.set(conv.id, []);
+  }
+  return J(conversationVO(conv, ctx.viewer.id));
+});
+
+// §12.5 发送消息（REST 有明确请求-响应语义；clientId 幂等去重）
+R('POST', '/api/chat/:conversationId/messages', { auth: true }, (ctx) => {
+  const id = intParam(ctx.params.conversationId);
+  const conv = id === null ? null : db.chatConversationById.get(id);
+  if (!conv || !isConvMember(conv, ctx.viewer.id)) return E(8001, '会话不存在');
+  const b = ctx.json || {};
+  const content = typeof b.content === 'string' ? b.content.trim() : '';
+  const clientId = typeof b.clientId === 'string' ? b.clientId.trim() : '';
+  if (!content) return E(8003, '消息内容不能为空');
+  if (content.length > 500) return E(8003, '消息不能超过 500 个字符');
+
+  // 幂等：同 clientId 重复提交返回同一条已落库消息，不重复落库
+  let dedupeKey = null;
+  if (clientId) {
+    dedupeKey = `${conv.id}:${ctx.viewer.id}:${clientId}`;
+    const existing = db.chatClientIdIndex.get(dedupeKey);
+    if (existing) return J(chatMessageVO(existing), '发送成功');
+  }
+
+  db.counters.chatMessage += 1;
+  const nowMs = Date.now();
+  const msg = {
+    id: db.counters.chatMessage,
+    conversationId: conv.id,
+    senderId: ctx.viewer.id,
+    content,
+    type: 1,
+    read: false,
+    createTime: fmt(new Date(nowMs)),
+    _createdMs: nowMs,
+  };
+  let convMessages = db.chatMessagesByConv.get(conv.id);
+  if (!convMessages) {
+    convMessages = [];
+    db.chatMessagesByConv.set(conv.id, convMessages);
+  }
+  convMessages.push(msg);
+  db.chatMessages.push(msg);
+  conv.lastMessageId = msg.id;
+  conv.lastMessageContent = msg.content;
+  conv.lastMessageTime = msg.createTime;
+  conv.lastMessageMs = nowMs;
+  if (dedupeKey) db.chatClientIdIndex.set(dedupeKey, msg);
+
+  // 副作用：新消息推给在线的对方（多连接全推；发送者自己多设备也会收到 chat.msg，
+  // 客户端按 id 去重——契约 §12.8 乐观发送）
+  pushChatMessage(conv, msg);
+  return J(chatMessageVO(msg), '发送成功');
+});
+
+// §12.6 已读上报（把对方发来且我未读的全部标已读；对方在线 → chat.read 回执）
+R('PUT', '/api/chat/:conversationId/read', { auth: true }, (ctx) => {
+  const id = intParam(ctx.params.conversationId);
+  const conv = id === null ? null : db.chatConversationById.get(id);
+  if (!conv || !isConvMember(conv, ctx.viewer.id)) return E(8001, '会话不存在');
+  let updated = 0;
+  for (const m of db.chatMessagesByConv.get(conv.id) || []) {
+    if (m.senderId !== ctx.viewer.id && !m.read) {
+      m.read = true;
+      updated += 1;
+    }
+  }
+  if (updated > 0) {
+    // 推给在线的会话对方（多连接全推）
+    for (const memberId of [conv.userAId, conv.userBId]) {
+      if (memberId !== ctx.viewer.id) pushToUser(memberId, 'chat.read', { conversationId: conv.id, readerId: ctx.viewer.id });
+    }
+  }
+  return J({ updated }, '已读');
+});
 
 /* ------------------------------ mock media ------------------------------- */
 R('GET', '/img', {}, (ctx) => {
@@ -1480,6 +1867,15 @@ if (seedOnly) {
   console.log(`collects:      ${db.collects.length}`);
   console.log(`follows:       ${db.follows.length}`);
   console.log(`notifications: ${db.notifications.length}`);
+  console.log(`conversations: ${db.chatConversations.length}  (messages: ${db.chatMessages.length})`);
+  const adminUnreadChat = {};
+  for (const c of db.chatConversations) {
+    if (c.userAId !== 1 && c.userBId !== 1) continue;
+    for (const m of db.chatMessagesByConv.get(c.id) || []) {
+      if (m.senderId !== 1 && !m.read) adminUnreadChat[c.id] = (adminUnreadChat[c.id] || 0) + 1;
+    }
+  }
+  console.log(`admin unread chat by conversation: ${JSON.stringify(adminUnreadChat)}`);
   const admin = db.usersById.get(1);
   console.log(
     `admin(1): posts=${db.posts.filter((p) => p.userId === 1).length} following=${admin.followingCount} followers=${admin.followersCount}`,
@@ -1524,12 +1920,16 @@ ensureSampleVideoAsync().then(() => {
       }
     });
   });
+  // 契约 §12.7 —— WebSocket /ws/chat 挂在同一个 HTTP server 上
+  server.on('upgrade', handleUpgrade);
   server.listen(PORT, HOST, () => {
     console.log('');
     console.log('  小红书 mock server');
     console.log(`  listening    http://localhost:${PORT}  (bind ${HOST})`);
+    console.log(`  websocket    ws://localhost:${PORT}/ws/chat?token=<JWT>`);
     console.log(`  PUBLIC_BASE  ${PUBLIC_BASE}`);
     console.log(`  seed         ${db.users.length} users / ${db.posts.length} posts / ${db.comments.length} comments / ${db.notifications.length} notifications`);
+    console.log(`  chat seed    ${db.chatConversations.length} conversations / ${db.chatMessages.length} messages`);
     console.log(`  login        admin · user1 · user2 · user3 · testuser   (password 123456)`);
     console.log(`  emulator     PUBLIC_BASE=http://10.0.2.2:${PORT} node server.mjs`);
     console.log('');
