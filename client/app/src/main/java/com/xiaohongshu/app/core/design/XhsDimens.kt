@@ -48,8 +48,8 @@ object Dimens {
     /** 视频底栏 44。 */
     val videoBottomBar = 44.dp
 
-    /** 点点输入条 48。 */
-    val aiInputBar = 48.dp
+    /** 消息输入条 48。 */
+    val msgInputBar = 48.dp
 
     /** 点点「内容由AI生成」声明行 24（实测 21.4）。 */
     val aiDisclaimerBar = 24.dp
@@ -78,6 +78,9 @@ object Dimens {
 
     /** 搜索框 */
     val radiusSearchBar = 16.dp
+
+    /** 消息输入框 */
+    val radiusMsgInputBar = 12.dp
 
     /** 弹层顶部/弹窗/＋按钮 12。 */
     val radiusSheet = 12.dp

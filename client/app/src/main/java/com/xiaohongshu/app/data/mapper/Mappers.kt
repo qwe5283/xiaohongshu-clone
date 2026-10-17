@@ -1,7 +1,9 @@
 package com.xiaohongshu.app.data.mapper
 
 import com.xiaohongshu.app.core.util.Formatters
+import com.xiaohongshu.app.data.dto.ChatMessageDto
 import com.xiaohongshu.app.data.dto.CommentDto
+import com.xiaohongshu.app.data.dto.ConversationDto
 import com.xiaohongshu.app.data.dto.FollowUserDto
 import com.xiaohongshu.app.data.dto.NotificationDto
 import com.xiaohongshu.app.data.dto.NotificationType
@@ -12,6 +14,8 @@ import com.xiaohongshu.app.data.dto.UserBriefDto
 import com.xiaohongshu.app.data.dto.UserDto
 import com.xiaohongshu.app.data.repo.PostRepository
 import com.xiaohongshu.app.domain.model.Comment
+import com.xiaohongshu.app.domain.model.Conversation
+import com.xiaohongshu.app.domain.model.ImMessage
 import com.xiaohongshu.app.domain.model.Note
 import com.xiaohongshu.app.domain.model.NoteImage
 import com.xiaohongshu.app.domain.model.NotificationItem
@@ -154,6 +158,39 @@ fun UserBriefDto.toDomain(): UserBrief = UserBrief(
 )
 
 fun PageDto<UserBriefDto>.toUserBriefPage(): Paged<UserBrief> = Paged(
+    items = records.map { it.toDomain() },
+    page = current.toInt(),
+    total = total,
+    pages = pages,
+)
+
+fun ConversationDto.toDomain(): Conversation = Conversation(
+    id = id,
+    peerId = peerId,
+    peerNickname = peerNickname,
+    peerAvatar = peerAvatar,
+    lastMessage = lastMessageContent,
+    lastTime = Formatters.parseApiTime(lastMessageTime),
+    unread = unreadCount,
+)
+
+fun PageDto<ConversationDto>.toConversationPage(): Paged<Conversation> = Paged(
+    items = records.map { it.toDomain() },
+    page = current.toInt(),
+    total = total,
+    pages = pages,
+)
+
+fun ChatMessageDto.toDomain(): ImMessage = ImMessage(
+    id = id,
+    conversationId = conversationId,
+    senderId = senderId,
+    content = content,
+    time = Formatters.parseApiTime(createTime),
+    state = ImMessage.SendState.Sent,
+)
+
+fun PageDto<ChatMessageDto>.toMessagePage(): Paged<ImMessage> = Paged(
     items = records.map { it.toDomain() },
     page = current.toInt(),
     total = total,

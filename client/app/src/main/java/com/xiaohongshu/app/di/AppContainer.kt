@@ -16,16 +16,20 @@ import com.xiaohongshu.app.core.net.SessionExpiryNotifier
 import com.xiaohongshu.app.core.net.TokenHolder
 import com.xiaohongshu.app.core.notify.UnreadCountCenter
 import com.xiaohongshu.app.core.publish.PublishDraft
+import com.xiaohongshu.app.core.realtime.RealtimeConnection
 import com.xiaohongshu.app.core.ui.ToastController
 import com.xiaohongshu.app.data.local.SearchHistoryStore
+import com.xiaohongshu.app.data.local.DataStoreSessionLocalStore
 import com.xiaohongshu.app.data.local.SessionManager
 import com.xiaohongshu.app.data.repo.AiRepository
+import com.xiaohongshu.app.data.repo.ChatRepository
 import com.xiaohongshu.app.data.repo.CommentRepository
 import com.xiaohongshu.app.data.repo.FollowRepository
 import com.xiaohongshu.app.data.repo.NotificationRepository
 import com.xiaohongshu.app.data.repo.PostRepository
 import com.xiaohongshu.app.data.repo.UploadRepository
 import com.xiaohongshu.app.data.repo.UserRepository
+import okhttp3.OkHttpClient
 
 /**
  * 依赖容器（手工 DI）。
@@ -55,7 +59,7 @@ class AppContainer(application: Application) {
         debugLogging = BuildConfig.DEBUG,
     )
 
-    val sessionManager = SessionManager(application, apis.user, tokenHolder)
+    val sessionManager = SessionManager(DataStoreSessionLocalStore(application), apis.user, tokenHolder)
 
     /** 互动状态机（D1/D2）：乐观更新 + 回滚 + 跨页一致。 */
     val interactionStore = InteractionStore(
@@ -80,11 +84,19 @@ class AppContainer(application: Application) {
     val commentRepository = CommentRepository(apis.comment)
     val followRepository = FollowRepository(apis.follow)
     val notificationRepository = NotificationRepository(apis.notification)
+    val chatRepository = ChatRepository(apis.chat)
     val aiRepository = AiRepository(apis.ai)
     val uploadRepository = UploadRepository(apis.upload)
 
-    /** 未读数轮询（15s，仅前台 + 已登录）。 */
-    val unreadCountCenter = UnreadCountCenter(notificationRepository, sessionManager)
+    /** IM 实时通道（契约 §12.7）：ws(s)://<host>/ws/chat。生命周期同未读数通道（前台 + 已登录）。 */
+    val realtimeConnection = RealtimeConnection(
+        baseUrl = BuildConfig.XHS_BASE_URL,
+        tokenProvider = tokenHolder,
+        client = OkHttpClient.Builder().build(), // WS 不复用 Retrofit 的 15s 超时装配
+    )
+
+    /** 未读数（WS 推送 + 关键时刻 REST 校正，无定时轮询；仅前台 + 已登录）。 */
+    val unreadCountCenter = UnreadCountCenter(notificationRepository, sessionManager, realtimeConnection)
 }
 
 /** 供 Compose 树读取容器。 */

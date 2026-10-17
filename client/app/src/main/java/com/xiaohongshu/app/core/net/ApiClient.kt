@@ -126,6 +126,7 @@ object ApiClient {
             collect = default.create(com.xiaohongshu.app.data.api.CollectApi::class.java),
             follow = default.create(com.xiaohongshu.app.data.api.FollowApi::class.java),
             notification = default.create(com.xiaohongshu.app.data.api.NotificationApi::class.java),
+            chat = default.create(com.xiaohongshu.app.data.api.ChatApi::class.java),
             upload = default.create(com.xiaohongshu.app.data.api.UploadApi::class.java),
             ai = longRunning.create(com.xiaohongshu.app.data.api.AiApi::class.java),
         )
@@ -143,6 +144,7 @@ data class Apis(
     val collect: com.xiaohongshu.app.data.api.CollectApi,
     val follow: com.xiaohongshu.app.data.api.FollowApi,
     val notification: com.xiaohongshu.app.data.api.NotificationApi,
+    val chat: com.xiaohongshu.app.data.api.ChatApi,
     val upload: com.xiaohongshu.app.data.api.UploadApi,
     val ai: com.xiaohongshu.app.data.api.AiApi,
 )

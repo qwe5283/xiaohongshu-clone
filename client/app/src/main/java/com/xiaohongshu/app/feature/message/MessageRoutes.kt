@@ -18,10 +18,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -40,16 +43,19 @@ import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
 import com.xiaohongshu.app.core.net.onFailure
 import com.xiaohongshu.app.core.net.userMessage
-import com.xiaohongshu.app.core.ui.PlaceholderIconRes
+import com.xiaohongshu.app.core.ui.XhsAvatar
 import com.xiaohongshu.app.core.ui.XhsConfirmSheet
 import com.xiaohongshu.app.core.ui.XhsCountBadge
 import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.ui.XhsDotBadge
 import com.xiaohongshu.app.core.ui.XhsIconButton
+import com.xiaohongshu.app.core.ui.XhsInlineLoading
 import com.xiaohongshu.app.core.ui.XhsTopBar
 import com.xiaohongshu.app.core.util.Formatters
 import com.xiaohongshu.app.data.dto.NotificationCategory
 import com.xiaohongshu.app.di.LocalAppContainer
+import com.xiaohongshu.app.di.appViewModel
+import com.xiaohongshu.app.domain.model.Conversation
 import com.xiaohongshu.app.domain.model.UnreadCounts
 import com.xiaohongshu.app.navigation.AppNavigator
 import kotlinx.coroutines.launch
@@ -57,9 +63,12 @@ import kotlinx.coroutines.launch
 /**
  * G1 消息页（Tab 根页面）。
  *
- * 页面本身没有任何服务端列表：三入口是固定结构、会话列表只有「点点」一个入口，
- * 因此本页**不需要 ViewModel**，唯一的动态数据是三个入口的未读角标，直接读
- * [com.xiaohongshu.app.core.notify.UnreadCountCenter.counts]（15s 轮询已在 core 里跑）。
+ * 页面结构：顶栏（一键已读 / 创建占位）→ 三入口区（赞和收藏 / 评论和@ / 新增关注）→
+ * 会话列表（「点点」固定首行 + REST 私信会话，契约 §12.2）。
+ *
+ * 唯一的动态数据有两份：三个入口的未读角标（读
+ * [com.xiaohongshu.app.core.notify.UnreadCountCenter.counts]，进 Tab 时主动拉一次校正）与
+ * 私信会话列表（[ConversationsViewModel]：进 Tab 首刷 + WS `chat.msg` 帧就地更新）。
  *
  * 游客拦截：`MainScaffold` 已在点「消息」Tab 时推入登录页，本页只在登录态可达。
  *
@@ -73,11 +82,39 @@ fun MessageRoute(
 ) {
     val container = LocalAppContainer.current
     val unread by container.unreadCountCenter.counts.collectAsStateWithLifecycle()
+    val vm: ConversationsViewModel = appViewModel {
+        ConversationsViewModel(
+            repository = it.chatRepository,
+            realtime = it.realtimeConnection,
+            session = it.sessionManager,
+            toasts = it.toastController,
+        )
+    }
+    val conversations by vm.state.collectAsStateWithLifecycle()
+
+    // 进 Tab 首刷（Tab 切换会重建本组合；从 G8 返回时 MainScaffold 选中态回消息 Tab，
+    // 同样会走到这里——满足「返回私聊页时刷新」的预期）。未读角标一并拉一次：
+    // WS 推送是增量通道，兜住「连接健康但服务端没推帧」的漂移（如 mockserver _reset）
+    LaunchedEffect(Unit) {
+        vm.refresh()
+        container.unreadCountCenter.refresh()
+    }
 
     MessageScreen(
         counts = unread,
+        conversations = conversations.items,
+        conversationsLoading = conversations.loading,
         onEntryClick = navigator::toNotifications,
         onConversationClick = navigator::toAi,
+        onChatClick = { conversation ->
+            navigator.toChat(
+                conversationId = conversation.id,
+                peerId = conversation.peerId,
+                peerNickname = conversation.peerNickname,
+                peerAvatar = conversation.peerAvatar,
+            )
+        },
+        onPeerClick = { conversation -> navigator.toUserProfile(conversation.peerId) },
         // G1 顶栏右上「创建」没有定义任何行为（点按目标 ≥44 由 XhsIconButton 保证），
         // 故此处为**有意的空实现**，仅渲染 ic_placeholder 占位素材。
         onCreateClick = {},
@@ -104,7 +141,7 @@ fun MarkAllReadSheet(
     XhsConfirmSheet(
         visible = visible,
         onConfirm = {
-            // 本地立即全清 + 服务端全量已读；失败由下一次 15s 轮询校正（G5-2 同款异常恢复）
+            // 本地立即全清 + 服务端全量已读；失败由下次未读数推送/进页拉取校正（G5-2 同款异常恢复）
             container.unreadCountCenter.clearAll()
             scope.launch {
                 container.notificationRepository.markAllRead(null)
@@ -122,8 +159,12 @@ fun MarkAllReadSheet(
 @Composable
 private fun MessageScreen(
     counts: UnreadCounts,
+    conversations: List<Conversation>,
+    conversationsLoading: Boolean,
     onEntryClick: (NotificationCategory) -> Unit,
     onConversationClick: () -> Unit,
+    onChatClick: (Conversation) -> Unit,
+    onPeerClick: (Conversation) -> Unit,
     onCreateClick: () -> Unit,
     onMarkAllReadClick: () -> Unit,
 ) {
@@ -205,15 +246,41 @@ private fun MessageScreen(
             }
         }
 
-        // ---- 会话列表：只有「点点」一个入口 ----
-        ConversationRow(
-            title = "点点",
-            preview = ConversationPreview,
-            timeText = Formatters.formatConversationTime(System.currentTimeMillis()),
-            unread = false,
-            pinned = true,
-            onClick = onConversationClick,
-        )
+        // ---- 会话列表：「点点」固定首行 + 私信会话（契约 §12）----
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            item(key = "ai-entry") {
+                ConversationRow(
+                    title = "点点",
+                    preview = ConversationPreview,
+                    timeText = Formatters.formatConversationTime(System.currentTimeMillis()),
+                    unread = false,
+                    pinned = true,
+                    avatarUrl = null,
+                    onClick = onConversationClick,
+                )
+            }
+
+            items(
+                items = conversations,
+                key = { "chat-${it.id}" },
+            ) { conversation ->
+                ConversationRow(
+                    title = conversation.peerDisplayName,
+                    preview = conversation.lastMessage,
+                    timeText = Formatters.formatConversationTime(conversation.lastTime),
+                    unread = conversation.unread > 0,
+                    pinned = false,
+                    avatarUrl = conversation.peerAvatar,
+                    onClick = { onChatClick(conversation) },
+                )
+            }
+
+            if (conversationsLoading && conversations.isEmpty()) {
+                item(key = "loading") {
+                    XhsInlineLoading(modifier = Modifier.padding(vertical = Dimens.s16))
+                }
+            }
+        }
         }
     }
 }
@@ -281,6 +348,9 @@ private fun EntryColumn(
  * 实测：头像位 48 @16、标题 15sp @76（= 16 + 48 + 12）、预览 13sp、时间右侧；
  * 未读 8dp 红点 / 置顶 12dp 图标「按需显示」。
  *
+ * [avatarUrl] 为空 = 「点点」行（渲染行首 `ai` 小标，原 G1 定稿样式）；
+ * 非空 = 私信会话行（契约 §12），渲染 `XhsAvatar` 且头像可点 → F2。
+ *
  * 「行首 ai 小标」：设计上该行最左侧是一个 24×24 圆角小标（浅色底 + `ai` 字样）。本实现把它
  * 放大到 48dp 的**头像位**（同一格既承担实测的「头像 48 @16」，又是行首标识），
  * 否则「小标在最左」与「头像 @16 / 标题 @76」两条实测无法同时成立。
@@ -292,7 +362,9 @@ private fun ConversationRow(
     timeText: String,
     unread: Boolean,
     pinned: Boolean,
+    avatarUrl: String?,
     onClick: () -> Unit,
+    onAvatarClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
@@ -306,10 +378,20 @@ private fun ConversationRow(
             modifier = Modifier
                 .size(Dimens.avatarConversation)
                 .clip(RoundedCornerShape(Dimens.radiusCard))
-                .background(XhsColor.BgGray),
+                .then(
+                    if (onAvatarClick != null) {
+                        Modifier.clickable(onClick = onAvatarClick)
+                    } else {
+                        Modifier
+                    },
+                ),
             contentAlignment = Alignment.Center,
         ) {
-            Text(text = AiMarkerText, style = XhsType.meta, color = XhsColor.Text2)
+            if (avatarUrl.isNullOrBlank()) {
+                Text(text = AiMarkerText, style = XhsType.meta, color = XhsColor.Text2)
+            } else {
+                XhsAvatar(url = avatarUrl, size = Dimens.avatarConversation, borderWidthPx = 0f)
+            }
         }
 
         Spacer(modifier = Modifier.width(Dimens.s12))
@@ -334,10 +416,10 @@ private fun ConversationRow(
 
         Column(horizontalAlignment = Alignment.End) {
             Text(text = timeText, style = XhsType.captionSub, color = XhsColor.Text2)
-            // 置顶 12dp 图标（素材缺失 → ic_placeholder）
+            // 置顶 12dp 图标
             if (pinned) {
                 Icon(
-                    painter = painterResource(PlaceholderIconRes),
+                    painter = painterResource(R.drawable.ic_pin_top),
                     contentDescription = "置顶",
                     tint = XhsColor.Text3,
                     modifier = Modifier.size(Dimens.icon12),

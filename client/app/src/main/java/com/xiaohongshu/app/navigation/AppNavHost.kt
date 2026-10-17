@@ -8,9 +8,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.DisposableEffectResult
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavType
@@ -24,6 +24,7 @@ import com.xiaohongshu.app.feature.ai.AiRoute
 import com.xiaohongshu.app.feature.auth.AuthRoute
 import com.xiaohongshu.app.feature.detail.NoteDetailRoute
 import com.xiaohongshu.app.feature.detail.VideoDetailRoute
+import com.xiaohongshu.app.feature.message.ChatRoute
 import com.xiaohongshu.app.feature.message.NotificationListRoute
 import com.xiaohongshu.app.feature.profile.EditProfileRoute
 import com.xiaohongshu.app.feature.profile.SettingsRoute
@@ -40,9 +41,9 @@ import com.xiaohongshu.app.navigation.Transitions.pushExit
 /**
  * 全局导航图。
  *
- * 同时承担两项全局副作用（I1 与会话/轮询规范）：
+ * 同时承担两项全局副作用（I1 与未读数通道规范）：
  * 1. 登录态失效 → 清登录态 + 清互动缓存 + 清角标 + 推入登录页（I1，区别于 A2 的「从未登录」）；
- * 2. 未读角标 15s 轮询，仅在「已登录 + App 前台」时运行。
+ * 2. 未读角标（WS 推送 + 关键时刻校正）与 WS 长连接，仅在「已登录 + App 前台」时运行。
  */
 @Composable
 fun AppNavHost(container: AppContainer) {
@@ -58,6 +59,7 @@ fun AppNavHost(container: AppContainer) {
             container.sessionManager.onSessionExpired()
             container.interactionStore.clear()
             container.unreadCountCenter.clear()
+            container.realtimeConnection.disconnect()
             // 已在 Auth 页时不重复推入
             val current = navController.currentDestination?.route
             if (current != Routes.AUTH) {
@@ -72,21 +74,32 @@ fun AppNavHost(container: AppContainer) {
         container.unreadCountCenter.refresh()
     }
 
-    // ---- 未读角标轮询：仅登录 + 前台 ----
+    // ---- 未读角标 + WS 实时通道生命周期：仅登录 + 前台 ----
+    // 生命周期同未读数通道（契约 §12.7：连接维度 = 登录用户，非会话）
     DisposableEffect(lifecycleOwner, session.loggedIn, container) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START ->
-                    if (session.loggedIn) container.unreadCountCenter.start(scope)
-                Lifecycle.Event.ON_STOP -> container.unreadCountCenter.stop()
+                    if (session.loggedIn) {
+                        container.unreadCountCenter.start(scope)
+                        container.realtimeConnection.connect()
+                    }
+                Lifecycle.Event.ON_STOP -> {
+                    container.unreadCountCenter.stop()
+                    container.realtimeConnection.disconnect()
+                }
                 else -> Unit
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        if (session.loggedIn) container.unreadCountCenter.start(scope)
+        if (session.loggedIn) {
+            container.unreadCountCenter.start(scope)
+            container.realtimeConnection.connect()
+        }
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             container.unreadCountCenter.stop()
+            container.realtimeConnection.disconnect()
         }
     }
 
@@ -175,6 +188,30 @@ fun AppNavHost(container: AppContainer) {
         }
 
         composable(Routes.AI) { AiRoute(navigator) }
+
+        composable(
+            route = Routes.CHAT_PATTERN,
+            arguments = listOf(
+                navArgument(Routes.ARG_CONVERSATION_ID) { type = NavType.LongType },
+                navArgument(Routes.ARG_PEER_ID) { type = NavType.LongType },
+                navArgument(Routes.ARG_PEER_NICKNAME) {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument(Routes.ARG_PEER_AVATAR) {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+            ),
+        ) { entry ->
+            ChatRoute(
+                navigator = navigator,
+                conversationId = entry.arguments?.getLong(Routes.ARG_CONVERSATION_ID) ?: 0L,
+                peerId = entry.arguments?.getLong(Routes.ARG_PEER_ID) ?: 0L,
+                peerNickname = entry.arguments?.getString(Routes.ARG_PEER_NICKNAME).orEmpty(),
+                peerAvatar = entry.arguments?.getString(Routes.ARG_PEER_AVATAR).orEmpty(),
+            )
+        }
     }
 }
 
@@ -257,6 +294,10 @@ private class NavControllerNavigator(
 
     override fun toAi() {
         navigateChecked(Routes.AI)
+    }
+
+    override fun toChat(conversationId: Long, peerId: Long, peerNickname: String, peerAvatar: String) {
+        navigateChecked(Routes.chat(conversationId, peerId, peerNickname, peerAvatar))
     }
 
     override fun toPublishForm() {

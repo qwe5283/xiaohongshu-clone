@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -327,4 +329,32 @@ internal fun ProfileLogoutSheet(
         },
         modifier = modifier,
     )
+}
+
+/**
+ * F2「私信」通栏按钮（契约 §12.8）：与 [XhsFollowWideButton] **等宽并排**的两枚之一。
+ *
+ * 视觉：灰底（[XhsColor.BtnGray]）黑字胶囊，高与关注按钮一致（`Dimens.buttonFollow + 4`），
+ * 圆角 `Dimens.radiusPill`。行为恒一（没有「已关注/未关注」二态），点击由调用方决定
+ * （建会话 → 推 G8 私聊页）。
+ */
+@Composable
+internal fun XhsMessageWideButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .height(Dimens.buttonFollow + 4.dp)
+            .clip(RoundedCornerShape(Dimens.radiusPill))
+            .background(XhsColor.BtnGray)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "私信",
+            style = XhsType.buttonLabel,
+            color = XhsColor.BtnGrayText,
+        )
+    }
 }

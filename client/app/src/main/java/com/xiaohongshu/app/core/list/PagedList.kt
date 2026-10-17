@@ -61,63 +61,92 @@ class PagedList<T : Any>(
     private val _state = MutableStateFlow(PagedState<T>())
     val state: StateFlow<PagedState<T>> = _state.asStateFlow()
 
-    private var inFlight = false
+    /** 刷新请求允许并发；追加与刷新互斥，避免一个请求清理另一个请求的加载态。 */
+    private var refreshInFlight = 0
+    private var appendInFlight = 0
 
-    /** 首次加载 / 下拉刷新（B4-1 → B4-3/B4-2）。 */
+    /**
+     * 列表代际（CodeReview-2026-10-14 发现 2）：refresh/resetTo 递增。请求发出时捕获，
+     * 写回前校验——旧意图的响应（乱序返回、resetTo 前发出）整体丢弃，不覆盖新意图。
+     * 代际失效的请求同时失去标志的恢复权（finally 跳过），避免旧清理抹掉新请求的加载态。
+     */
+    private var listEpoch = 0L
+
+    /** 首次加载 / 下拉刷新（B4-1 → B4-3/B4-2）。并发刷新允许，只有最新代际能写回。 */
     suspend fun refresh() {
-        inFlight = true
-        _state.value = _state.value.copy(loading = true, error = null)
-        when (val result = fetch(1, pageSize)) {
-            is ApiResult.Ok -> {
-                _state.value = PagedState(
-                    items = result.data.items.distinctBy(keyOf),
-                    loading = false,
-                    loaded = true,
-                    endReached = !result.data.hasMore,
-                    page = 1,
-                )
+        val myEpoch = ++listEpoch
+        refreshInFlight++
+        _state.value = _state.value.copy(loading = true, loadingMore = false, error = null)
+        try {
+            val result = fetch(1, pageSize)
+            if (myEpoch != listEpoch) return
+            when (result) {
+                is ApiResult.Ok -> {
+                    _state.value = PagedState(
+                        items = result.data.items.distinctBy(keyOf),
+                        loading = refreshInFlight > 1,
+                        loaded = true,
+                        endReached = !result.data.hasMore,
+                        page = 1,
+                    )
+                }
+                else -> {
+                    // 保留旧内容，只把错误态暴露给 UI 决策（有内容时通常静默）
+                    _state.value = _state.value.copy(
+                        loading = refreshInFlight > 1,
+                        error = result.userMessage(),
+                        loaded = true,
+                    )
+                }
             }
-            else -> {
-                // 保留旧内容，只把错误态暴露给 UI 决策（有内容时通常静默）
-                _state.value = _state.value.copy(
-                    loading = false,
-                    error = result.userMessage(),
-                    loaded = true,
-                )
+        } finally {
+            refreshInFlight--
+            // 取消（如退页）也必须恢复标志，否则 loading 残留会永久阻塞追加
+            if (refreshInFlight == 0) {
+                _state.value = _state.value.copy(loading = false)
             }
         }
-        inFlight = false
     }
 
     /**
      * 追加下一页（B4-4）。到底或正在加载时为 no-op；失败弹全局 Toast 且保留内容。
+     * 追加只写入发起时的列表代际；期间发生 refresh/resetTo 则整体丢弃（分页基数已变）。
      */
     suspend fun loadMore() {
         val current = _state.value
-        if (inFlight || current.loading || current.loadingMore || current.endReached) return
+        if (refreshInFlight > 0 || appendInFlight > 0 || current.loading || current.loadingMore || current.endReached) return
         if (current.error != null && !current.hasContent) return
-        inFlight = true
+        val myEpoch = listEpoch
+        appendInFlight++
         _state.value = current.copy(loadingMore = true)
         val nextPage = current.page + 1
-        when (val result = fetch(nextPage, pageSize)) {
-            is ApiResult.Ok -> {
-                val merged = (_state.value.items + result.data.items)
-                    .distinctBy(keyOf)
-                _state.value = _state.value.copy(
-                    items = merged,
-                    loadingMore = false,
-                    loaded = true,
-                    page = nextPage,
-                    endReached = !result.data.hasMore,
-                )
+        try {
+            val result = fetch(nextPage, pageSize)
+            if (myEpoch != listEpoch) return
+            when (result) {
+                is ApiResult.Ok -> {
+                    val merged = (_state.value.items + result.data.items)
+                        .distinctBy(keyOf)
+                    _state.value = _state.value.copy(
+                        items = merged,
+                        loadingMore = false,
+                        loaded = true,
+                        page = nextPage,
+                        endReached = !result.data.hasMore,
+                    )
+                }
+                else -> {
+                    // 追加失败：已加载内容保留，仅全局 Toast（B4-4）
+                    _state.value = _state.value.copy(loadingMore = false)
+                    toasts?.show(result.userMessage())
+                }
             }
-            else -> {
-                // 追加失败：已加载内容保留，仅全局 Toast（B4-4）
+        } finally {
+            appendInFlight--
+            if (myEpoch == listEpoch) {
                 _state.value = _state.value.copy(loadingMore = false)
-                toasts?.show(result.userMessage())
             }
         }
-        inFlight = false
     }
 
     /** 首次失败后点「重试」（B4-2）。 */
@@ -146,8 +175,9 @@ class PagedList<T : Any>(
         mutate { it.filterNot { item -> keyOf(item) == id } }
     }
 
-    /** 发布成功后把新笔记置顶（E5-2）。 */
+    /** 发布成功后把新笔记置顶（E5-2）。同时使在途请求失效：本地的列表已是权威内容。 */
     fun resetTo(items: List<T>) {
+        listEpoch++
         _state.value = PagedState(
             items = items.distinctBy(keyOf),
             loading = false,

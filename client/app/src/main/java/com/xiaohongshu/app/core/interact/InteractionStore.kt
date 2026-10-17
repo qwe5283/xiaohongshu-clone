@@ -11,9 +11,11 @@ import com.xiaohongshu.app.core.net.apiCall
 import com.xiaohongshu.app.core.net.unwrap
 import com.xiaohongshu.app.domain.model.Comment
 import com.xiaohongshu.app.domain.model.Note
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,6 +68,8 @@ class InteractionStore(
     private val collectApi: CollectApi,
     private val followApi: FollowApi,
     private val toasts: ToastController,
+    /** 在途 toggle 的执行线程；测试注入 Unconfined 以内联驱动时序。 */
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
 ) {
 
     /**
@@ -73,7 +77,7 @@ class InteractionStore(
      * 乐观覆盖量就成了孤儿——不回滚、无错误 Toast，且后续反向 toggle 会与服务端真实
      * 状态倒置。Main.immediate 让点击线程上乐观态同步生效（原 viewModelScope 同款行为）。
      */
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var scope = CoroutineScope(SupervisorJob() + dispatcher)
 
     private val _noteOverrides = MutableStateFlow<Map<Long, NoteInteraction>>(emptyMap())
     val noteOverrides: StateFlow<Map<Long, NoteInteraction>> = _noteOverrides.asStateFlow()
@@ -326,22 +330,25 @@ class InteractionStore(
 
     /**
      * 退出登录 / 会话失效时清空。这些覆盖量属于上一个用户，必须丢弃。
+     *
+     * 同时取消上一会话的全部在途 toggle 并重建执行域（CodeReview-2026-10-14 发现 1）：
+     * 只清覆盖量不清任务的话，旧账号的迟到响应仍会写回新会话。epoch 表**故意不清**——
+     * 序号跨会话单调递增，旧会话的响应永远无法通过 [isLatest] 校验；清空会让新旧序号
+     * 重新相等，旧响应借尸还魂。
      */
     fun clear() {
+        scope.cancel()
+        scope = CoroutineScope(SupervisorJob() + dispatcher)
         _noteOverrides.value = emptyMap()
         _followOverrides.value = emptyMap()
         _commentOverrides.value = emptyMap()
-        likeEpochs.clear()
-        collectEpochs.clear()
-        followEpochs.clear()
-        commentEpochs.clear()
     }
 
     /** 发布成功、删除笔记、或从收藏列表取消收藏后，丢弃单条笔记的覆盖。 */
     fun forget(postId: Long) {
         _noteOverrides.value = _noteOverrides.value - postId
-        likeEpochs.remove(postId)
-        collectEpochs.remove(postId)
+        // epoch 同样保留：删除条目会让下一次 toggle 从 1 重新计数，
+        // 与该 id 在途请求的序号重新相等（理由同 [clear]）。
     }
 
     /**

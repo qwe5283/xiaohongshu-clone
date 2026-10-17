@@ -13,7 +13,7 @@ import retrofit2.http.Query
 interface NotificationApi {
 
     /**
-     * 未读数（15s 轮询，仅登录态 + 前台）。
+     * 未读数（登录、进消息 Tab、WS 重连后等关键时刻拉取；日常增量走 WS `notify.unread` 推送）。
      * 契约变更 #6：同时返回三个分类未读数，供 G1 三入口卡角标；为 0 时客户端隐藏角标。
      */
     @GET("api/notification/unread-count")
@@ -31,7 +31,7 @@ interface NotificationApi {
         @Query("type") type: Int? = null,
     ): ApiEnvelope<PageDto<NotificationDto>>
 
-    /** 点条目时先标已读（角标 -1）再跳转。失败不阻断操作，下次轮询校正。 */
+    /** 点条目时先标已读（角标 -1）再跳转。失败不阻断操作，由下次未读数推送/校正兜底。 */
     @PUT("api/notification/read/{id}")
     suspend fun markRead(@Path("id") id: Long): ApiEnvelope<Unit>
 

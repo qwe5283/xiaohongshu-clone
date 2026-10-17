@@ -57,6 +57,9 @@ interface AppNavigator {
     /** H1 点点（推入式，无底部 Tab）。 */
     fun toAi()
 
+    /** G8 私聊页（契约 §12，推入式，无底部 Tab）。peer 信息用于顶栏与建会话后的即显。 */
+    fun toChat(conversationId: Long, peerId: Long, peerNickname: String = "", peerAvatar: String = "")
+
     /** E2 发布表单页（媒体已在 [com.xiaohongshu.app.core.publish.PublishDraft] 中准备好）。 */
     fun toPublishForm()
 

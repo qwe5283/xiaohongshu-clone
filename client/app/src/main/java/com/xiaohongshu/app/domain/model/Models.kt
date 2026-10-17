@@ -213,6 +213,73 @@ data class ChatMessage(
     enum class ChatState { Sending, Thinking, Done, Failed }
 }
 
+/* ================================================================== *
+ * IM 私信（契约 §12）
+ *
+ * 命名说明：AI 对话已占用 `ChatMessage`，故私信侧用 `ImMessage` / `Conversation`，
+ * 两者互不相干（H1-H3 是单轮问答、§12 是双人对话）。
+ * ================================================================== */
+
+/** 单聊会话（G1 会话列表行）。 */
+data class Conversation(
+    val id: Long,
+    /** 对方用户 id（点头像 → F2；建会话用）。 */
+    val peerId: Long,
+    val peerNickname: String,
+    val peerAvatar: String,
+    val lastMessage: String,
+    val lastTime: Long,
+    /** 对方发来且我未读的消息数；行右侧红点用 >0 判定。 */
+    val unread: Long,
+) {
+    val peerDisplayName: String get() = peerNickname.ifBlank { "小红书用户" }
+}
+
+/** 私聊消息（G8 消息流）。 */
+data class ImMessage(
+    /** 服务端消息 id；本地未落库的临时消息用负数（见 [LocalIdSeed]）。 */
+    val id: Long,
+    val conversationId: Long,
+    /** 发送者 id；与当前登录用户比对决定气泡左右。 */
+    val senderId: Long,
+    val content: String,
+    val time: Long,
+    /** 本地乐观发送时的幂等键；重试带同一值（契约 §12.5）。服务端消息为空串。 */
+    val clientId: String = "",
+    val state: SendState = SendState.Sent,
+) {
+    enum class SendState {
+        /** 已乐观上屏、等 REST 响应。 */
+        Sending,
+
+        /** 服务端已确认（或来自 WS 推送）。 */
+        Sent,
+
+        /** 发送失败；点气泡按同一 clientId 重试。 */
+        Failed,
+    }
+
+    val isMine: Boolean get() = senderId == LocalUserIdProvider.currentUserId
+
+    companion object {
+        /** 本地临时 id 种子：递减取负数，绝不与服务端 id（正数）冲突。 */
+        var LocalIdSeed: Long = -1L
+    }
+}
+
+/**
+ * 当前登录用户 id 的进程级提供者。
+ *
+ * 为什么不让每条消息带 `mine: Boolean`：气泡左右是**渲染层**概念，而 [ImMessage] 同时要参与
+ * WS 推送去重（按 id）与列表状态比较；把 mine 做成派生属性（[ImMessage.isMine]）可以让同一条
+ * 消息在「历史」「推送」「乐观消息」三种来源下保持同一形态。SessionManager 在登录态变化时
+ * 更新它，避免 domain 层反向依赖 data/local。
+ */
+object LocalUserIdProvider {
+    @Volatile
+    var currentUserId: Long = 0L
+}
+
 /** 搜索结果里「用户」Tab 的行（B3-1 的 Tab 之一）。 */
 data class UserBrief(
     val id: Long,

@@ -14,6 +14,8 @@ import com.xiaohongshu.app.domain.model.ChatMessage
 import com.xiaohongshu.app.domain.model.NotificationItem
 import com.xiaohongshu.app.domain.model.Paged
 import com.xiaohongshu.app.domain.model.UnreadCounts
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -23,10 +25,19 @@ import java.io.File
 /** 消息通知数据源（G1–G6）。 */
 class NotificationRepository(private val notificationApi: NotificationApi) {
 
-    /** 15s 轮询的未读数（总数 + 三分类）。 */
-    suspend fun unreadCounts(): ApiResult<UnreadCounts> = apiCall {
-        notificationApi.unreadCount().unwrap()
-    }.map { it.toDomain() }
+    /**
+     * 读跟随写：未读数与已读写共用一把锁串行——子页 pop 的「乐观清零 + read-all」
+     * 与回 G1 的未读拉取几乎同时发出，mockserver 的每请求随机延迟会让拉取约半数
+     * 抢在 read-all 落库前处理，把旧计数写回（角标闪回）。串行后拉取必然读到写后状态。
+     */
+    private val readYourWrites = Mutex()
+
+    /** 未读数（总数 + 三分类，契约 §7.1；无定时轮询，关键时刻拉取）。 */
+    suspend fun unreadCounts(): ApiResult<UnreadCounts> = readYourWrites.withLock {
+        apiCall {
+            notificationApi.unreadCount().unwrap()
+        }.map { it.toDomain() }
+    }
 
     /** G2/G3/G4 列表。[category] 对应三个入口；[type] 为更细的筛选。 */
     suspend fun list(
@@ -42,12 +53,16 @@ class NotificationRepository(private val notificationApi: NotificationApi) {
         ).unwrap()
     }.map { it.toNotificationPage() }
 
-    /** 点条目时先标已读（角标 -1）再跳转；失败不阻断，下次轮询校正。 */
-    suspend fun markRead(id: Long): ApiResult<Unit> = apiCall { notificationApi.markRead(id).unwrap() }
+    /** 点条目时先标已读（角标 -1）再跳转；失败不阻断，由下次未读数推送/校正兜底。与 [unreadCounts] 串行（读跟随写）。 */
+    suspend fun markRead(id: Long): ApiResult<Unit> = readYourWrites.withLock {
+        apiCall { notificationApi.markRead(id).unwrap() }
+    }
 
-    /** G6 一键已读（作用于当前分类列表）。 */
-    suspend fun markAllRead(category: NotificationCategory? = null): ApiResult<Unit> = apiCall {
-        notificationApi.markAllRead(category?.value).unwrap()
+    /** G6 一键已读（作用于当前分类列表）。与 [unreadCounts] 串行（读跟随写）。 */
+    suspend fun markAllRead(category: NotificationCategory? = null): ApiResult<Unit> = readYourWrites.withLock {
+        apiCall {
+            notificationApi.markAllRead(category?.value).unwrap()
+        }
     }
 }
 

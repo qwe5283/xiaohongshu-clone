@@ -6,16 +6,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.xiaohongshu.app.core.design.XhsColor
+import com.xiaohongshu.app.core.net.onFailure
+import com.xiaohongshu.app.core.net.onOk
+import com.xiaohongshu.app.core.net.userMessage
 import com.xiaohongshu.app.core.ui.SheetAction
 import com.xiaohongshu.app.core.ui.XhsActionSheet
 import com.xiaohongshu.app.core.ui.XhsOverlayInputBar
 import com.xiaohongshu.app.di.LocalAppContainer
 import com.xiaohongshu.app.di.appViewModel
 import com.xiaohongshu.app.navigation.AppNavigator
+import kotlinx.coroutines.launch
 
 /**
  * WS-Profile 的四个入口（F1–F6），全部由本文件暴露；内容层在同目录的 Screen 文件里。
@@ -86,10 +91,10 @@ fun MyProfileRoute(navigator: AppNavigator, onOpenDrawer: () -> Unit) {
  * F2 他人主页（推入式）。
  *
  * 与 F1 的差异：无小组件行、无「去发布」banner、无「编辑主页」pill（顶栏左为 ←、右为「⋯」视觉占位）、
- * Tab 仅「笔记 / 收藏」、关注为**通栏大按钮**（D2 同一状态机）。
+ * Tab 仅「笔记 / 收藏」、**关注与私信两枚等宽按钮并排**（契约 §12.8：D2 同一状态机 + 私信入口）。
  *
  * isMe（评论区等入口点自己头像）时为「推入态个人页」：顶栏 ← + 「编辑主页」pill、
- * Tab 含「赞过」、隐藏关注按钮——与 Tab 根页面仅差左上角按钮与底 Tab。
+ * Tab 含「赞过」、隐藏关注/私信按钮——与 Tab 根页面仅差左上角按钮与底 Tab。
  */
 @Composable
 fun UserProfileRoute(
@@ -112,6 +117,7 @@ fun UserProfileRoute(
     }
     val state by vm.state.collectAsStateWithLifecycle()
     val session by container.sessionManager.state.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(userId) { vm.loadAuthor() }
 
@@ -127,6 +133,26 @@ fun UserProfileRoute(
         onFollowToggle = {
             // D2：需登录的写操作，先过登录拦截（§4.4，不弹 Toast）
             if (!container.loginGate.runOrDefer { vm.toggleFollow() }) navigator.toLogin()
+        },
+        onMessageClick = {
+            // 私信（契约 §12.4/§12.8）：先幂等建/取会话拿到会话 id，再推 G8。
+            // F2 只在登录态可达，仍统一过登录拦截保持与其他写操作一致（§4.4）。
+            if (!container.loginGate.runOrDefer {
+                scope.launch {
+                    container.chatRepository.ensureConversation(userId)
+                        .onOk { conversation ->
+                            navigator.toChat(
+                                conversationId = conversation.id,
+                                peerId = conversation.peerId,
+                                peerNickname = conversation.peerNickname,
+                                peerAvatar = conversation.peerAvatar,
+                            )
+                        }
+                        .onFailure { container.toastController.show(it.userMessage()) }
+                }
+            }) {
+                navigator.toLogin()
+            }
         },
         onTabSelect = vm::selectTab,
         onNoteClick = navigator::toNote,

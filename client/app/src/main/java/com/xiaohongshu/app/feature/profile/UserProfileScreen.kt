@@ -1,9 +1,12 @@
 package com.xiaohongshu.app.feature.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.runtime.Composable
@@ -41,6 +44,7 @@ internal fun UserProfileScreen(
     onEditProfile: () -> Unit,
     onCopyRedId: () -> Unit,
     onFollowToggle: () -> Unit,
+    onMessageClick: () -> Unit,
     onTabSelect: (ProfileTab) -> Unit,
     onNoteClick: (Long, Boolean) -> Unit,
     onAuthorClick: (Long) -> Unit,
@@ -76,13 +80,26 @@ internal fun UserProfileScreen(
             onEditProfile = if (state.isMe) onEditProfile else null,
             onBioClick = if (state.isMe) onEditProfile else null,
             footer = {
-                // D2：他人主页用通栏大按钮；自己的主页不显示
+                // D2：他人主页用通栏大按钮；自己的主页不显示。
+                // 私信（契约 §12.8）：与关注按钮**右拆分**为等宽两枚（同高、间距 8），
+                // 「关注 + 私信」并排替代原来的单个通栏按钮。
                 if (!state.isMe) {
-                    XhsFollowWideButton(
-                        followed = state.followed,
-                        onToggle = onFollowToggle,
-                        modifier = Modifier.padding(horizontal = Dimens.pagePadding),
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Dimens.pagePadding),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.s8),
+                    ) {
+                        XhsFollowWideButton(
+                            followed = state.followed,
+                            onToggle = onFollowToggle,
+                            modifier = Modifier.weight(1f),
+                        )
+                        XhsMessageWideButton(
+                            onClick = onMessageClick,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             },
         )

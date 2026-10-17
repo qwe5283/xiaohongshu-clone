@@ -92,4 +92,15 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    testImplementation(libs.junit)
+}
+
+// 单测 classpath 离线解析：compose-bom 的 runtime-android 会传递拉取 coroutines 1.10.1，
+// 本机离线缓存只有 1.9.0（与主 classpath 实际使用一致），钉住避免测试与生产版本不一致。
+configurations.configureEach {
+    resolutionStrategy.force(
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0",
+    )
 }

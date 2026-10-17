@@ -45,11 +45,18 @@ object Routes {
     /** H1/H2 点点对话页（推入式，无底部 Tab）。 */
     const val AI = "ai"
 
+    /** G8 私聊页（契约 §12，推入式，无底部 Tab）。 */
+    const val CHAT = "chat"
+
     // ---- 参数名 ----
     const val ARG_POST_ID = "postId"
     const val ARG_USER_ID = "userId"
     const val ARG_KEYWORD = "keyword"
     const val ARG_CATEGORY = "category"
+    const val ARG_CONVERSATION_ID = "conversationId"
+    const val ARG_PEER_ID = "peerId"
+    const val ARG_PEER_NICKNAME = "peerNickname"
+    const val ARG_PEER_AVATAR = "peerAvatar"
 
     // ---- 带参路由构造 ----
     fun searchResult(keyword: String): String =
@@ -63,10 +70,23 @@ object Routes {
 
     fun notifications(category: Int): String = "$NOTIFICATIONS/$category"
 
+    fun chat(
+        conversationId: Long,
+        peerId: Long,
+        peerNickname: String = "",
+        peerAvatar: String = "",
+    ): String {
+        val nick = java.net.URLEncoder.encode(peerNickname, "UTF-8")
+        val avatar = java.net.URLEncoder.encode(peerAvatar, "UTF-8")
+        return "$CHAT/$conversationId/$peerId?$ARG_PEER_NICKNAME=$nick&$ARG_PEER_AVATAR=$avatar"
+    }
+
     // ---- 路由模式（用于 NavHost 声明）----
     const val NOTE_DETAIL_PATTERN = "$NOTE_DETAIL/{$ARG_POST_ID}"
     const val VIDEO_DETAIL_PATTERN = "$VIDEO_DETAIL/{$ARG_POST_ID}"
     const val USER_PROFILE_PATTERN = "$USER_PROFILE/{$ARG_USER_ID}"
     const val NOTIFICATIONS_PATTERN = "$NOTIFICATIONS/{$ARG_CATEGORY}"
     const val SEARCH_RESULT_PATTERN = "$SEARCH_RESULT?$ARG_KEYWORD={$ARG_KEYWORD}"
+    const val CHAT_PATTERN =
+        "$CHAT/{$ARG_CONVERSATION_ID}/{$ARG_PEER_ID}?$ARG_PEER_NICKNAME={$ARG_PEER_NICKNAME}&$ARG_PEER_AVATAR={$ARG_PEER_AVATAR}"
 }

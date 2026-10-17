@@ -414,7 +414,7 @@ internal fun AiInputBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(Dimens.aiInputBar)
+                .height(Dimens.msgInputBar)
                 .padding(horizontal = Dimens.s12),
             verticalAlignment = Alignment.CenterVertically,
         ) {

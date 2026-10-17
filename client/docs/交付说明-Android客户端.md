@@ -156,7 +156,7 @@ cd client
 - **`ic_placeholder_illus.xml`** —— 空态插画占位（`XhsIllustrationSlot` 使用）。
 - 另：**结构性控件已用 Canvas 精确绘制**（`XhsPlusGlyph` ＋ / `XhsCheckCircle` 协议勾选），**不需要替换**；原先同一批就地画的 ☰ / ▶ / 人形已改为矢量资源（`ic_menu` / `ic_play` / `ic_user_circle`），见 §8.1。
 
-**缺素材、当前用占位顶替的位置（共 11 个文件、27 处；2026-09-18 按当前代码重新清点）**：
+**缺素材、当前用占位顶替的位置（共 11 个文件、26 处；2026-09-18 按当前代码重新清点）**：
 
 | 位置 | 具体缺哪些图标 |
 |------|---------------|
@@ -164,7 +164,7 @@ cd client
 | `feature/profile/ProfileCommon.kt`（5 处） | 去发布 banner 图标、segment 搜索框、部件卡图标等 |
 | `feature/profile/MyProfileScreen.kt`（3 处） | 抽屉条目图标 |
 | `feature/profile/ProfileHeader.kt`（2 处） | 复制小红书号（12dp）、他人主页 ⋯（24dp） |
-| `feature/message/MessageRoutes.kt`（2 处） | 顶栏「创建」、置顶图标 |
+| `feature/message/MessageRoutes.kt`（1 处） | 顶栏「创建」 |
 | `feature/detail/VideoDetailScreen.kt`（2 处） | 音乐碟、作者行分享 |
 | `feature/detail/CommentPanel.kt`（2 处） | 评论面板 emoji / @ |
 | `feature/search/SearchComponents.kt`（2 处） | 拍照搜索相机、历史记录 🗑 |
@@ -172,7 +172,9 @@ cd client
 | `feature/profile/SettingsScreen.kt`（1 处） | 设置行图标（除「关于小红书」用 `ic_about`） |
 | `feature/profile/EditProfileScreen.kt`（1 处） | 头像相机角标 |
 
-**已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_share / ic_scan / ic_edit / ic_broom / ic_play / ic_menu / ic_user / ic_user_circle`。
+**已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_share / ic_scan / ic_edit / ic_broom / ic_play / ic_menu / ic_user / ic_user_circle / ic_pin_top / ic_notify_mute`。
+
+> 2026-10-18 更新：新增两个 iconfont **实心**字形（24 视口 / 占位按长边 19.5dp）——`ic_pin_top`（置顶：上箭头 + 顶横条）已接线到 `MessageRoutes.kt` 会话行的 12dp 置顶位，上表对应条目已移除；`ic_notify_mute`（消息免打扰：带斜杠的铃铛）**当前无调用方**，留作备用（会话模型尚无免打扰字段）。源 SVG 为 `docs/assets/top-filling.svg` 与 `docs/assets/消息免打扰.svg`（后者转换时用了临时 ASCII 副本，仓库只保留中文名源）。
 
 > 2026-10-03 更新：新增 8 个 iconfont 线形图标（24 视口 / 1.8dp / 占位 18~20dp，源 SVG 为 `docs/assets/` 下中文名文件）：`ic_delete`（垃圾桶）、`ic_plus_circle`（圆环＋）、`ic_discover`（指南针）、`ic_image`（图片）、`ic_camera`（相机）、`ic_emoji`（笑脸）、`ic_settings`（齿轮），以及**换代的 `ic_more`**——旧三点版与 `ic_menu` 语义重复已废弃，现为「圆环+三点」（AiRoute 一处引用自动生效）。上表中 AI 面板的「表情 / ＋」、搜索的「拍照相机 / 历史 🗑」、设置的「设置行图标」、评论面板的「emoji」等位置可直接接线。
 
@@ -186,7 +188,7 @@ cd client
 
 **规范**：24 视口（`viewportWidth/Height=24`，`width/height=24dp`）+ 描边 1.8dp + 图形占位 18~20dp（工具/结构性字形例外）+ 填充版与描边版必须同外缘。细则见 `客户端架构与开发规范.md` §4.5.1。
 
-**源文件**：共用那批图标（heart / star / comment / search / close / chevron / more / home / notify / about / live / male / female / publish / red / assistant / ai-* 等 22 个）的**源 SVG 在 `frontend/src/assets/icons/`**——Android 的 drawable 就是从这里转出来的；新下载的 `user.svg` / `user_circle.svg` 在 `client/docs/assets/`。（第一批下载的 `分享 / 扫一扫 / 扫帚 / 播放_填充 / 编辑` 五个源 SVG 已不在仓库里，**以 `res/drawable/*.xml` 为准**。）它们是**设计源**，不是可编译资源；再要新增或改动图标时，按上一节规范改 `res/drawable/*.xml`（或重新走一遍 SVG→VectorDrawable 转换），**不要把 .svg 放回 `res/drawable/`**（aapt2 只收 `.xml`/`.png`，放了会直接构建失败）。
+**源文件**：共用那批图标（heart / star / comment / search / close / chevron / more / home / notify / about / live / male / female / publish / red / assistant / ai-* 等 22 个）的**源 SVG 在 `frontend/src/assets/icons/`**——Android 的 drawable 就是从这里转出来的；新下载的 `user.svg` / `user_circle.svg` 在 `client/docs/assets/`。2026-10-18 新增的 `top-filling.svg`（`ic_pin_top`）与 `消息免打扰.svg`（`ic_notify_mute`）也在 `client/docs/assets/`。（第一批下载的 `分享 / 扫一扫 / 扫帚 / 播放_填充 / 编辑` 五个源 SVG 已不在仓库里，**以 `res/drawable/*.xml` 为准**。）它们是**设计源**，不是可编译资源；再要新增或改动图标时，按上一节规范改 `res/drawable/*.xml`（或重新走一遍 SVG→VectorDrawable 转换），**不要把 .svg 放回 `res/drawable/`**（aapt2 只收 `.xml`/`.png`，放了会直接构建失败）。
 
 > ⚠️ **跨端待办**：这批线宽统一只做了 Android 侧，`frontend/src/assets/icons/` 里同名图标仍是老线宽（heart / chevron 6.25%、close 8.3%），两端现在不一致。要对齐就照规范 §4.5.1 第 2 条处理 Web 那批。
 
