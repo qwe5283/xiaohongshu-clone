@@ -70,7 +70,7 @@ fun MyProfileRoute(navigator: AppNavigator, onOpenDrawer: () -> Unit) {
         onEditProfile = {
             if (session.loggedIn) navigator.toEditProfile() else navigator.toLogin()
         },
-        onCopyRedId = { copyToClipboard(context, "小红书号", state.user.displayRedId) },
+        onCopyRedId = { copyToClipboard(context, container, "小红书号", state.user.displayRedId) },
         onTabSelect = vm::selectTab,
         onNoteClick = navigator::toNote,
         onAuthorClick = navigator::toUserProfile,
@@ -120,7 +120,7 @@ fun UserProfileRoute(
         onLeftAction = navigator::back,
         // isMe（推入态个人页）时的「编辑主页」pill；isMe 必为登录态（currentUserId == userId）
         onEditProfile = navigator::toEditProfile,
-        onCopyRedId = { copyToClipboard(context, "小红书号", state.user.displayRedId) },
+        onCopyRedId = { copyToClipboard(context, container, "小红书号", state.user.displayRedId) },
         onFollowToggle = {
             // D2：需登录的写操作，先过登录拦截（§4.4，不弹 Toast）
             if (!container.loginGate.runOrDefer { vm.toggleFollow() }) navigator.toLogin()

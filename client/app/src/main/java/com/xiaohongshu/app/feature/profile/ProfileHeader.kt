@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,13 +56,19 @@ internal fun ProfileHeader(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(Dimens.profileHeaderImage),
+            .heightIn(min = Dimens.profileHeaderImage),
     ) {
         // 头图：缺失素材由 XhsAsyncImage 统一占位
         XhsAsyncImage(
             url = user.backgroundImage,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.matchParentSize(),
             contentScale = ContentScale.Crop,
+        )
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(XhsColor.ProfileHeaderScrim),
         )
 
         ProfileFloatingTopBar(
@@ -72,57 +80,35 @@ internal fun ProfileHeader(
             modifier = Modifier.align(Alignment.TopStart),
         )
 
-        // 头像 + 昵称 + 小红书号/IP + 统计行 + 简介行 + 性别 chip（实测偏移 @(2,78)）
+        // 契约 §12.8：顶部留白必须参与测量，独立性别行与访客操作行才能撑开资料头。
         Column(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .offset(
-                    x = Dimens.profileAvatarOffsetX,
-                    y = Dimens.profileAvatarOffsetY,
-                ),
+                .padding(top = Dimens.profileAvatarOffsetY)
+                .offset(x = Dimens.profileAvatarOffsetX)
+                .padding(Dimens.pagePadding),
         ) {
-            Row(verticalAlignment = Alignment.Top) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 XhsAvatar(url = user.avatar, size = Dimens.avatarProfile)
                 Spacer(modifier = Modifier.width(Dimens.s12))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = user.displayName,
                         style = XhsType.profileNickname,
-                        color = XhsColor.Text1,
+                        color = XhsColor.Text1Dark,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     Spacer(modifier = Modifier.height(Dimens.s4))
-                    // 小红书号 + 复制（真实写系统剪贴板）+ IP 属地（取自 region 字段）
+                    // 小红书号，点击复制
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "小红书号：${user.displayRedId}",
                             style = XhsType.meta,
-                            color = XhsColor.Text2,
+                            color = XhsColor.Text2Dark,
                             maxLines = 1,
+                            modifier = Modifier.clickable(onClick = onCopyRedId),
                         )
-                        Box(
-                            modifier = Modifier
-                                .size(Dimens.minTouchTarget)
-                                .clickable(onClick = onCopyRedId),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            // 复制图标为缺失素材（§4.5）：统一占位
-                            Icon(
-                                painter = painterResource(PlaceholderIconRes),
-                                contentDescription = "复制小红书号",
-                                tint = XhsColor.Text2,
-                                modifier = Modifier.size(Dimens.icon12),
-                            )
-                        }
-                        if (user.region.isNotBlank()) {
-                            Text(
-                                text = "IP 属地：${user.region}",
-                                style = XhsType.meta,
-                                color = XhsColor.Text2,
-                                maxLines = 1,
-                            )
-                        }
                     }
                 }
             }
@@ -136,6 +122,16 @@ internal fun ProfileHeader(
                 isMe = isMe,
                 onBioClick = onBioClick,
             )
+
+            if (user.hasGender) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Dimens.s4),
+                ) {
+                    GenderChip(gender = user.gender)
+                }
+            }
 
             if (footer != null) {
                 Spacer(modifier = Modifier.height(Dimens.s4))
@@ -177,25 +173,19 @@ private fun ProfileFloatingTopBar(
                     Icon(
                         painter = painterResource(R.drawable.ic_menu),
                         contentDescription = "菜单",
-                        tint = XhsColor.Text1,
+                        tint = XhsColor.Text1Dark,
                         modifier = Modifier.size(Dimens.profileMenuIcon),
                     )
                 } else {
                     Icon(
                         painter = painterResource(R.drawable.ic_chevron_left),
                         contentDescription = "返回",
-                        tint = XhsColor.Text1,
+                        tint = XhsColor.Text1Dark,
                         modifier = Modifier.size(Dimens.icon24),
                     )
                 }
             }
 
-            if (onEditProfile != null) {
-                EditProfilePill(
-                    onClick = onEditProfile,
-                    modifier = Modifier.align(Alignment.Center),
-                )
-            }
 
             Row(
                 modifier = Modifier
@@ -204,32 +194,29 @@ private fun ProfileFloatingTopBar(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (isMe) {
+                    if (onEditProfile != null) {
+                        EditProfilePill(
+                            onClick = onEditProfile,
+                            modifier = Modifier,
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(Dimens.profileTopIconGap))
                     // 扫一扫 / 分享：**视觉占位**（无行为），但素材已就位
                     XhsIconButton(
                         iconRes = R.drawable.ic_scan,
                         onClick = {},
-                        tint = XhsColor.Text1,
+                        tint = XhsColor.Text1Dark,
                         iconSize = Dimens.icon24,
                         contentDescription = "扫一扫",
                     )
-                    Spacer(modifier = Modifier.width(Dimens.profileTopIconGap))
-                    XhsIconButton(
-                        iconRes = R.drawable.ic_share,
-                        onClick = {},
-                        tint = XhsColor.Text1,
-                        iconSize = Dimens.icon24,
-                        contentDescription = "分享",
-                    )
-                } else if (onMoreClick != null) {
-                    // F2「⋯」：视觉占位
-                    XhsIconButton(
-                        iconRes = PlaceholderIconRes,
-                        onClick = onMoreClick,
-                        tint = XhsColor.Text1,
-                        iconSize = Dimens.icon24,
-                        contentDescription = "更多",
-                    )
                 }
+                XhsIconButton(
+                    iconRes = R.drawable.ic_share,
+                    onClick = {},
+                    tint = XhsColor.Text1Dark,
+                    iconSize = Dimens.icon24,
+                    contentDescription = "分享",
+                )
             }
         }
     }
@@ -300,25 +287,20 @@ private fun StatItem(count: Long, label: String) {
         Text(
             text = statText(count),
             style = XhsType.s(14, emphasis = true),
-            color = XhsColor.Text1,
+            color = XhsColor.Text1Dark,
             maxLines = 1,
         )
         Spacer(modifier = Modifier.width(Dimens.s4))
         Text(
             text = label,
             style = XhsType.meta,
-            color = XhsColor.Text2,
+            color = XhsColor.Text2Dark,
             maxLines = 1,
         )
     }
 }
 
-/**
- * 简介行（高 26）+ 性别 chip（30×20，icon 12）。
- *
- * 契约 §12.8：简介引导只对本人有意义，不能按 F1/F2 入口区分。
- * 性别未知（`gender == 0`，含「保密」）不显示图标。
- */
+/** 契约 §12.8：简介引导只对本人有意义，不能按 F1/F2 入口区分。 */
 @Composable
 private fun ProfileBioRow(
     user: User,
@@ -327,30 +309,24 @@ private fun ProfileBioRow(
 ) {
     val bio = user.bio.trim()
     val guidance = isMe && bio.isEmpty()
-    if (bio.isEmpty() && !user.hasGender && !guidance) return
+    if (bio.isEmpty() && !guidance) return
 
     Row(
         modifier = Modifier.height(Dimens.profileBioRow),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (bio.isNotEmpty() || guidance) {
-            Text(
-                text = if (guidance) "点击这里，填写简介" else bio,
-                style = XhsType.meta,
-                color = if (guidance) XhsColor.Text2 else XhsColor.Text1,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = if (onBioClick != null) {
-                    Modifier.clickable(onClick = onBioClick)
-                } else {
-                    Modifier
-                },
-            )
-        }
-        if (user.hasGender) {
-            Spacer(modifier = Modifier.width(Dimens.s8))
-            GenderChip(gender = user.gender)
-        }
+        Text(
+            text = if (guidance) "点击这里，填写简介" else bio,
+            style = XhsType.meta,
+            color = XhsColor.Text1Dark,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = if (onBioClick != null) {
+                Modifier.clickable(onClick = onBioClick)
+            } else {
+                Modifier
+            },
+        )
     }
 }
 

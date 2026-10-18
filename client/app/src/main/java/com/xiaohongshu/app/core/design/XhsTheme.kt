@@ -96,11 +96,15 @@ object XhsColors {
 
     val text1: Color
         @Composable @ReadOnlyComposable
-        get() = if (LocalXhsDark.current) Color(0xFFF5F5F5) else XhsColor.Text1
+        get() = if (LocalXhsDark.current) XhsColor.Text1Dark else XhsColor.Text1
 
     val text2: Color
         @Composable @ReadOnlyComposable
-        get() = if (LocalXhsDark.current) Color(0x99FFFFFF) else XhsColor.Text2
+        get() = if (LocalXhsDark.current) XhsColor.Text2Dark else XhsColor.Text2
+
+    val text3: Color
+        @Composable @ReadOnlyComposable
+        get() = if (LocalXhsDark.current) XhsColor.Text3Dark else XhsColor.Text3
 
     /** 视频底栏区（#1A1A1A）。 */
     val barSurface: Color

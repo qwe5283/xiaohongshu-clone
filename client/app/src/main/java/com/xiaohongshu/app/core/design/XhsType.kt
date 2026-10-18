@@ -70,7 +70,7 @@ object XhsType {
     val sheetRow = s(17)
 
     // ---- 24sp：个人主页昵称 ----
-    val profileNickname = s(24, emphasis = true)
+    val profileNickname = s(17, emphasis = true)
 
     // ---- 按钮与计数 ----
     val countEmphasis = s(17, emphasis = true)

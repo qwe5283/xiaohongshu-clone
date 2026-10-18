@@ -36,6 +36,9 @@ object Dimens {
     /** 页面顶栏 Tab 选中态装饰条长度 28。 */
     val topBarTabUnderlineWidth = 28.dp
 
+    /** 页签选中态装饰条厚度。 */
+    val tabUnderlineHeight = 2.dp
+
     /** 频道栏 36。 */
     val channelBar = 36.dp
 
@@ -96,7 +99,7 @@ object Dimens {
     val avatarComment = 36.dp
     val avatarDetailAuthor = 36.dp
     val avatarConversation = 48.dp
-    val avatarProfile = 108.dp
+    val avatarProfile = 72.dp
     val avatarBorderWidthPx = 2f
 
     /** 二级回复头像 24。 */
@@ -217,7 +220,7 @@ object Dimens {
     val profileMenuIcon = 24.dp
     val profileEditPillWidth = 93.dp
     val profileEditPillHeight = 26.dp
-    val profileTopIconGap = 12.dp
+    val profileTopIconGap = 8.dp
 
     /** 头像 @(2,78)。 */
     val profileAvatarOffsetX = 2.dp

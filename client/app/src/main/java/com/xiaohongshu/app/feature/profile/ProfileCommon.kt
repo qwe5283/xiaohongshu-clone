@@ -8,6 +8,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +33,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -47,7 +52,9 @@ import com.xiaohongshu.app.core.ui.PlaceholderIconRes
 import com.xiaohongshu.app.core.ui.XhsConfirmSheet
 import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.util.Formatters
+import com.xiaohongshu.app.di.AppContainer
 import com.xiaohongshu.app.di.LocalAppContainer
+import com.xiaohongshu.app.feature.auth.HelpPlaceholderToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,13 +68,13 @@ import java.util.UUID
  */
 internal enum class ProfileTab(
     val label: String,
-    val iconRes: Int,
     /** 空态文案（§4.7 已定稿：暂无笔记 / 暂无收藏 / 暂无点赞）。 */
     val emptyText: String,
+    @get:DrawableRes val iconRes: Int? = null,
 ) {
-    NOTES("笔记", R.drawable.ic_publish, "暂无笔记"),
-    COLLECTED("收藏", R.drawable.ic_star, "暂无收藏"),
-    LIKED("赞过", R.drawable.ic_heart, "暂无点赞");
+    NOTES("笔记", "暂无笔记"),
+    COLLECTED("收藏", "暂无收藏"),
+    LIKED("赞过", "暂无点赞");
 
     companion object {
         /** F2：他人主页 Tab 仅「笔记 / 收藏」（无「赞过」）。 */
@@ -78,11 +85,6 @@ internal enum class ProfileTab(
 /** 统计数字：0 也显示（与列表计数的「0 → 文字标签」规则不同，统计行始终显示数字）。 */
 internal fun statText(count: Long): String = Formatters.formatStatCount(count)
 
-/**
- * F1/F2 页签行（h 44、条目宽 64/86、icon 18；右侧 44×44 搜索框为**视觉占位**）。
- *
- * 搜索框无行为定义且素材缺失，故按 §4.5 统一用 [PlaceholderIconRes] 占位。
- */
 @Composable
 internal fun ProfileSegmentRow(
     tabs: List<ProfileTab>,
@@ -98,12 +100,12 @@ internal fun ProfileSegmentRow(
                 .height(Dimens.segmentBar),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Spacer(modifier = Modifier.width(Dimens.pagePadding))
             tabs.forEach { tab ->
                 ProfileSegmentItem(
                     tab = tab,
                     selected = tab == selected,
                     onClick = { onSelect(tab) },
+                    iconRes = tab.iconRes,
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
@@ -113,7 +115,7 @@ internal fun ProfileSegmentRow(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        painter = painterResource(PlaceholderIconRes),
+                        painter = painterResource(R.drawable.ic_search),
                         contentDescription = null,
                         tint = XhsColor.Text2,
                         modifier = Modifier.size(Dimens.icon20),
@@ -131,36 +133,55 @@ private fun ProfileSegmentItem(
     tab: ProfileTab,
     selected: Boolean,
     onClick: () -> Unit,
+    @DrawableRes iconRes: Int? = null,
 ) {
     Row(
         modifier = Modifier
             .width(Dimens.segmentItemWide)
             .height(Dimens.segmentBar)
+            .clip(RoundedCornerShape(Dimens.radiusPill))
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        Icon(
-            painter = painterResource(tab.iconRes),
-            contentDescription = null,
-            tint = if (selected) XhsColor.Text1 else XhsColor.Text2,
-            modifier = Modifier.size(Dimens.segmentIcon),
-        )
-        Spacer(modifier = Modifier.width(Dimens.s4))
+        if (iconRes != null) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = if (selected) XhsColor.Text1 else XhsColor.Text2,
+                modifier = Modifier.size(Dimens.segmentIcon),
+            )
+            Spacer(modifier = Modifier.width(Dimens.s4))
+        }
         Text(
             text = tab.label,
-            style = XhsType.s(15, emphasis = selected),
+            style = if (selected) XhsType.tabSelected else XhsType.tabUnselected,
             color = if (selected) XhsColor.Text1 else XhsColor.Text2,
             maxLines = 1,
+            modifier = Modifier.drawBehind {
+                if (selected) {
+                    val underlineHeight = Dimens.tabUnderlineHeight.toPx()
+                    val underlineWidth = Dimens.topBarTabUnderlineWidth.toPx()
+                    drawRoundRect(
+                        color = XhsColor.Red,
+                        topLeft = Offset(
+                            x = (size.width - underlineWidth) / 2f,
+                            y = size.height + Dimens.s4.toPx(),
+                        ),
+                        size = Size(width = underlineWidth, height = underlineHeight),
+                        cornerRadius = CornerRadius(underlineHeight / 2f),
+                    )
+                }
+            },
         )
     }
 }
 
-/** F1 小红书号旁的复制（真实实现：写入系统剪贴板）。 */
-internal fun copyToClipboard(context: Context, label: String, text: String) {
+internal fun copyToClipboard(context: Context, container: AppContainer, label: String, text: String) {
     if (text.isBlank()) return
     val manager = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return
     manager.setPrimaryClip(ClipData.newPlainText(label, text))
+    container.toastController.show("小红书号复制成功")
 }
 
 // ---------------------------------------------------------------- 本地选图（F3 头像 / 背景图）

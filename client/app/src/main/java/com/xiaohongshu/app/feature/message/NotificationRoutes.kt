@@ -71,9 +71,16 @@ fun NotificationListRoute(
         paged = vm.paged,
         onBack = exit,
         onRowClick = { item ->
-            // 顺序固定：**先标已读**（本地乐观置已读 + 角标 -1，再发请求），**再**跳 C1-1
+            // 顺序固定：**先标已读**（本地乐观置已读 + 角标 -1，再发请求），**再**跳转
             vm.onRowClick(item)
-            if (item.postId > 0) navigator.toNoteDetail(item.postId)
+            // 跳转目标按分类分流：G4 的关注类通知没有笔记可去（type=6 无 postId），
+            // 整行与头像同去 F2（线框图 g4「点击头像/条目 → F2 对方主页」）；
+            // G2/G3 用 `postId > 0` 兜底，避免脏数据把用户带进不存在的笔记页
+            when {
+                category == NotificationCategory.FOLLOW && item.senderId > 0 ->
+                    navigator.toUserProfile(item.senderId)
+                item.postId > 0 -> navigator.toNoteDetail(item.postId)
+            }
         },
         onAvatarClick = { item -> navigator.toUserProfile(item.senderId) },
         // G3 的「回复」是写操作，与 ♡ / 回关一样过登录拦截（§4.4）

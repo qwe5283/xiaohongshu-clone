@@ -18,11 +18,20 @@ object XhsColor {
     /** 文字主色：标题/正文/选中态。 */
     val Text1 = Color(0xFF333333)
 
+    /** 深色背景文字主色：标题、正文与强调数值。 */
+    val Text1Dark = Color(0xFFF5F5F5)
+
     /** 文字次级：未选 Tab/频道、时间戳、辅助说明。 */
     val Text2 = Color(0xFF8C8C8C)
 
+    /** 深色背景文字次级：时间戳与辅助说明。 */
+    val Text2Dark = Color(0x99FFFFFF)
+
     /** 弱文字/占位：输入框占位、禁用、空态插画线。 */
     val Text3 = Color(0xFFCCCCCC)
+
+    /** 深色背景弱文字：资料标识、统计项标签与占位。 */
+    val Text3Dark = Color(0x66FFFFFF)
 
     /** 分隔线（0.6dp hairline）。 */
     val Divider = Color(0xFFEEEEEE)
@@ -45,6 +54,9 @@ object XhsColor {
     /** 弹层/遮罩输入/弹窗遮罩。 */
     val Scrim = Color(0x99000000)
     val ScrimGray = Color(0x66000000)
+
+    /** 个人主页头图遮罩，保证照片上的浅色文字可辨认（契约 §12.8）。 */
+    val ProfileHeaderScrim = Color(0x74000000)
 
     /** 轮播圆点未选中 / 进度轨道（骨架条底色另见 [Skeleton]）。 */
     val DotInactive = Color(0xFFD9D9D9)
