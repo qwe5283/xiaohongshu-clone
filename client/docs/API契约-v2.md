@@ -528,6 +528,7 @@ WS 是增强通道，REST 401 仍是登录失效的唯一权威信号）。
 
 ### 12.8 客户端行为约定（非服务端契约）
 
+- **页签高度**：F1/F2 的整行和单个页签使用 `Dimens.profileSegmentBar`，C3 评论面板页签栏使用 `Dimens.commentPanelTabBar`，两者独立定义，调整其中一个不影响另一处；高度值以 `XhsDimens.kt` 为准。
 - **F1/F2 个人主页**：共用 `ProfileScreen` 与 `ProfileUiState`。「是否本人」（`isMe`）和入口形态
   （`ProfilePresentation.TAB_ROOT` / `PUSHED`）独立：底部「我」保留菜单与底 Tab；头像入口始终推入、
   显示返回且无底 Tab，访问本人也保留原返回路径。本人显示编辑入口、简介引导与「笔记/收藏/赞过」；

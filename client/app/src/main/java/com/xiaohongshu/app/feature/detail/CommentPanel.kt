@@ -104,11 +104,10 @@ internal fun CommentPanel(
             // 键盘弹起时输入行上移；手势条与输入法取较大者
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)),
     ) {
-        // Tab 行 h 44：评论 n / 赞和收藏 n
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(Dimens.segmentBar)
+                .height(Dimens.commentPanelTabBar)
                 .padding(start = Dimens.s16, end = Dimens.s12),
             verticalAlignment = Alignment.CenterVertically,
         ) {

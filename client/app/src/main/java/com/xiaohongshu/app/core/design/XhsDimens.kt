@@ -42,8 +42,11 @@ object Dimens {
     /** 频道栏 36。 */
     val channelBar = 36.dp
 
-    /** segment 页签行 44。 */
-    val segmentBar = 44.dp
+    /** F1/F2 个人页页签栏，与评论面板独立调整。 */
+    val profileSegmentBar = 44.dp
+
+    /** C3 评论面板页签栏，与个人页独立调整。 */
+    val commentPanelTabBar = 44.dp
 
     /** 详情顶栏与底栏 56。 */
     val detailBar = 56.dp
@@ -234,7 +237,7 @@ object Dimens {
 
     /** 页签行条目宽 64/86（icon 18）、右搜索 44×44。 */
     val segmentItemNarrow = 64.dp
-    val segmentItemWide = 86.dp
+    val segmentItemWide = 60.dp
     val segmentIcon = 18.dp
     val segmentSearchBox = 44.dp
 

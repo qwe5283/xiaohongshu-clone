@@ -97,7 +97,7 @@ internal fun ProfileSegmentRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(Dimens.segmentBar),
+                .height(Dimens.profileSegmentBar),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             tabs.forEach { tab ->
@@ -138,7 +138,7 @@ private fun ProfileSegmentItem(
     Row(
         modifier = Modifier
             .width(Dimens.segmentItemWide)
-            .height(Dimens.segmentBar)
+            .height(Dimens.profileSegmentBar)
             .clip(RoundedCornerShape(Dimens.radiusPill))
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,

@@ -48,7 +48,7 @@ object Formatters {
         return when (time.toLocalDate()) {
             today -> "今天 ${time.format(HOUR_MINUTE)}"
             today.minusDays(1) -> "昨天 ${time.format(HOUR_MINUTE)}"
-            else -> time.format(YEAR_MONTH_DAY)
+            else -> time.format(MONTH_DAY)
         }
     }
 

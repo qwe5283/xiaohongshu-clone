@@ -82,8 +82,6 @@ internal fun ProfileScreen(
             },
         )
 
-        if (state.isMe) Spacer(modifier = Modifier.height(Dimens.s12))
-
         ProfileSegmentRow(
             tabs = state.visibleTabs,
             selected = state.tab,
@@ -131,7 +129,7 @@ internal fun ProfileScreen(
                     XhsListStateHost(
                         state = state.pageState,
                         onRetry = onRetry,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().background(XhsColor.WaterfallBg),
                         emptyText = state.tab.emptyText,
                     ) {
                         PostWaterfall(

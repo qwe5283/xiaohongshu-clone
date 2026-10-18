@@ -243,3 +243,11 @@ cd client
 - 性别独立成行补充：`./gradlew :app:compileDebugKotlin :app:assembleDebug --offline` 通过，零编译 error / warning；现有两枚性别图标按徽标例外体检，0 项需处理，等大对照图已核对。Debug APK 已刷新至 `dist/xiaohongshu-clone-debug.apk`，与构建产物 SHA256 一致，未代为安装。
 - `./gradlew :app:compileDebugKotlin :app:testDebugUnitTest --offline` 通过，零编译 error / warning；现有 11 项单元测试全部通过。
 - `git diff --check` 通过；旧 Screen / UiState 引用已清理，并按架构规范 §8 检查 Token、列表四态、互动、登录拦截和交付范围。本轮未进行真机交互验收。
+
+---
+
+## 12. 页签高度解耦（2026-10-19）
+
+- 个人页整行与单个页签改用 `Dimens.profileSegmentBar`，评论面板页签栏改用独立的 `Dimens.commentPanelTabBar`；删除旧共用常量，三个引用全部迁移。
+- 已知取舍：两个常量保留原高度，独立赋值，避免今后调整其中一处时改变另一处的布局。
+- 验证：`./gradlew :app:compileDebugKotlin --offline` 通过，零 error / warning；旧共用常量无残留引用，`git diff --check` 通过，并按架构规范 §8 完成适用项自检。
