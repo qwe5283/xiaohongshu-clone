@@ -367,13 +367,13 @@ internal fun XhsMessageWideButton(
     Box(
         modifier = modifier
             .height(Dimens.buttonFollow + 4.dp)
-            .clip(RoundedCornerShape(Dimens.radiusPill))
+            .clip(RoundedCornerShape(Dimens.radiusCommonBtn))
             .background(XhsColor.BtnGray)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "私信",
+            text = "发私信",
             style = XhsType.buttonLabel,
             color = XhsColor.BtnGrayText,
         )

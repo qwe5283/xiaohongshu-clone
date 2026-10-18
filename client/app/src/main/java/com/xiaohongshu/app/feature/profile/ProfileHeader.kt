@@ -134,7 +134,7 @@ internal fun ProfileHeader(
             }
 
             if (footer != null) {
-                Spacer(modifier = Modifier.height(Dimens.s4))
+                Spacer(modifier = Modifier.height(Dimens.s8))
                 footer()
             }
         }

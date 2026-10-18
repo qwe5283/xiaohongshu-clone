@@ -82,6 +82,9 @@ object Dimens {
     /** 卡片 8。 */
     val radiusCard = 8.dp
 
+    /** 通用按钮圆角 */
+    val radiusCommonBtn = 8.dp
+
     /** 搜索框 */
     val radiusSearchBar = 16.dp
 

@@ -155,8 +155,7 @@ private fun ProfileVisitorActions(
 ) {
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Dimens.pagePadding),
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Dimens.s8),
     ) {
         XhsFollowWideButton(

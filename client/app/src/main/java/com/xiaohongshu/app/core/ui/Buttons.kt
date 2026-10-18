@@ -150,7 +150,7 @@ fun XhsFollowWideButton(
         modifier = modifier
             .fillMaxWidth()
             .height(Dimens.buttonFollow + 4.dp)
-            .clip(RoundedCornerShape(Dimens.radiusPill))
+            .clip(RoundedCornerShape(Dimens.radiusCommonBtn))
             .background(container)
             .clickable(onClick = onToggle),
         contentAlignment = Alignment.Center,
