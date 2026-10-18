@@ -27,12 +27,12 @@ import kotlinx.coroutines.launch
  *
  * | 入口 | 屏号 | 实现文件 |
  * |------|------|----------|
- * | [MyProfileRoute] | F1 + F4 + F6 | `MyProfileScreen.kt` / `ProfileDrawer` |
- * | [UserProfileRoute] | F2 | `UserProfileScreen.kt` |
+ * | [MyProfileRoute] | F1 + F4 + F6 | `ProfileScreen.kt` / `ProfileDrawer.kt` |
+ * | [UserProfileRoute] | F2 | `ProfileScreen.kt` |
  * | [EditProfileRoute] | F3 + F3-1 + F3-2 | `EditProfileScreen.kt` |
  * | [SettingsRoute] | F5 + F6 | `SettingsScreen.kt` |
  *
- * 公共件：`ProfileCommon.kt`（页签行 / 小组件卡 / 去发布 banner / 本地选图 / F6 弹层）、
+ * 公共件：`ProfileCommon.kt`（页签行 / 本地选图 / F6 弹层）、
  * `ProfileHeader.kt`（F1/F2 共用资料头）。
  */
 
@@ -59,10 +59,11 @@ fun MyProfileRoute(navigator: AppNavigator, onOpenDrawer: () -> Unit) {
     val session by container.sessionManager.state.collectAsStateWithLifecycle()
 
     // 进入 / 返回本页时刷新资料（统计行）
-    LaunchedEffect(session.loggedIn) { if (session.loggedIn) vm.refreshUser() }
+    LaunchedEffect(session.user.id, session.loggedIn) { if (session.loggedIn) vm.refreshUser() }
 
-    MyProfileScreen(
+    ProfileScreen(
         state = state,
+        presentation = ProfilePresentation.TAB_ROOT,
         loggedIn = session.loggedIn,
         // F1：☰ → F4 抽屉（由 MainScaffold 挂载）；抽屉仅登录态可达（游客 ☰ → A2 登录页）
         onLeftAction = { if (session.loggedIn) onOpenDrawer() else navigator.toLogin() },
@@ -70,9 +71,6 @@ fun MyProfileRoute(navigator: AppNavigator, onOpenDrawer: () -> Unit) {
             if (session.loggedIn) navigator.toEditProfile() else navigator.toLogin()
         },
         onCopyRedId = { copyToClipboard(context, "小红书号", state.user.displayRedId) },
-        onBioClick = {
-            if (session.loggedIn) navigator.toEditProfile() else navigator.toLogin()
-        },
         onTabSelect = vm::selectTab,
         onNoteClick = navigator::toNote,
         onAuthorClick = navigator::toUserProfile,
@@ -88,13 +86,7 @@ fun MyProfileRoute(navigator: AppNavigator, onOpenDrawer: () -> Unit) {
 }
 
 /**
- * F2 他人主页（推入式）。
- *
- * 与 F1 的差异：无小组件行、无「去发布」banner、无「编辑主页」pill（顶栏左为 ←、右为「⋯」视觉占位）、
- * Tab 仅「笔记 / 收藏」、**关注与私信两枚等宽按钮并排**（契约 §12.8：D2 同一状态机 + 私信入口）。
- *
- * isMe（评论区等入口点自己头像）时为「推入态个人页」：顶栏 ← + 「编辑主页」pill、
- * Tab 含「赞过」、隐藏关注/私信按钮——与 Tab 根页面仅差左上角按钮与底 Tab。
+ * 契约 §12.8：头像入口始终保留原返回路径，查看本人时也不能跳到「我」Tab。
  */
 @Composable
 fun UserProfileRoute(
@@ -119,24 +111,23 @@ fun UserProfileRoute(
     val session by container.sessionManager.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(userId) { vm.loadAuthor() }
+    LaunchedEffect(userId, session.user.id) { vm.loadAuthor() }
 
-    UserProfileScreen(
+    ProfileScreen(
         state = state,
+        presentation = ProfilePresentation.PUSHED,
         loggedIn = session.loggedIn,
-        onBack = navigator::back,
-        // F2「⋯」菜单为视觉占位：无行为
-        onMoreClick = {},
+        onLeftAction = navigator::back,
         // isMe（推入态个人页）时的「编辑主页」pill；isMe 必为登录态（currentUserId == userId）
         onEditProfile = navigator::toEditProfile,
-        onCopyRedId = { copyToClipboard(context, "小红书号", state.author.displayRedId) },
+        onCopyRedId = { copyToClipboard(context, "小红书号", state.user.displayRedId) },
         onFollowToggle = {
             // D2：需登录的写操作，先过登录拦截（§4.4，不弹 Toast）
             if (!container.loginGate.runOrDefer { vm.toggleFollow() }) navigator.toLogin()
         },
         onMessageClick = {
             // 私信（契约 §12.4/§12.8）：先幂等建/取会话拿到会话 id，再推 G8。
-            // F2 只在登录态可达，仍统一过登录拦截保持与其他写操作一致（§4.4）。
+            // 契约 §12.8：游客可浏览主页，私信动作仍需登录拦截。
             if (!container.loginGate.runOrDefer {
                 scope.launch {
                     container.chatRepository.ensureConversation(userId)
@@ -161,6 +152,7 @@ fun UserProfileRoute(
             if (!container.loginGate.runOrDefer { vm.toggleLike(note.id) }) navigator.toLogin()
         },
         onRetry = vm::retry,
+        onLogin = navigator::toLogin,
         listFor = vm::listOf,
         gridFor = vm::gridFor,
     )

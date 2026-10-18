@@ -10,7 +10,6 @@ import com.xiaohongshu.app.core.ui.ToastController
 import com.xiaohongshu.app.data.local.SessionManager
 import com.xiaohongshu.app.data.repo.PostRepository
 import com.xiaohongshu.app.domain.model.Note
-import com.xiaohongshu.app.domain.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,42 +20,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** F1 我的主页 UI 状态。 */
-internal data class MyProfileUiState(
-    val user: User = User.Empty,
-    val tab: ProfileTab = ProfileTab.NOTES,
-    /** 三个 Tab 各自的分页态（交给 `XhsListStateHost` 决定四态）。 */
-    val notesState: PagedState<Note> = PagedState(),
-    val collectedState: PagedState<Note> = PagedState(),
-    val likedState: PagedState<Note> = PagedState(),
-    /** 已经过 [InteractionStore] 合并的**渲染**数据（点赞在详情页变化后返回不跳回）。 */
-    val notes: List<Note> = emptyList(),
-    val collected: List<Note> = emptyList(),
-    val liked: List<Note> = emptyList(),
-) {
-    fun pageStateOf(tab: ProfileTab): PagedState<Note> = when (tab) {
-        ProfileTab.NOTES -> notesState
-        ProfileTab.COLLECTED -> collectedState
-        ProfileTab.LIKED -> likedState
-    }
-
-    fun itemsOf(tab: ProfileTab): List<Note> = when (tab) {
-        ProfileTab.NOTES -> notes
-        ProfileTab.COLLECTED -> collected
-        ProfileTab.LIKED -> liked
-    }
-
-    /** 当前 Tab 的分页态 / 展示数据。 */
-    val pageState: PagedState<Note> get() = pageStateOf(tab)
-    val items: List<Note> get() = itemsOf(tab)
-}
-
 /**
  * F1 我的主页。
  *
  * 关键取舍：
  * - **三个 Tab 各持一个 [PagedList]**：切页签不丢对方已加载的数据；
- * - **懒加载**：请求由 UI 侧在「该 Tab 首次展示」时挂载 `PagedListEffectStaggered` 触发（见 MyProfileScreen），
+ * - **懒加载**：请求由 UI 侧在「该 Tab 首次展示」时挂载 `PagedListEffectStaggered` 触发（见 ProfileScreen），
  *   VM 不做首屏全量预取；因此 VM 内部不提供 `ensureLoaded`；
  * - 渲染数据一律经 `InteractionStore.mergeAll`，但点赞/收藏动作必须回传**服务端原值**
  *   （§4.3 警告：把合并值再喂回 `toggleLike` 会让计数永久偏移），故提供 [rawNote] 反查；
@@ -102,15 +71,16 @@ internal class MyProfileViewModel(
         fetch = { page, size -> posts.likedPosts(userId = me(), page = page, pageSize = size) },
     )
 
-    val state: StateFlow<MyProfileUiState> = combine(
+    val state: StateFlow<ProfileUiState> = combine(
         session.state,
         _tab,
         notes.state,
         collected.state,
         liked.state,
     ) { sessionState, tab, notesState, collectedState, likedState ->
-        MyProfileUiState(
+        ProfileUiState(
             user = sessionState.user,
+            isMe = true,
             tab = tab,
             notesState = notesState,
             collectedState = collectedState,
@@ -130,7 +100,11 @@ internal class MyProfileViewModel(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
         // 首帧即「加载中」，避免出现一帧空白列表（与 HomeViewModel 同款处理）
-        initialValue = MyProfileUiState(notesState = PagedState(loading = true)),
+        initialValue = ProfileUiState(
+            user = session.state.value.user,
+            isMe = true,
+            notesState = PagedState(loading = true),
+        ),
     )
 
     init {

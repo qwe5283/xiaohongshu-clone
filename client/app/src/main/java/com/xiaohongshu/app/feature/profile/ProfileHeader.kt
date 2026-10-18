@@ -37,33 +37,18 @@ import com.xiaohongshu.app.core.ui.XhsAvatar
 import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.domain.model.User
 
-/**
- * F1 / F2 共用的资料头（头图 282、浮层顶栏 44、头像 108 @(2,78)、昵称 24sp、
- * 统计行 24、简介行 26、性别 chip 30×20）。
- *
- * 结构说明：头图是**整块 282 的背景图**，顶栏与资料信息浮在它之上；
- * 头像用 [Dimens.profileAvatarOffsetX] / [Dimens.profileAvatarOffsetY] 的实测偏移定位，
- * 与顶栏解耦，顶栏高度变化不会把头像带偏。
- *
- * 差异通过参数表达，而不是复制两份：
- * - [onEditProfile] 非空 = F1（带「编辑主页」pill）；为空 = F2；
- * - [onMoreClick] 非空 = F2（「⋯」视觉占位）；
- * - [pushed] = 推入态（F2 / 评论区点自己头像进入的个人页）：左上角渲染 ← 而非 ☰。
- *   isMe 只管内容形态（编辑 pill、扫一扫/分享、简介引导），与进页方式正交；
- * - 小组件行 / 「去发布」banner 不属于本组件，由 F1 单独渲染。
- */
+/** 契约 §12.8：本人也可从头像入口推入，身份与导航形态必须独立。 */
 @Composable
 internal fun ProfileHeader(
     user: User,
     isMe: Boolean,
+    presentation: ProfilePresentation,
     onLeftAction: () -> Unit,
     onCopyRedId: () -> Unit,
     modifier: Modifier = Modifier,
-    pushed: Boolean = false,
     onEditProfile: (() -> Unit)? = null,
     onMoreClick: (() -> Unit)? = null,
     onBioClick: (() -> Unit)? = null,
-    /** 头部内追加内容（F2 的通栏关注按钮），渲染在简介行之后。 */
     footer: (@Composable () -> Unit)? = null,
 ) {
     Box(
@@ -80,7 +65,7 @@ internal fun ProfileHeader(
 
         ProfileFloatingTopBar(
             isMe = isMe,
-            pushed = pushed,
+            presentation = presentation,
             onLeftAction = onLeftAction,
             onEditProfile = onEditProfile,
             onMoreClick = onMoreClick,
@@ -164,7 +149,7 @@ internal fun ProfileHeader(
 @Composable
 private fun ProfileFloatingTopBar(
     isMe: Boolean,
-    pushed: Boolean,
+    presentation: ProfilePresentation,
     onLeftAction: () -> Unit,
     onEditProfile: (() -> Unit)?,
     onMoreClick: (() -> Unit)?,
@@ -180,8 +165,6 @@ private fun ProfileFloatingTopBar(
                 .fillMaxWidth()
                 .height(Dimens.topBar),
         ) {
-            // 左：F1 ☰（开抽屉）/ 推入态 ←（返回）。推入的自个人页是「← + isMe 内容」，
-            // 故 ☰ 只在「我 + Tab 根页面」时出现
             Box(
                 modifier = Modifier
                     .align(Alignment.CenterStart)
@@ -190,7 +173,7 @@ private fun ProfileFloatingTopBar(
                     .clickable(onClick = onLeftAction),
                 contentAlignment = Alignment.Center,
             ) {
-                if (isMe && !pushed) {
+                if (presentation == ProfilePresentation.TAB_ROOT) {
                     Icon(
                         painter = painterResource(R.drawable.ic_menu),
                         contentDescription = "菜单",
@@ -333,8 +316,8 @@ private fun StatItem(count: Long, label: String) {
 /**
  * 简介行（高 26）+ 性别 chip（30×20，icon 12）。
  *
- * F1：简介为空显示引导文案「点击这里，填写简介」；
- * F2：他人简介为空时整行隐藏（不显示引导文案）；性别未知（`gender == 0`，含「保密」）不显示图标。
+ * 契约 §12.8：简介引导只对本人有意义，不能按 F1/F2 入口区分。
+ * 性别未知（`gender == 0`，含「保密」）不显示图标。
  */
 @Composable
 private fun ProfileBioRow(

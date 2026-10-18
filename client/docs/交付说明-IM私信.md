@@ -83,7 +83,7 @@ admin↔user3、user1↔user2、user2↔user3；**testuser 无会话**（空态�
 | `di/AppContainer.kt` | 注册 `chatRepository`/`realtimeConnection` |
 | `navigation/{Routes,AppNavigator,AppNavHost}.kt` | `chat/{id}/{peerId}` 路由 + WS 生命周期 |
 | `feature/message/MessageRoutes.kt` | G1 会话列表接入 |
-| `feature/profile/{ProfileRoutes,UserProfileScreen,ProfileCommon}.kt` | F2 按钮拆分 |
+| `feature/profile/{ProfileRoutes,ProfileScreen,ProfileCommon}.kt` | F2 按钮拆分（2026-10-18 归入共用主页） |
 
 **MockServer（client/mockserver/，修改 4 / 新增 1 依赖）**
 

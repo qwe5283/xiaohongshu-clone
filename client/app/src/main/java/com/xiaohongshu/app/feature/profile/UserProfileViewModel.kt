@@ -21,49 +21,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** F2 他人主页 UI 状态。 */
-internal data class UserProfileUiState(
-    val userId: Long = 0L,
-    val author: User = User.Empty,
-    val tab: ProfileTab = ProfileTab.NOTES,
-    val notesState: PagedState<Note> = PagedState(),
-    val collectedState: PagedState<Note> = PagedState(),
-    val likedState: PagedState<Note> = PagedState(),
-    val notes: List<Note> = emptyList(),
-    val collected: List<Note> = emptyList(),
-    val liked: List<Note> = emptyList(),
-    /** 已合并本地乐观态的关注态（渲染用）。 */
-    val followed: Boolean = false,
-    /** 自己的主页不显示关注按钮，但展示「编辑主页」pill 与「赞过」Tab。 */
-    val isMe: Boolean = false,
-) {
-    fun pageStateOf(tab: ProfileTab): PagedState<Note> = when (tab) {
-        ProfileTab.NOTES -> notesState
-        ProfileTab.COLLECTED -> collectedState
-        ProfileTab.LIKED -> likedState
-    }
-
-    fun itemsOf(tab: ProfileTab): List<Note> = when (tab) {
-        ProfileTab.NOTES -> notes
-        ProfileTab.COLLECTED -> collected
-        ProfileTab.LIKED -> liked
-    }
-
-    val pageState: PagedState<Note> get() = pageStateOf(tab)
-    val items: List<Note> get() = itemsOf(tab)
-}
-
 /**
- * F2 他人主页。
- *
- * 数据来源：
- * - 资料主体 `GET /api/user/{id}`（契约 §1.4，公开）→ [UserRepository]：昵称/头像/简介/背景图/
- *   性别/获赞与收藏，一次性拿全，是 F2 头部的权威数据源；
- * - 「笔记」`GET /api/post/user/{id}`、「收藏」`GET /api/collect/posts/{id}` → [PostRepository]；
- * - 关注数/粉丝数 `GET /api/follow/count/{id}`、关注态 `GET /api/follow/status/{id}` → [FollowRepository]。
- *
- * 兜底策略：资料请求失败时用列表返回的 `authorNickname` / `authorAvatar`（契约 §2.12）填充，
- * 保证「从卡片作者头像进来」至少能看到昵称与头像，而不是一片空白。
+ * 契约 §12.8：推入页也可能展示本人，资料必须跟随 SessionManager，才能即时反映编辑回写。
+ * 他人资料仍走契约 §1.4；请求失败时用契约 §2.12 的作者字段兜底，避免资料头全空。
  */
 internal class UserProfileViewModel(
     private val userId: Long,
@@ -110,24 +70,24 @@ internal class UserProfileViewModel(
         fetch = { page, size -> posts.likedPosts(userId = userId, page = page, pageSize = size) },
     )
 
-    private val base: kotlinx.coroutines.flow.Flow<UserProfileUiState> = combine(
+    private val base: kotlinx.coroutines.flow.Flow<ProfileUiState> = combine(
         session.state,
         _tab,
         _author,
         _followed,
         notes.state,
     ) { sessionState, tab, author, followed, notesState ->
-        UserProfileUiState(
-            userId = userId,
-            author = author,
-            tab = tab,
+        val isMe = sessionState.loggedIn && sessionState.user.id == userId
+        ProfileUiState(
+            user = if (isMe) sessionState.user else author,
+            tab = if (isMe || tab != ProfileTab.LIKED) tab else ProfileTab.NOTES,
             notesState = notesState,
             followed = followed,
-            isMe = sessionState.user.id == userId,
+            isMe = isMe,
         )
     }
 
-    val state: StateFlow<UserProfileUiState> = combine(
+    val state: StateFlow<ProfileUiState> = combine(
         base,
         collected.state,
         liked.state,
@@ -138,12 +98,12 @@ internal class UserProfileViewModel(
         val firstNote = ui.notesState.items.firstOrNull()
             ?: collectedState.items.firstOrNull()
             ?: likedState.items.firstOrNull()
-        val author = ui.author.copy(
-            nickname = ui.author.nickname.ifBlank { firstNote?.authorNickname.orEmpty() },
-            avatar = ui.author.avatar.ifBlank { firstNote?.authorAvatar.orEmpty() },
+        val author = ui.user.copy(
+            nickname = ui.user.nickname.ifBlank { firstNote?.authorNickname.orEmpty() },
+            avatar = ui.user.avatar.ifBlank { firstNote?.authorAvatar.orEmpty() },
         )
         ui.copy(
-            author = author,
+            user = author,
             collectedState = collectedState,
             likedState = likedState,
             // 渲染用合并值；写操作仍按 id 反查 raw（§4.3）
@@ -155,23 +115,24 @@ internal class UserProfileViewModel(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-        initialValue = UserProfileUiState(
-            userId = userId,
-            author = User.Empty.copy(id = userId),
-            isMe = session.currentUserId == userId,
+        initialValue = ProfileUiState(
+            user = if (session.isLoggedIn && session.currentUserId == userId) {
+                session.state.value.user
+            } else {
+                User.Empty.copy(id = userId)
+            },
+            isMe = session.isLoggedIn && session.currentUserId == userId,
             notesState = PagedState(loading = true),
         ),
     )
 
-    /**
-     * 进入页面时拉资料、关注数与关注态。
-     *
-     * 资料（§1.4）是头部四个区块（昵称/头像/简介/背景图/性别/获赞与收藏）的权威来源；
-     * 关注数用 §6.5 覆盖，保证与关注流/粉丝数的实时性一致（资料里的计数可能是快照）。
-     * 游客不发关注态请求，避免 401 触发全局 I1 推登录页。
-     */
+    /** 契约 §6：游客不查关注态，避免 401 触发全局 I1。 */
     fun loadAuthor() {
         viewModelScope.launch {
+            if (session.isLoggedIn && session.currentUserId == userId) {
+                session.refreshMe()
+                return@launch
+            }
             users.getUser(userId).onOk { profile ->
                 _author.value = profile.copy(id = userId)
             }
@@ -191,6 +152,7 @@ internal class UserProfileViewModel(
     // ------------------------------------------------------------------ 页签
 
     fun selectTab(tab: ProfileTab) {
+        if (tab !in state.value.visibleTabs) return
         _tab.value = tab
     }
 
@@ -208,7 +170,7 @@ internal class UserProfileViewModel(
     }
 
     fun retry() {
-        viewModelScope.launch { listOf(_tab.value).retry() }
+        viewModelScope.launch { listOf(state.value.tab).retry() }
     }
 
     // ------------------------------------------------------------------ 互动

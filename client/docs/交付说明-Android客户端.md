@@ -59,7 +59,7 @@ cd client
 2. **新增端点**：`GET /api/post/following-feed`（B5 关注流）、`GET /api/like/posts/{userId}`（F1 赞过）、`GET /api/post/hot-keywords`（B2 猜你想搜）、`POST /api/post/text-image`（E3，**直接返回 URL**，免客户端二次上传）、`GET /api/ai/suggestions`（H1 建议问题）。
 3. **语义澄清**（易踩坑，务必让后端看）：
    - `PostVO.commentCount` = 一级评论 **+ 回复** 总和（要与底栏 💬 一致）；
-   - `UserVO.likeCount/collectCount` 是**收到**的赞/藏，而 `collectedPostCount/likedPostCount` 是**我赞过/收藏过**——两者语义相反，F1 小组件卡必须用后者（§0 有专门的对照表）；
+   - `UserVO.likeCount/collectCount` 是**收到**的赞/藏，而 `collectedPostCount/likedPostCount` 是**我赞过/收藏过**——两者语义相反（契约 §0 有专门的对照表）；后两个字段继续保留，当前主页不再渲染小组件卡；
    - `NotificationVO.type` 以实体注释为准（1..6），并新增 `category=1|2|3` 参数对应 G1 三个入口。
 
 > 客户端没有直接依赖任何"临时"字段：契约里所有新增项都已在 mock server 实现并跑通，后端按文档实现后把 Base URL 指过去即可，**客户端无需改代码**。
@@ -103,8 +103,8 @@ cd client
 - **C3-1 评论面板**：打开时**视频上移缩小**；圆角弹层约 2/3 高；Tab 行「评论 3 / 赞和收藏 5」+ ≡ 排序占位 + × 关闭；底部输入行 52「爱评论的人运气都不差」且空输入时「发送」禁用（定稿文案，逐字实现）。
 - **D1 点赞乐观更新 + 无计数漂移**：对低计数卡片连续点两次 ♡，UI 与服务端最终都回到 `likeCount=2 / liked=false`（专门验证了我修掉的计数偏移缺陷）。
 - **E1 发布入口弹层**：遮罩 + 三行（从相册选择/拍摄/写文字）20sp 居中 + 间隔 + 取消。
-- **F1 我的主页**：头图、浮层顶栏（☰/编辑主页 pill/扫一扫/分享）、头像 108、昵称 24sp、小红书号+复制+IP 属地、统计行「3 关注 8 粉丝 **3.7万** 获赞与收藏」、简介、性别图标、小组件卡「收藏 8 / 赞过 13」（**用的是 `collectedPostCount/likedPostCount`，语义正确**）、去发布 banner、segment 三 Tab、各 Tab 瀑布流。
-- **F2 他人主页**：Tab 仅「笔记/收藏」；本人访问时不显示关注按钮（修好取数后才验证通过，见 §7）。
+- **F1 我的主页**：共用 `ProfileScreen`，头图、浮层顶栏（☰/编辑主页 pill/扫一扫/分享）、头像、昵称、小红书号+复制+IP 属地、统计行（关注/粉丝/**获赞与收藏**）、简介、性别图标、segment 三 Tab、各 Tab 瀑布流；当前不渲染小组件卡或「去发布」banner。
+- **F2 推入主页**：共用 `ProfileScreen`，他人访问时 Tab 为「笔记/收藏」并展示关注/私信；本人访问时显示编辑入口及「赞过」，通过返回按钮回来源页，无底 Tab。2026-10-18 重构记录见 §11。
 - **F4 抽屉 / F6 退出确认**：抽屉宽 308 + 设置/社区公约/关于我们/退出登录 + 底部三宫格；确认退出后**回到 A1 游客首页**（＋ 变灰、角标消失、悬浮条回来）。
 - **G1 消息页**：三入口卡角标 **4 / 2 / 1**（分别来自接口的三个分类未读数），底 Tab 角标 **7 = 三者之和**（契约变更 #6 端到端跑通）；点点会话行带 ai 小标。
 - **G2 收到的赞和收藏**：抓包确认 `category=1`（契约变更 #7 跑通）；三种子类型文案、未读左侧红点 + 已读整行变淡、右侧笔记封面缩略图、时间「刚刚 / 7小时前 / 12小时前 / 昨天 / 09-12」。
@@ -156,13 +156,13 @@ cd client
 - **`ic_placeholder_illus.xml`** —— 空态插画占位（`XhsIllustrationSlot` 使用）。
 - 另：**结构性控件已用 Canvas 精确绘制**（`XhsPlusGlyph` ＋ / `XhsCheckCircle` 协议勾选），**不需要替换**；原先同一批就地画的 ☰ / ▶ / 人形已改为矢量资源（`ic_menu` / `ic_play` / `ic_user_circle`），见 §8.1。
 
-**缺素材、当前用占位顶替的位置（共 11 个文件、26 处；2026-09-18 按当前代码重新清点）**：
+**缺素材、用占位顶替的位置（初次交付记录；个人主页条目于 2026-10-18 更新）**：
 
 | 位置 | 具体缺哪些图标 |
 |------|---------------|
 | `feature/ai/AiComponents.kt`（5 处） | 语音、表情、＋、复制、踩、重新生成 |
-| `feature/profile/ProfileCommon.kt`（5 处） | 去发布 banner 图标、segment 搜索框、部件卡图标等 |
-| `feature/profile/MyProfileScreen.kt`（3 处） | 抽屉条目图标 |
+| `feature/profile/ProfileCommon.kt`（2 处） | segment 搜索框、本地图片预览占位 |
+| `feature/profile/ProfileDrawer.kt`（3 处） | 抽屉条目图标 |
 | `feature/profile/ProfileHeader.kt`（2 处） | 复制小红书号（12dp）、他人主页 ⋯（24dp） |
 | `feature/message/MessageRoutes.kt`（1 处） | 顶栏「创建」 |
 | `feature/detail/VideoDetailScreen.kt`（2 处） | 音乐碟、作者行分享 |
@@ -213,3 +213,24 @@ cd client
 - 正式签名密钥与上架配置（见 §1 签名说明）。
 - 「关注/粉丝列表页」「合集」「话题」「位置」「可见范围」「评论表情/配图」「置顶评论」「IP 属地」「私信」等已显式排除或标注为占位的功能。
 - 明暗主题：产品为浅色为主 + 视频页局部深色沉浸，**不跟随系统暗色**（与原版行为一致）。
+
+---
+
+## 11. 个人主页重构（2026-10-18）
+
+- F1/F2 共用 `ProfileScreen` 与 `ProfileUiState`，删除各自的 Screen 和重复展示状态；抽屉移入 `ProfileDrawer.kt`，继续由 `MainScaffold` 挂载。
+- `isMe` 决定编辑入口、简介引导、关注/私信和页签，`ProfilePresentation` 独立决定菜单或返回。两个 Route、ViewModel 实例及各页签滚动状态继续独立。
+- 本人资料统一订阅 `SessionManager.state`，推入的本人主页也能即时反映编辑回写；本人主页的头部下方间距统一。失去本人身份时「赞过」回到「笔记」。
+- 页签懒加载、列表四态、分页页脚统一实现；游客只请求公开笔记，收藏不发受保护请求，F1 保留登录兜底。
+
+### 已知取舍
+
+- 放弃两份布局分别演进，统一为一套主页内容；保留两个 ViewModel 的取数与生命周期，避免把 Tab 根页与推入页的分页和滚动状态绑在一起。
+- 沿用他人仅「笔记/收藏」、游客收藏为空态的现有裁剪；不新增隐私设置、私密笔记、草稿或关注/粉丝列表。
+- 当前代码原本已不渲染小组件卡和「去发布」banner，本次同步清理旧说明；计数字段仍保留既有接口语义。
+- 现有占位不扩展：复制、更多、页签搜索框、抽屉条目等仍使用占位素材；扫一扫/分享和更多菜单仍无业务行为。未改公共 UI 与设计 Token。
+
+### 验证
+
+- `./gradlew :app:compileDebugKotlin :app:testDebugUnitTest --offline` 通过，零编译 error / warning；现有 11 项单元测试全部通过。
+- `git diff --check` 通过；旧 Screen / UiState 引用已清理，并按架构规范 §8 检查 Token、列表四态、互动、登录拦截和交付范围。本轮未进行真机交互验收。

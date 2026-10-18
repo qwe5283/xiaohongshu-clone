@@ -38,7 +38,7 @@
 | 13 | 语义明确 | `PostVO.commentCount` | = 一级评论数 **+ 回复数** 总和 | C1-1「共 n 条评论」与底栏 💬 一致 |
 | 14 | 语义明确 | `NotificationVO.type` | 以实体注释为准：1..6（见 §7.2） | G2/G3/G4 |
 | 15 | 语义明确 | 列表 `pageSize` 默认 | 建议后端默认值由 10 调为 20（客户端已显式传参，非阻塞） | 全局 |
-| 16 | 新增字段 | `UserVO` + `collectedPostCount` / `likedPostCount` | **我**收藏/赞过的笔记数（见下方语义说明） | F1 小组件行副文 |
+| 16 | 新增字段 | `UserVO` + `collectedPostCount` / `likedPostCount` | **我**收藏/赞过的笔记数（见下方语义说明） | 保留原 F1 小组件计数，当前布局不展示 |
 | 17 | 新增端点 | `GET /api/user/search` | 用户搜索分页（昵称/小红书号/登录账号模糊匹配） | B3-1「用户」页签 |
 | 18 | 语义明确 | `GET /api/post/list` 的 `type` | B3-1 页签取数：**全部不传 `type`**、**视频传 `type=1`** | B3-1「全部/视频」页签 |
 | 19 | 新增字段 | `UserBriefVO` + `redId` / `followersCount` | B3-1 行副文：小红书号 / 粉丝数 | B3-1「用户」页签 |
@@ -54,12 +54,12 @@
 | `followingCount` / `followersCount` | 关注数 / 粉丝数 | F1 统计行 |
 | `likeAndCollectCount` | **获赞与收藏**总数（收到） | F1 统计行第三项 |
 | `likeCount` / `collectCount` | 获赞数 / 获藏数（收到，兼容旧语义） | 暂不展示（保留） |
-| **`collectedPostCount`** [新增] | **我收藏的笔记数** | F1 小组件卡「收藏」副文 |
-| **`likedPostCount`** [新增] | **我赞过的笔记数** | F1 小组件卡「赞过」副文 |
+| **`collectedPostCount`** [新增] | **我收藏的笔记数** | 保留计数，当前布局不展示 |
+| **`likedPostCount`** [新增] | **我赞过的笔记数** | 保留计数，当前布局不展示 |
 
-> 小组件卡在 F1 首屏渲染，早于「收藏/赞过」Tab 的懒加载，因此必须在用户资料接口里返回，不能靠列表 `total` 兜底。
+> 原 F1 小组件卡已不在当前布局渲染；两个计数字段继续保留在资料接口，不能因页签懒加载而依赖列表 `total` 才提供。
 > 这两个数字需与 `GET /api/collect/posts/{me}`、`GET /api/like/posts/{me}` 的 `total` 一致（收藏/取消收藏、点赞/取消点赞时同步维护）。
-> 他人主页（F2）不展示小组件行，故这两个字段对非本人可为 0。
+> 这两个字段对非本人可为 0，当前主页不依赖它们展示。
 
 > 客户端在 mock server 下开发，**以上 20 项均按本文实现**。后端实现完成后，客户端只需把 Base URL 切到真实服务，无需改代码。
 
@@ -124,7 +124,7 @@
 }
 ```
 > F1 统计行：关注 / 粉丝 / **获赞与收藏**（`likeAndCollectCount`）。
-> F1 小组件行两卡副文：收藏（`collectedPostCount`）/ 赞过（`likedPostCount`）—— 含义见 §0 语义说明，**勿用** `likeCount`/`collectCount`。
+> 保留字段 `collectedPostCount` / `likedPostCount` 表示用户收藏/赞过的笔记数，当前主页不展示这两项计数；含义见 §0，**勿与** `likeCount`/`collectCount` 混用。
 
 ### 1.8 [新增] 用户搜索 — `GET /api/user/search` · 公开（带 token 时填充 `followed`）
 参数：`keyword`（必填，模糊匹配 `nickname` / 小红书号 `redId` / 登录账号 `username`，忽略大小写）、`pageNum`、`pageSize`。
@@ -528,6 +528,14 @@ WS 是增强通道，REST 401 仍是登录失效的唯一权威信号）。
 
 ### 12.8 客户端行为约定（非服务端契约）
 
+- **F1/F2 个人主页**：共用 `ProfileScreen` 与 `ProfileUiState`。「是否本人」（`isMe`）和入口形态
+  （`ProfilePresentation.TAB_ROOT` / `PUSHED`）独立：底部「我」保留菜单与底 Tab；头像入口始终推入、
+  显示返回且无底 Tab，访问本人也保留原返回路径。本人显示编辑入口、简介引导与「笔记/收藏/赞过」；
+  他人显示关注/私信与「笔记/收藏」。失去本人身份时，当前「赞过」页签回到「笔记」，不再挂载其分页。
+  本人资料统一订阅 `SessionManager.state`，进入时用 §1.3 校正；他人资料仍取 §1.4 和 §6 关注数据。
+  F1 笔记仍走 §2.7，F2 笔记仍走 §2.6，分页与滚动状态按入口的 ViewModel 实例保存。
+  游客仅请求 F2 的公开笔记，收藏沿用空态兜底且不请求 §5；F1 游客兜底不发请求并展示登录入口。
+  本轮沿用现有页签可见规则，不新增隐私设置或权限字段。
 - **F2 私信按钮**：他人主页原「通栏关注按钮」右拆为两枚并排 pill（关注 + 私信，等宽、同高 44、
   间距 8、圆角胶囊同 D2）。私信 → `POST /api/chat/conversations` → 推入 G8；失败 → Toast。
   自己的主页不显示（与关注按钮同规则）。
