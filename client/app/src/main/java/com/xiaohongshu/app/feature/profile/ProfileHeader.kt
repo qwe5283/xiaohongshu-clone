@@ -1,62 +1,58 @@
 package com.xiaohongshu.app.feature.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
-import com.xiaohongshu.app.core.ui.PlaceholderIconRes
 import com.xiaohongshu.app.core.ui.XhsAsyncImage
 import com.xiaohongshu.app.core.ui.XhsAvatar
-import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.domain.model.User
 
-/** 契约 §12.8：本人也可从头像入口推入，身份与导航形态必须独立。 */
 @Composable
 internal fun ProfileHeader(
     user: User,
     isMe: Boolean,
-    presentation: ProfilePresentation,
-    onLeftAction: () -> Unit,
     onCopyRedId: () -> Unit,
+    onAvatarBottomChanged: (Float) -> Unit,
     modifier: Modifier = Modifier,
-    onEditProfile: (() -> Unit)? = null,
-    onMoreClick: (() -> Unit)? = null,
     onBioClick: (() -> Unit)? = null,
     footer: (@Composable () -> Unit)? = null,
 ) {
+    val headerCoordinates = remember { mutableStateOf<LayoutCoordinates?>(null) }
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = Dimens.profileHeaderImage),
+            .heightIn(min = Dimens.profileHeaderImage)
+            .onGloballyPositioned { headerCoordinates.value = it },
     ) {
         // 头图：缺失素材由 XhsAsyncImage 统一占位
         XhsAsyncImage(
@@ -71,15 +67,6 @@ internal fun ProfileHeader(
                 .background(XhsColor.ProfileHeaderScrim),
         )
 
-        ProfileFloatingTopBar(
-            isMe = isMe,
-            presentation = presentation,
-            onLeftAction = onLeftAction,
-            onEditProfile = onEditProfile,
-            onMoreClick = onMoreClick,
-            modifier = Modifier.align(Alignment.TopStart),
-        )
-
         // 契约 §12.8：顶部留白必须参与测量，独立性别行与访客操作行才能撑开资料头。
         Column(
             modifier = Modifier
@@ -89,7 +76,16 @@ internal fun ProfileHeader(
                 .padding(Dimens.pagePadding),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                XhsAvatar(url = user.avatar, size = Dimens.avatarProfile)
+                XhsAvatar(
+                    url = user.avatar,
+                    size = Dimens.avatarProfile,
+                    modifier = Modifier.onGloballyPositioned { avatar ->
+                        val header = headerCoordinates.value
+                        if (header != null && header.isAttached) {
+                            onAvatarBottomChanged(header.localPositionOf(avatar, Offset.Zero).y + avatar.size.height)
+                        }
+                    },
+                )
                 Spacer(modifier = Modifier.width(Dimens.s12))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -138,125 +134,6 @@ internal fun ProfileHeader(
                 footer()
             }
         }
-    }
-}
-
-/** 浮层顶栏（高 44，含状态栏内边距，浮在头图上）。 */
-@Composable
-private fun ProfileFloatingTopBar(
-    isMe: Boolean,
-    presentation: ProfilePresentation,
-    onLeftAction: () -> Unit,
-    onEditProfile: (() -> Unit)?,
-    onMoreClick: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .statusBarsPadding(),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(Dimens.topBar),
-        ) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = Dimens.s4)
-                    .size(Dimens.minTouchTarget)
-                    .clickable(onClick = onLeftAction),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (presentation == ProfilePresentation.TAB_ROOT) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_menu),
-                        contentDescription = "菜单",
-                        tint = XhsColor.Text1Dark,
-                        modifier = Modifier.size(Dimens.profileMenuIcon),
-                    )
-                } else {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_chevron_left),
-                        contentDescription = "返回",
-                        tint = XhsColor.Text1Dark,
-                        modifier = Modifier.size(Dimens.icon24),
-                    )
-                }
-            }
-
-
-            Row(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = Dimens.s4),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (isMe) {
-                    if (onEditProfile != null) {
-                        EditProfilePill(
-                            onClick = onEditProfile,
-                            modifier = Modifier,
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(Dimens.profileTopIconGap))
-                    // 扫一扫 / 分享：**视觉占位**（无行为），但素材已就位
-                    XhsIconButton(
-                        iconRes = R.drawable.ic_scan,
-                        onClick = {},
-                        tint = XhsColor.Text1Dark,
-                        iconSize = Dimens.icon24,
-                        contentDescription = "扫一扫",
-                    )
-                }
-                XhsIconButton(
-                    iconRes = R.drawable.ic_share,
-                    onClick = {},
-                    tint = XhsColor.Text1Dark,
-                    iconSize = Dimens.icon24,
-                    contentDescription = "分享",
-                )
-            }
-        }
-    }
-}
-
-/** 「编辑主页」pill（93×26、icon 18）。 */
-@Composable
-private fun EditProfilePill(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .width(Dimens.profileEditPillWidth)
-            .height(Dimens.profileEditPillHeight)
-            .clip(RoundedCornerShape(Dimens.radiusPill))
-            .background(XhsColor.Bg)
-            .border(
-                width = Dimens.hairline,
-                color = XhsColor.Divider,
-                shape = RoundedCornerShape(Dimens.radiusPill),
-            )
-            .clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        // 铅笔图标；18dp 取 Dimens 中唯一的同档 token（segmentIcon = 18）
-        Icon(
-            painter = painterResource(R.drawable.ic_edit),
-            contentDescription = null,
-            tint = XhsColor.Text1,
-            modifier = Modifier.size(Dimens.segmentIcon),
-        )
-        Spacer(modifier = Modifier.width(Dimens.s4))
-        Text(
-            text = "编辑主页",
-            style = XhsType.meta,
-            color = XhsColor.Text1,
-            maxLines = 1,
-        )
     }
 }
 

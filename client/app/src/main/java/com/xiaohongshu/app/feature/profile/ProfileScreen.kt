@@ -5,10 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.runtime.Composable
@@ -56,90 +54,102 @@ internal fun ProfileScreen(
     LaunchedEffect(state.tab) { visited = visited + state.tab }
 
     val loginRequired = !loggedIn && presentation == ProfilePresentation.TAB_ROOT
+    val collapseState = rememberProfileCollapseState(state.user.id)
+    val topBarColor = rememberProfileTopBarColor(state.user.backgroundImage)
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(XhsColor.Bg),
+    ProfileCollapsingLayout(
+        state = collapseState,
+        modifier = Modifier.fillMaxSize().background(XhsColor.Bg),
+        topBar = {
+            ProfileFloatingTopBar(
+                user = state.user,
+                collapseState = collapseState,
+                backgroundColor = topBarColor,
+                isMe = state.isMe,
+                presentation = presentation,
+                onLeftAction = onLeftAction,
+                onEditProfile = if (state.isMe) onEditProfile else null,
+            )
+        },
+        header = {
+            ProfileHeader(
+                user = state.user,
+                isMe = state.isMe,
+                onCopyRedId = onCopyRedId,
+                onBioClick = if (state.isMe) onEditProfile else null,
+                onAvatarBottomChanged = { collapseState.avatarBottom = it },
+                footer = if (state.isMe) null else {
+                    {
+                        ProfileVisitorActions(
+                            followed = state.followed,
+                            onFollowToggle = onFollowToggle,
+                            onMessageClick = onMessageClick,
+                        )
+                    }
+                },
+            )
+        },
     ) {
-        ProfileHeader(
-            user = state.user,
-            isMe = state.isMe,
-            presentation = presentation,
-            onLeftAction = onLeftAction,
-            onCopyRedId = onCopyRedId,
-            onEditProfile = if (state.isMe) onEditProfile else null,
-            onBioClick = if (state.isMe) onEditProfile else null,
-            onMoreClick = {},
-            footer = if (state.isMe) null else {
-                {
-                    ProfileVisitorActions(
-                        followed = state.followed,
-                        onFollowToggle = onFollowToggle,
-                        onMessageClick = onMessageClick,
-                    )
-                }
-            },
-        )
+        Column(modifier = Modifier.fillMaxSize()) {
+            ProfileSegmentRow(
+                tabs = state.visibleTabs,
+                selected = state.tab,
+                onSelect = onTabSelect,
+            )
 
-        ProfileSegmentRow(
-            tabs = state.visibleTabs,
-            selected = state.tab,
-            onSelect = onTabSelect,
-        )
+            // 契约 §2.7 / §4 / §5：游客只能请求推入页的公开笔记，不能用 401 代替入口判断。
+            if (!loginRequired) {
+                visited.filter { it in state.visibleTabs && (it == ProfileTab.NOTES || loggedIn) }
+                    .forEach { tab ->
+                        key(state.user.id, loggedIn, tab) {
+                            PagedListEffectStaggered(
+                                list = listFor(tab),
+                                listState = gridFor(tab),
+                                state = state.pageStateOf(tab),
+                                autoRefreshKey = state.user.id to tab,
+                            )
+                        }
+                    }
+            }
 
-        // 契约 §2.7 / §4 / §5：游客只能请求推入页的公开笔记，不能用 401 代替入口判断。
-        if (!loginRequired) {
-            visited.filter { it in state.visibleTabs && (it == ProfileTab.NOTES || loggedIn) }
-                .forEach { tab ->
-                    key(state.user.id, loggedIn, tab) {
-                        PagedListEffectStaggered(
-                            list = listFor(tab),
-                            listState = gridFor(tab),
-                            state = state.pageStateOf(tab),
-                            autoRefreshKey = state.user.id to tab,
-                        )
+            Box(modifier = Modifier.weight(1f)) {
+                when {
+                    loginRequired -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            XhsEmptyState(
+                                text = "登录后体验更多功能",
+                                action = {
+                                    XhsPrimaryButton(
+                                        text = "登录",
+                                        onClick = onLogin,
+                                        fillWidth = false,
+                                        modifier = Modifier.padding(horizontal = Dimens.s32),
+                                    )
+                                },
+                            )
+                        }
                     }
-                }
-        }
-
-        Box(modifier = Modifier.weight(1f)) {
-            when {
-                loginRequired -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        XhsEmptyState(
-                            text = "登录后体验更多功能",
-                            action = {
-                                XhsPrimaryButton(
-                                    text = "登录",
-                                    onClick = onLogin,
-                                    fillWidth = false,
-                                    modifier = Modifier.padding(horizontal = Dimens.s32),
-                                )
-                            },
-                        )
+                    !loggedIn && state.tab != ProfileTab.NOTES -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            XhsEmptyState(text = state.tab.emptyText)
+                        }
                     }
-                }
-                !loggedIn && state.tab != ProfileTab.NOTES -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        XhsEmptyState(text = state.tab.emptyText)
-                    }
-                }
-                else -> {
-                    XhsListStateHost(
-                        state = state.pageState,
-                        onRetry = onRetry,
-                        modifier = Modifier.fillMaxSize().background(XhsColor.WaterfallBg),
-                        emptyText = state.tab.emptyText,
-                    ) {
-                        PostWaterfall(
-                            notes = state.items,
-                            listState = gridFor(state.tab),
-                            onNoteClick = { note -> onNoteClick(note.id, note.isVideo) },
-                            onAuthorClick = onAuthorClick,
-                            onLikeClick = onLikeClick,
-                            footer = { XhsListFooter(state = state.pageState) },
-                        )
+                    else -> {
+                        XhsListStateHost(
+                            state = state.pageState,
+                            onRetry = onRetry,
+                            modifier = Modifier.fillMaxSize().background(XhsColor.WaterfallBg),
+                            emptyText = state.tab.emptyText,
+                        ) {
+                            PostWaterfall(
+                                notes = state.items,
+                                listState = gridFor(state.tab),
+                                onNoteClick = { note -> onNoteClick(note.id, note.isVideo) },
+                                onAuthorClick = onAuthorClick,
+                                onLikeClick = onLikeClick,
+                                footer = { XhsListFooter(state = state.pageState) },
+                            )
+                        }
                     }
                 }
             }
