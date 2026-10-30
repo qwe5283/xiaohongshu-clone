@@ -384,14 +384,8 @@ internal fun AiSuggestionChips(
 }
 
 /**
- * H1/H2 底部输入条（高 48）：胶囊（语音/表情/＋ 三个 24dp 空占位 + 输入 + 发送）
- * ＋「内容由AI生成」声明行 24。
- *
- * 关于「⊕」：它画在输入胶囊的右端，也就是本条唯一的发送入口。按交付要求
- * （「回车或发送按钮提交」）把它实现为**可用的发送钮**（素材用仓库已有的 `ic_ai_send`），
- * 而非空占位；空占位的是胶囊内的语音 / 表情 / ＋ 三个图标（[PlaceholderIconRes]）。
- *
- * [thinking] = true 时（H3-1）输入框与发送钮都禁用。
+ * 语音、表情与更多尚未定义业务交互，因此只展示图标；发送单独使用 `ic_ai_send`，
+ * 避免与更多入口混淆。H3-1 思考期间禁用输入与发送，避免并发提问。
  */
 @Composable
 internal fun AiInputBar(
@@ -427,10 +421,9 @@ internal fun AiInputBar(
                     .padding(horizontal = Dimens.s12),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // 语音 / 表情 / ＋：未定义行为 → ic_placeholder 视觉占位（无点击）
-                AiInputPlaceholderIcon(contentDescription = "语音")
-                AiInputPlaceholderIcon(contentDescription = "表情")
-                AiInputPlaceholderIcon(contentDescription = "更多")
+                AiInputIcon(iconRes = PlaceholderIconRes, contentDescription = "语音")
+                AiInputIcon(iconRes = R.drawable.ic_emoji, contentDescription = "表情")
+                AiInputIcon(iconRes = R.drawable.ic_plus_circle, contentDescription = "更多")
 
                 Spacer(modifier = Modifier.width(Dimens.s8))
 
@@ -485,13 +478,13 @@ internal fun AiInputBar(
 }
 
 @Composable
-private fun AiInputPlaceholderIcon(contentDescription: String) {
+private fun AiInputIcon(iconRes: Int, contentDescription: String) {
     Box(
         modifier = Modifier.size(Dimens.icon24),
         contentAlignment = Alignment.Center,
     ) {
         androidx.compose.material3.Icon(
-            painter = painterResource(PlaceholderIconRes),
+            painter = painterResource(iconRes),
             contentDescription = contentDescription,
             tint = XhsColor.Text3,
             modifier = Modifier.size(Dimens.icon20),

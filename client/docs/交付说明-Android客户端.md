@@ -150,33 +150,33 @@ cd client
 
 ## 8. ⚠️ 待替换的占位素材（你要求的收尾提醒）
 
-按你的指示「找不到的图标和矢量图插画就先都使用同一个素材顶替」。现在全项目只用**两个**占位素材，替换时按下面的清单逐一补图即可（替换后无需改代码，改资源文件名/内容即可）：
+按你的指示「找不到的图标和矢量图插画就先都使用同一个素材顶替」。以下清单按 2026-10-30 当前代码维护；新增同义素材后，在对应调用处接入资源，避免改动共用占位影响其他语义。
 
-- **`ic_placeholder.xml`** —— 所有缺失图标与插画共用的占位（一个带斜杠的圆角方框，一眼能看出是占位）。
-- **`ic_placeholder_illus.xml`** —— 空态插画占位（`XhsIllustrationSlot` 使用）。
+- **`ic_placeholder.xml`** —— 缺失图标与图片加载兜底共用的占位（带斜杠的圆角方框）。
+- **`ic_placeholder_illus.xml`** —— 仅保留资源，当前无页面引用；`XhsIllustrationSlot` 已移除。空态已使用 `ic_no_data / ic_no_network / ic_no_msg` 正式插画。
 - 另：**结构性控件已用 Canvas 精确绘制**（`XhsPlusGlyph` ＋ / `XhsCheckCircle` 协议勾选），**不需要替换**；原先同一批就地画的 ☰ / ▶ / 人形已改为矢量资源（`ic_menu` / `ic_play` / `ic_user_circle`），见 §8.1。
 
-**缺素材、用占位顶替的位置（初次交付记录；个人主页条目于 2026-10-18 更新）**：
+**仍缺素材的固定图标槽位：21 个**（AI 回复操作栏按一组计算，不累计多条回复；不含图片加载兜底）：
 
-| 位置 | 具体缺哪些图标 |
-|------|---------------|
-| `feature/ai/AiComponents.kt`（5 处） | 语音、表情、＋、复制、踩、重新生成 |
-| `feature/profile/ProfileCommon.kt`（2 处） | segment 搜索框、本地图片预览占位 |
-| `feature/profile/ProfileDrawer.kt`（3 处） | 抽屉条目图标 |
-| `feature/profile/ProfileHeader.kt`（2 处） | 复制小红书号（12dp）、他人主页 ⋯（24dp） |
-| `feature/message/MessageRoutes.kt`（1 处） | 顶栏「创建」 |
-| `feature/detail/VideoDetailScreen.kt`（2 处） | 音乐碟、作者行分享 |
-| `feature/detail/CommentPanel.kt`（2 处） | 评论面板 emoji / @ |
-| `feature/search/SearchComponents.kt`（2 处） | 拍照搜索相机、历史记录 🗑 |
-| `feature/publish/PublishComponents.kt`（2 处） | 删除 ×、长文卡箭头等 |
-| `feature/profile/SettingsScreen.kt`（1 处） | 设置行图标（除「关于小红书」用 `ic_about`） |
-| `feature/profile/EditProfileScreen.kt`（1 处） | 头像相机角标 |
+| 位置 | 具体缺哪些图标 | 槽位数 |
+|------|---------------|--------|
+| `feature/ai/AiComponents.kt` | 语音、复制、踩、重新生成 | 4 |
+| `feature/profile/ProfileDrawer.kt` | 社区公约、退出登录，以及底部三个无标签图标 | 5 |
+| `feature/detail/VideoDetailScreen.kt` | 作者行音乐碟 | 1 |
+| `feature/publish/PublishComponents.kt` | 「写长文」卡片图标 | 1 |
+| `feature/profile/SettingsScreen.kt` | 账号与安全、多语言和翻译、隐私设置、存储空间、内容偏好调节、收货地址、添加小组件、未成年人模式、新功能体验、帮助与客服 | 10 |
 
-**已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_share / ic_scan / ic_edit / ic_broom / ic_play / ic_menu / ic_user / ic_user_circle / ic_pin_top / ic_notify_mute`。
+**条件触发的图片占位**：`core/ui/XhsAsyncImage.kt` 的头像、个人页背景、AI 推荐卡封面与通知缩略图在未加载出位图时显示共用占位；`ProfileCommon.LocalImagePreview` 和 `PublishComponents.LocalMediaThumb` 的本地预览在加载中/失败时显示占位；`VideoDetailScreen` 的视频地址为空时显示占位。`core/ui/XhsLocalImage.kt` 和 `XhsPlaceholderBox` 内仍保留占位实现，目前无业务调用方。
+
+**2026-10-30 已复用 7 个槽位（28 → 21）**：头像相机角标 → `ic_camera`；AI 表情/更多 → `ic_emoji / ic_plus_circle`；抽屉设置/关于我们 → `ic_settings / ic_about`；设置页通用设置/通知设置 → `ic_settings / ic_notify`。沿用各位置原尺寸、颜色和点击行为，未修改 drawable。
+
+此前清单中的搜索相机/历史删除、消息页创建、个人页搜索及详情分享已使用正式素材；复制小红书号改为点击文字，个人页页签及评论面板的旧图标已取消渲染。
+
+**已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_share / ic_scan / ic_edit / ic_broom / ic_play / ic_menu / ic_user / ic_user_circle / ic_pin_top / ic_notify_mute / ic_camera / ic_emoji / ic_plus_circle / ic_settings / ic_delete / ic_discover / ic_image`。
 
 > 2026-10-18 更新：新增两个 iconfont **实心**字形（24 视口 / 占位按长边 19.5dp）——`ic_pin_top`（置顶：上箭头 + 顶横条）已接线到 `MessageRoutes.kt` 会话行的 12dp 置顶位，上表对应条目已移除；`ic_notify_mute`（消息免打扰：带斜杠的铃铛）**当前无调用方**，留作备用（会话模型尚无免打扰字段）。源 SVG 为 `docs/assets/top-filling.svg` 与 `docs/assets/消息免打扰.svg`（后者转换时用了临时 ASCII 副本，仓库只保留中文名源）。
 
-> 2026-10-03 更新：新增 8 个 iconfont 线形图标（24 视口 / 1.8dp / 占位 18~20dp，源 SVG 为 `docs/assets/` 下中文名文件）：`ic_delete`（垃圾桶）、`ic_plus_circle`（圆环＋）、`ic_discover`（指南针）、`ic_image`（图片）、`ic_camera`（相机）、`ic_emoji`（笑脸）、`ic_settings`（齿轮），以及**换代的 `ic_more`**——旧三点版与 `ic_menu` 语义重复已废弃，现为「圆环+三点」（AiRoute 一处引用自动生效）。上表中 AI 面板的「表情 / ＋」、搜索的「拍照相机 / 历史 🗑」、设置的「设置行图标」、评论面板的「emoji」等位置可直接接线。
+> 2026-10-03 更新：新增 8 个 iconfont 线形图标（24 视口 / 1.8dp / 占位 18~20dp，源 SVG 为 `docs/assets/` 下中文名文件）：`ic_delete`（垃圾桶）、`ic_plus_circle`（圆环＋）、`ic_discover`（指南针）、`ic_image`（图片）、`ic_camera`（相机）、`ic_emoji`（笑脸）、`ic_settings`（齿轮），以及**换代的 `ic_more`**——旧三点版与 `ic_menu` 语义重复已废弃，现为「圆环+三点」（AiRoute 一处引用自动生效）。当前接线与剩余占位以上表为准。
 
 > 2026-09-15 更新：底 Tab 改为**纯文字无图标**（对齐原版），故 `ic_home`、`ic_notify` 已无用例（文件保留但不再引用）；`ic_assistant` 仍用于首页顶栏点点气泡与 H1 会话页。
 >
@@ -273,3 +273,11 @@ cd client
 - `:app:compileDebugKotlin :app:assembleDebug :app:testDebugUnitTest --offline` 通过，零编译 error / warning；新增 5 项测试覆盖滚动消费顺序、边界、透明度阈值、回滑与尺寸变化，连同原有 11 项测试全部通过。
 - 模拟器实测本人/他人主页展开、部分收起、完全收起、回滑恢复、各页签切换、头部区域拖动及空收藏页上滑/回滑；顶栏纯色、居中头像与编辑入口切换均符合预期。
 - `git diff --check` 通过；按架构规范 §8 完成设计 Token、列表四态、身份与登录门禁、文件范围自检。本轮 Debug APK 位于 `app/build/outputs/apk/debug/app-debug.apk`，已安装至现有模拟器。
+
+---
+
+## 14. 复用现有图标（2026-10-30）
+
+- 接入 7 个语义匹配的图标槽位，固定占位由 28 个减至 21 个，具体映射与剩余清单见 §8；同步修正架构规范中的旧空态插画组件引用。
+- 已知取舍：本轮仅接入已有 drawable，沿用原尺寸、颜色与点击行为；语音、复制、踩、重新生成等缺少对应素材的位置继续使用统一占位。
+- `:app:compileDebugKotlin :app:assembleDebug --offline` 通过，零编译 error / warning；Debug APK 已刷新至 `dist/xiaohongshu-clone-debug.apk`。按用户要求未运行测试，未进行真机或模拟器验收。

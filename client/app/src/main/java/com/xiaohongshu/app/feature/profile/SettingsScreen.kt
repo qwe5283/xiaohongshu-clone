@@ -37,7 +37,7 @@ import com.xiaohongshu.app.core.ui.XhsTopBar
  * 添加小组件/未成年人模式｜新功能体验｜帮助与客服/关于小红书；底部居中「切换账号」15sp。
  *
  * **子页全部为占位**（范围待产品定义），故除「退出登录」外一律无跳转；
- * 行图标除「关于小红书」用真实素材 `ic_about` 外，其余为缺失素材 → `ic_placeholder`（§4.5）。
+ * 行图标仅在缺少同义素材时使用 `ic_placeholder`（§4.5）。
  */
 @Composable
 internal fun SettingsScreen(
@@ -60,9 +60,9 @@ internal fun SettingsScreen(
             SettingsGroup {
                 SettingRow(label = "账号与安全")
                 XhsDivider()
-                SettingRow(label = "通用设置")
+                SettingRow(label = "通用设置", iconRes = R.drawable.ic_settings)
                 XhsDivider()
-                SettingRow(label = "通知设置")
+                SettingRow(label = "通知设置", iconRes = R.drawable.ic_notify)
                 XhsDivider()
                 SettingRow(label = "多语言和翻译")
                 XhsDivider()

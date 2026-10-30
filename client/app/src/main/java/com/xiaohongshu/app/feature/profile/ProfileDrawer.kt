@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
@@ -87,11 +88,11 @@ internal fun ProfileDrawer(
                         .fillMaxWidth()
                         .padding(horizontal = Dimens.s12),
                 ) {
-                    DrawerItem(label = "设置", onClick = onSettings)
+                    DrawerItem(label = "设置", iconRes = R.drawable.ic_settings, onClick = onSettings)
                     XhsDivider()
                     DrawerItem(label = "社区公约", onClick = {})
                     XhsDivider()
-                    DrawerItem(label = "关于我们", onClick = {})
+                    DrawerItem(label = "关于我们", iconRes = R.drawable.ic_about, onClick = {})
                 }
 
                 Spacer(modifier = Modifier.height(Dimens.drawerGroupGap))
@@ -141,6 +142,7 @@ private const val DRAWER_GRID_CELLS = 3
 private fun DrawerItem(
     label: String,
     onClick: () -> Unit,
+    iconRes: Int = PlaceholderIconRes,
     emphasized: Boolean = false,
 ) {
     Row(
@@ -152,7 +154,7 @@ private fun DrawerItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            painter = painterResource(PlaceholderIconRes),
+            painter = painterResource(iconRes),
             contentDescription = null,
             tint = XhsColor.Text2,
             modifier = Modifier.size(Dimens.icon24),

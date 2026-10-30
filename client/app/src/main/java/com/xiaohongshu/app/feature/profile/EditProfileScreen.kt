@@ -29,7 +29,6 @@ import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
-import com.xiaohongshu.app.core.ui.PlaceholderIconRes
 import com.xiaohongshu.app.core.ui.XhsAsyncImage
 import com.xiaohongshu.app.core.ui.XhsAvatar
 import com.xiaohongshu.app.core.ui.XhsDivider
@@ -91,7 +90,6 @@ internal fun EditProfileScreen(
                     } else {
                         XhsAvatar(url = state.user.avatar, size = Dimens.avatarProfile)
                     }
-                    // 相机角标（素材缺失 → §4.5 统一占位）
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
@@ -101,7 +99,7 @@ internal fun EditProfileScreen(
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            painter = painterResource(PlaceholderIconRes),
+                            painter = painterResource(R.drawable.ic_camera),
                             contentDescription = "更换头像",
                             tint = XhsColor.Text2,
                             modifier = Modifier.size(Dimens.icon16),
