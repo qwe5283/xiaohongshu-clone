@@ -153,7 +153,7 @@ internal fun AuthTextField(
 /**
  * Auth 页居中 LOGO + 标语（登录/注册两态常显；LOGO 居中，下方「登录后，体验更多功能」）。
  *
- * LOGO 用真实素材 `R.drawable.ic_logo`（非占位）；高度取 `Dimens.s32`，宽按素材
+ * LOGO 用真实素材 `R.drawable.ic_logo_filled`（非占位）；高度取 `Dimens.s32`，宽按素材
  * 205×96 等比 ≈ 68dp。
  */
 @Composable
@@ -163,7 +163,7 @@ internal fun AuthLogoHeader(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
-            painter = painterResource(R.drawable.ic_logo),
+            painter = painterResource(R.drawable.ic_logo_filled),
             contentDescription = "小红书",
             modifier = Modifier.height(Dimens.s32),
         )

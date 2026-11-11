@@ -174,7 +174,11 @@ cd client
 
 此前清单中的搜索相机/历史删除、消息页创建、个人页搜索及详情分享已使用正式素材；复制小红书号改为点击文字，个人页页签及评论面板的旧图标已取消渲染。
 
-**已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_share / ic_scan / ic_edit / ic_broom / ic_play / ic_menu / ic_user / ic_user_circle / ic_pin_top / ic_notify_mute / ic_camera / ic_emoji / ic_plus_circle / ic_settings / ic_delete / ic_discover / ic_image`。
+**已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_logo_filled / ic_share / ic_scan / ic_edit / ic_broom / ic_play / ic_menu / ic_user / ic_user_circle / ic_pin_top / ic_notify_mute / ic_camera / ic_emoji / ic_plus_circle / ic_settings / ic_delete / ic_discover / ic_image`。
+
+**2026-11-12 LOGO 资源拆分**：原 `ic_logo.png` 重命名为 `ic_logo_filled.png`，登录/注册页及文档引用同步迁移；新 `ic_logo.xml` 复制自 `ic_launcher_foreground.xml`，仅将默认填充改为常规图标黑色 `#FF000000`，保留启动前景的路径、108 视口、分组变换与留白（品牌资源例外）。
+
+验证：`:app:compileDebugKotlin :app:assembleDebug --offline` 通过，零编译 error / warning；已核对包含分组变换的等大对照图，原 PNG 与启动前景的 SHA256 均未变化，新矢量仅默认颜色不同。Debug APK 已刷新至 `dist/xiaohongshu-clone-debug.apk` 并核对 SHA256，未进行真机验收。
 
 本轮新增的 21 枚图标见上述清单，源 SVG 位于 `docs/assets/icons-2026-10-30/`，同名 VectorDrawable 位于 `app/src/main/res/drawable/`；均为 24 视口、1.8dp 圆角描边，图形外缘长边约 19.5dp。
 
