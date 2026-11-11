@@ -1,13 +1,10 @@
 package com.xiaohongshu.app.core.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -27,7 +24,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
@@ -38,18 +34,11 @@ val LocalImageLoader = staticCompositionLocalOf<ImageLoader> {
     error("LocalImageLoader 未提供：请在根布局用 CompositionLocalProvider 注入 ImageLoader")
 }
 
-/** 全项目统一的缺失素材占位（图标与插画共用同一个素材）。 */
-val PlaceholderIconRes = R.drawable.ic_placeholder
-
 /**
  * 异步图片。
  *
- * 占位策略（与产品约定一致）：所有缺失素材**统一使用同一个占位素材**，
- * 加载中为浅灰底，失败或无 URL 时叠加占位字形，便于验收时一眼看出待替换项。
- *
  * @param targetWidthDp/targetHeightDp 期望显示尺寸，用于下采样；不传则按 1080px 封顶。
- * @param showGlyphOnFailure true 时在失败占位上叠加 [PlaceholderIconRes] 字形（图标类场景用）。
- * @param fallbackPainter URL 为空时的兜底图（如未登录的默认头像）；加载失败仍走占位字形。
+ * @param fallbackPainter 加载中、URL 为空或加载失败时的兜底图；不传时保留容器本身。
  */
 @Composable
 fun XhsAsyncImage(
@@ -59,7 +48,6 @@ fun XhsAsyncImage(
     targetWidthDp: Dp? = null,
     targetHeightDp: Dp? = null,
     clip: Shape? = null,
-    showGlyphOnFailure: Boolean = true,
     alignment: Alignment = Alignment.Center,
     fallbackPainter: Painter? = null,
 ) {
@@ -79,7 +67,7 @@ fun XhsAsyncImage(
 
     val base = if (clip != null) modifier.clip(clip) else modifier
 
-    Box(modifier = base.background(Color.Transparent), contentAlignment = alignment) {
+    Box(modifier = base, contentAlignment = alignment) {
         val current = bitmap
         if (current != null) {
             Image(
@@ -89,7 +77,7 @@ fun XhsAsyncImage(
                 alignment = alignment,
                 modifier = Modifier.fillMaxSize(),
             )
-        } else if (url.isBlank() && fallbackPainter != null) {
+        } else if (fallbackPainter != null) {
             Image(
                 painter = fallbackPainter,
                 contentDescription = null,
@@ -97,27 +85,18 @@ fun XhsAsyncImage(
                 alignment = alignment,
                 modifier = Modifier.fillMaxSize(),
             )
-        } else if (showGlyphOnFailure) {
-            Icon(
-                painter = painterResource(PlaceholderIconRes),
-                contentDescription = null,
-                tint = XhsColor.Text3,
-                modifier = Modifier.fillMaxSize(0.42f),
-            )
         }
     }
 }
 
 /**
  * 圆形头像。头像档：18 / 24 / 36 / 48 / 108（取值见 [Dimens]）。
- * 缺图（URL 加载失败）时用统一占位素材，不用「默认头像」第二套资源；
- * 未登录（URL 为空）的默认头像走 [fallbackPainter]，调用方按需传入。
+ * 加载中、URL 为空或加载失败时显示 `ic_avatar_fallback`。
  *
  * @param borderWidthPx 描边宽度，单位为**物理像素**：发丝线传 1f 即可（1dp 在
  *   高密度屏约合 3px，视觉过粗）；0 表示不描边。描边画在头像外沿、贴着裁剪圆，
  *   可见宽度即该值，且不改变组件占位尺寸。
  * @param borderColor 描边颜色，仅 [borderWidthPx] > 0 时生效。
- * @param fallbackPainter URL 为空时显示的默认头像。
  */
 @Composable
 fun XhsAvatar(
@@ -126,7 +105,6 @@ fun XhsAvatar(
     modifier: Modifier = Modifier,
     borderWidthPx: Float = Dimens.avatarBorderWidthPx,
     borderColor: Color = XhsColor.DotInactive,
-    fallbackPainter: Painter? = null,
 ) {
     Box(
         modifier = modifier
@@ -155,47 +133,7 @@ fun XhsAvatar(
             targetWidthDp = size,
             targetHeightDp = size,
             clip = CircleShape,
-            showGlyphOnFailure = true,
-            fallbackPainter = fallbackPainter,
-        )
-    }
-}
-
-/**
- * 带封面比例的图片框（瀑布流卡片 / 详情大图）。
- * [ratio] 为 宽/高（4:3 用 1.333、3:4 用 0.75）。
- */
-@Composable
-fun XhsCoverImage(
-    url: String,
-    ratio: Float,
-    modifier: Modifier = Modifier,
-    clip: Shape? = null,
-    targetWidthDp: Dp? = null,
-) {
-    XhsAsyncImage(
-        url = url,
-        modifier = modifier.aspectRatio(ratio),
-        contentScale = ContentScale.Crop,
-        targetWidthDp = targetWidthDp,
-        clip = clip,
-        showGlyphOnFailure = false,
-    )
-}
-
-/** 无内容时的纯色块（用于视频占位等）。 */
-@Composable
-fun XhsPlaceholderBox(
-    modifier: Modifier = Modifier,
-    color: Color = XhsColor.PlaceholderBg,
-    glyphTint: Color = XhsColor.Text3,
-) {
-    Box(modifier = modifier.background(color), contentAlignment = Alignment.Center) {
-        Icon(
-            painter = painterResource(PlaceholderIconRes),
-            contentDescription = null,
-            tint = glyphTint,
-            modifier = Modifier.fillMaxSize(0.3f),
+            fallbackPainter = painterResource(R.drawable.ic_avatar_fallback),
         )
     }
 }

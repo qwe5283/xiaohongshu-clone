@@ -25,13 +25,13 @@ import java.util.concurrent.TimeUnit
  *
  * 选型说明：本工程**不引入 Coil**。缓存中的 Coil 2.7 面向 OkHttp 4，而网络栈统一在
  * OkHttp 5（Retrofit 3 的前置要求），两大版本混用会在运行期出现方法不兼容；自行实现同时
- * 便于精确控制「缺失素材统一占位」与按目标尺寸下采样的策略。
+ * 便于按目标尺寸下采样，并由 UI 决定各场景的占位方式。
  *
  * 能力：
  * - 两级缓存：内存 [LruCache]（1/8 堆，上限 48MB）+ OkHttp 磁盘缓存；
  * - 同 URL 并发去重（瀑布流里同一头像只发一次请求）；
  * - 先读头部尺寸再按目标尺寸选 `inSampleSize`，避免整图解码撑爆内存；
- * - 失败或空 URL 返回 null，由 UI 回落统一占位素材。
+ * - 失败或空 URL 返回 null，由 UI 决定是否显示兜底图。
  */
 class ImageLoader(context: Context) {
 

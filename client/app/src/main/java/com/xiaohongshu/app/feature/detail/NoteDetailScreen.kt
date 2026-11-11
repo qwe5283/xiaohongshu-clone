@@ -316,7 +316,7 @@ private fun NoteTopBar(
                     )
                     Spacer(modifier = Modifier.width(Dimens.s8))
                 }
-                // ↗ 分享：行为未定义 → 统一缺失素材占位（ic_placeholder）、点击 no-op
+                // 分享行为未定义，保留展示入口。
                 XhsIconButton(
                     iconRes = R.drawable.ic_share,
                     onClick = {},
@@ -354,7 +354,6 @@ private fun NoteMedia(images: List<NoteImage>, ratio: Float) {
                     url = images[page].url,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Fit,
-                    showGlyphOnFailure = false,
                 )
             }
             if (multiple) {
@@ -432,11 +431,6 @@ private fun InlineCommentInputRow(
         XhsAvatar(
             url = myAvatar,
             size = Dimens.avatarComment,
-            fallbackPainter = if (myAvatar.isBlank()) {
-                painterResource(R.drawable.ic_avatar_fallback)
-            } else {
-                null
-            },
         )
         Spacer(modifier = Modifier.width(Dimens.s8))
         CommentInputPill(

@@ -89,7 +89,7 @@ function isInkBetween(subs, A, B) {
 const KNOWN = {
   'ic_ai_new_chat': 'AI 页图标族（2.0dp）', 'ic_ai_send': 'AI 页图标族（2.4dp）',
   'ic_ai_sidebar_toggle': 'AI 页图标族（2.0dp）', 'ic_male': '行内性别徽标',
-  'ic_female': '行内性别徽标', 'ic_login': '插画（非图标）', 'ic_placeholder_illus': '占位插画',
+  'ic_female': '行内性别徽标', 'ic_login': '插画（非图标）',
 };
 
 function measure(file) {

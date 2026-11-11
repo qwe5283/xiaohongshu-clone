@@ -150,10 +150,9 @@ cd client
 
 ## 8. 图标补齐与图片占位
 
-以下清单按 2026-10-30 当前代码维护。固定图标已补齐；图片加载兜底仍保留原有占位素材。
+以下清单按 2026-11-12 当前代码维护。固定图标已补齐；图片占位按场景使用现有素材，不再共用缺失素材图案。
 
-- **`ic_placeholder.xml`** —— 缺失图标与图片加载兜底共用的占位（带斜杠的圆角方框）。
-- **`ic_placeholder_illus.xml`** —— 仅保留资源，当前无页面引用；`XhsIllustrationSlot` 已移除。空态已使用 `ic_no_data / ic_no_network / ic_no_msg` 正式插画。
+- **已移除 `ic_placeholder.xml` / `ic_placeholder_illus.xml`**。空态使用 `ic_no_data / ic_no_network / ic_no_msg` 正式插画。
 - 另：**结构性控件已用 Canvas 精确绘制**（`XhsPlusGlyph` ＋ / `XhsCheckCircle` 协议勾选），**不需要替换**；原先同一批就地画的 ☰ / ▶ / 人形已改为矢量资源（`ic_menu` / `ic_play` / `ic_user_circle`），见 §8.1。
 
 **固定图标占位：0 个**（不含图片加载兜底）。2026-10-30 已绘制并接入剩余 21 个槽位，SVG、Android 资源、逐项映射和预览见 [图标交付清单](assets/图标清单-2026-10-30.md)。
@@ -168,7 +167,9 @@ cd client
 
 抽屉底部三格在代码及归档线框中均无用途定义；本轮只补充候选字形，保持无标签、无点击事件与装饰性语义，不表示已实现对应功能。其余 18 个图标按既有用途接入。
 
-**条件触发的图片占位**：`core/ui/XhsAsyncImage.kt` 的头像、个人页背景、AI 推荐卡封面与通知缩略图在未加载出位图时显示共用占位；`ProfileCommon.LocalImagePreview` 和 `PublishComponents.LocalMediaThumb` 的本地预览在加载中/失败时显示占位；`VideoDetailScreen` 的视频地址为空时显示占位。`core/ui/XhsLocalImage.kt` 和 `XhsPlaceholderBox` 内仍保留占位实现，目前无业务调用方。
+**条件触发的图片占位**：头像（含编辑资料的本地头像预览）在加载中、URL/路径为空或解码失败时显示原色 `ic_avatar_fallback`；个人页背景、AI 推荐卡封面与通知缩略图不叠加占位图案。发布页本地媒体缩略图和编辑资料的本地背景预览在加载中或失败时显示淡色 `ic_image`（`XhsColor.Text3`）；视频地址为空时显示 `ic_logo`。通用 `XhsAsyncImage` 仅在显式提供 `fallbackPainter` 时绘制兜底图片。
+
+**死代码清理**：删除 `PlaceholderIconRes`、`showGlyphOnFailure`、`XhsPlaceholderBox`、无调用的 `XhsCoverImage`，以及整个无业务调用方的 `XhsLocalImage.kt`（含 `XhsLocalImage / XhsMediaImage / XhsMediaThumb`）；旧占位资源的审计分类同步移除。
 
 **2026-10-30 已复用 7 个槽位（28 → 21）**：头像相机角标 → `ic_camera`；AI 表情/更多 → `ic_emoji / ic_plus_circle`；抽屉设置/关于我们 → `ic_settings / ic_about`；设置页通用设置/通知设置 → `ic_settings / ic_notify`。沿用各位置原尺寸、颜色和点击行为，未修改 drawable。
 
@@ -243,7 +244,7 @@ cd client
 - 当前代码原本已不渲染小组件卡和「去发布」banner，本次同步清理旧说明；计数字段仍保留既有接口语义。
 - 性别独立成行后，资料头从固定高度改为最小高度，顶部留白参与测量，换取访客操作行与页签不重叠；背景图与遮罩随内容增高。
 - 主页页签放弃原图标加文字的默认展示，换成文字加下划线；保留显式传入图标的能力，现有 drawable 素材继续保留。
-- 当时保留的图标占位已在后续补齐，当前资源清单见 §8；扫一扫/分享和更多菜单的业务范围沿用各轮记录。头图按用户指定使用均匀黑色遮罩，放弃此前待议的渐变方案；仅在资料头显式使用暗色文字，页签、瀑布流及全局浅色主题沿用原配色。
+- 当时保留的图标占位已在后续补齐，当前资源与图片占位规则见 §8、§16；扫一扫/分享和更多菜单的业务范围沿用各轮记录。头图按用户指定使用均匀黑色遮罩，放弃此前待议的渐变方案；仅在资料头显式使用暗色文字，页签、瀑布流及全局浅色主题沿用原配色。
 
 ### 验证
 
@@ -287,7 +288,7 @@ cd client
 ## 14. 复用现有图标（2026-10-30）
 
 - 接入 7 个语义匹配的图标槽位，固定占位由 28 个减至 21 个，具体映射与剩余清单见 §8；同步修正架构规范中的旧空态插画组件引用。
-- 已知取舍（本轮历史状态）：仅接入已有 drawable，沿用原尺寸、颜色与点击行为；当时保留的语音、复制、踩、重新生成等占位已在 §15 补齐。
+- 已知取舍（本轮历史状态）：仅接入已有 drawable，沿用原尺寸、颜色与点击行为；当时保留的语音、复制、踩、重新生成等占位已在 §15 补齐，图片占位现按 §16 分场景处理。
 - `:app:compileDebugKotlin :app:assembleDebug --offline` 通过，零编译 error / warning；Debug APK 已刷新至 `dist/xiaohongshu-clone-debug.apk`。按用户要求未运行测试，未进行真机或模拟器验收。
 
 ---
@@ -298,3 +299,13 @@ cd client
 - 已知取舍：抽屉底部三格采用夜间模式、二维码、意见反馈候选字形，沿用无业务行为的装饰性展示；其余位置沿用原尺寸、颜色与点击回调。图片加载及视频地址为空时的兜底占位保留。
 - 21 枚新图标几何检查通过，并完成与现有图标的等大对照；全量扫描报告的 `ic_about` 线宽与 `ic_live` 外缘偏差属于既有资源，记录在图标清单中。
 - `:app:compileDebugKotlin :app:assembleDebug --offline` 通过，零编译 error / warning；Debug APK 已刷新至 `dist/xiaohongshu-clone-debug.apk`，与构建产物 SHA256 一致。沿用用户要求未运行单元测试或界面测试，未进行真机或模拟器验收。
+
+---
+
+## 16. 分场景图片占位与死代码清理（2026-11-12）
+
+- 全局头像与编辑资料的本地头像预览使用原色 `ic_avatar_fallback`，覆盖加载中、空引用与失败；个人页背景、AI 推荐封面、通知缩略图不叠加占位图案。
+- 发布页本地媒体缩略图和编辑资料的本地背景预览使用淡色 `ic_image`（`XhsColor.Text3`）；视频地址为空时使用 `ic_logo`。沿用各场景的容器、裁剪与成功加载后的图片显示方式。
+- 已知取舍：放弃用单一缺失素材图案提示所有图片问题，改为按场景选择已有资源；通用 `XhsAsyncImage` 默认只保留容器，显式传入 `fallbackPainter` 时在尚无位图的状态显示兜底图片。
+- 删除两份旧占位资源、`PlaceholderIconRes` 和 `showGlyphOnFailure`，清除未使用的 `XhsPlaceholderBox`、`XhsCoverImage` 与 `XhsLocalImage.kt` 及其媒体包装组件；同步清理调用参数、文档规则和审计分类。
+- 验证：`:app:compileDebugKotlin :app:assembleDebug --offline` 通过，零编译 error / warning；源码无旧占位引用，APK 资源表确认旧资源已移除、替代资源均已打包。Debug APK 已刷新至 `dist/xiaohongshu-clone-debug.apk`，与构建产物 SHA256 一致。未运行界面测试或进行真机验收。

@@ -408,7 +408,7 @@ private fun VideoSurface(
     if (videoUrl.isBlank()) {
         Box(modifier.background(XhsColor.Black), contentAlignment = Alignment.Center) {
             Icon(
-                painter = painterResource(R.drawable.ic_placeholder),
+                painter = painterResource(R.drawable.ic_logo),
                 contentDescription = null,
                 tint = XhsColor.Text3,
                 modifier = Modifier.size(Dimens.avatarDetailAuthor),

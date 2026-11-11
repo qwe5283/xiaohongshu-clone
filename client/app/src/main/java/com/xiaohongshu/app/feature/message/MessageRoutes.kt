@@ -115,8 +115,7 @@ fun MessageRoute(
             )
         },
         onPeerClick = { conversation -> navigator.toUserProfile(conversation.peerId) },
-        // G1 顶栏右上「创建」没有定义任何行为（点按目标 ≥44 由 XhsIconButton 保证），
-        // 故此处为**有意的空实现**，仅渲染 ic_placeholder 占位素材。
+        // G1「创建」尚未定义业务行为，因此保留空回调。
         onCreateClick = {},
         // G6 一键已读（入口从 G2/G3/G4 子页移入 G1）：弹层由宿主 MainScaffold 挂载
         // （页面内挂载遮罩盖不住底 Tab，见 MarkAllReadSheet）

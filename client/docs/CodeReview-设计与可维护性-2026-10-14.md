@@ -114,7 +114,7 @@ Home、Search、Profile 分别维护原始对象的查找；Home 和 Search 在�
 
 ## 7. [P2] 图片解码策略分散，内存约束已经不一致
 
-**定位**：[ImageLoader.kt:123](D:/Projects/FreeCoding/xiaohongshu/xiaohongshu-clone/client/app/src/main/java/com/xiaohongshu/app/core/image/ImageLoader.kt:123)，远端图片采样；其他实现见 [XhsLocalImage.kt:80](D:/Projects/FreeCoding/xiaohongshu/xiaohongshu-clone/client/app/src/main/java/com/xiaohongshu/app/core/ui/XhsLocalImage.kt:80)、[PublishComponents.kt:350](D:/Projects/FreeCoding/xiaohongshu/xiaohongshu-clone/client/app/src/main/java/com/xiaohongshu/app/feature/publish/PublishComponents.kt:350) 和 [ProfileCommon.kt:292](D:/Projects/FreeCoding/xiaohongshu/xiaohongshu-clone/client/app/src/main/java/com/xiaohongshu/app/feature/profile/ProfileCommon.kt:292)。
+**定位**：[ImageLoader.kt:123](D:/Projects/FreeCoding/xiaohongshu/xiaohongshu-clone/client/app/src/main/java/com/xiaohongshu/app/core/image/ImageLoader.kt:123)，远端图片采样；其他实现见 [PublishComponents.kt:350](D:/Projects/FreeCoding/xiaohongshu/xiaohongshu-clone/client/app/src/main/java/com/xiaohongshu/app/feature/publish/PublishComponents.kt:350) 和 [ProfileCommon.kt:292](D:/Projects/FreeCoding/xiaohongshu/xiaohongshu-clone/client/app/src/main/java/com/xiaohongshu/app/feature/profile/ProfileCommon.kt:292)。审查时还包含公用本地图片解码组件 `XhsLocalImage`；该组件因无业务调用方已于 2026-11-12 删除，以下为审查当时的问题记录。
 
 **问题与触发场景**：远端图片、公用本地图片、发布缩略图及资料预览分别维护采样策略，最后一处固定使用采样率 4。
 

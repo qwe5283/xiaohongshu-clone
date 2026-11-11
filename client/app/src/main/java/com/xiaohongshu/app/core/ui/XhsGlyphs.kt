@@ -16,9 +16,7 @@ import com.xiaohongshu.app.core.design.XhsColor
 /**
  * 用 Canvas 直接绘制的少量基础字形。
  *
- * 为什么不都用占位素材：＋ 按钮（底部 Tab 正中的主操作）、协议勾选圆圈属于**结构性控件**，
- * 用占位素材会让产品看起来是坏的。这两个形状简单到可以精确绘制，因此就地画；
- * 其余真正缺失的图标一律沿用统一占位素材（见 [PlaceholderIconRes]）。
+ * ＋ 按钮和协议勾选圆圈属于结构性控件，形状简单，使用 Canvas 精确绘制。
  */
 private const val DEFAULT_STROKE_RATIO = 0.1f
 

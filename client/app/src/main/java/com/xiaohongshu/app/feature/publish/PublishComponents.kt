@@ -46,7 +46,6 @@ import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
 import com.xiaohongshu.app.core.publish.DraftMedia
-import com.xiaohongshu.app.core.ui.PlaceholderIconRes
 import com.xiaohongshu.app.core.ui.XhsAsyncImage
 import com.xiaohongshu.app.core.ui.XhsCharCounter
 import com.xiaohongshu.app.core.ui.XhsChevronRight
@@ -202,7 +201,6 @@ internal fun MediaThumb(
                 modifier = Modifier.fillMaxSize(),
                 targetWidthDp = MediaThumbSize,
                 targetHeightDp = MediaThumbSize,
-                showGlyphOnFailure = false,
             )
 
             item.localPath.isNotBlank() -> LocalMediaThumb(
@@ -314,7 +312,7 @@ internal fun MediaAddTile(
  *
  * 为什么不用 `XhsAsyncImage`：其 `ImageLoader` 只走 OkHttp（仅 http/https），
  * 本地路径与 `content://` 一律解码失败。此处用 `ImageDecoder` 按目标尺寸下采样解码，
- * 占位策略与公共组件保持一致（`PlaceholderBg` + 统一占位素材）。
+ * 本地缩略图加载中或解码失败时显示淡色图片图标。
  */
 @Composable
 private fun LocalMediaThumb(
@@ -337,7 +335,7 @@ private fun LocalMediaThumb(
             )
         } else {
             Icon(
-                painter = painterResource(PlaceholderIconRes),
+                painter = painterResource(R.drawable.ic_image),
                 contentDescription = null,
                 tint = XhsColor.Text3,
                 modifier = Modifier.fillMaxSize(0.42f),

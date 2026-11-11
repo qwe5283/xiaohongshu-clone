@@ -54,7 +54,6 @@ internal fun ProfileHeader(
             .heightIn(min = Dimens.profileHeaderImage)
             .onGloballyPositioned { headerCoordinates.value = it },
     ) {
-        // 头图：缺失素材由 XhsAsyncImage 统一占位
         XhsAsyncImage(
             url = user.backgroundImage,
             modifier = Modifier.matchParentSize(),

@@ -48,7 +48,6 @@ import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
-import com.xiaohongshu.app.core.ui.PlaceholderIconRes
 import com.xiaohongshu.app.core.ui.XhsConfirmSheet
 import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.util.Formatters
@@ -269,6 +268,7 @@ private fun copyToProfileCache(context: Context, uri: Uri): String? = runCatchin
 @Composable
 internal fun LocalImagePreview(
     path: String?,
+    isAvatar: Boolean,
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
 ) {
@@ -298,9 +298,16 @@ internal fun LocalImagePreview(
                 contentScale = contentScale,
                 modifier = Modifier.fillMaxSize(),
             )
+        } else if (isAvatar) {
+            Image(
+                painter = painterResource(R.drawable.ic_avatar_fallback),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
         } else {
             Icon(
-                painter = painterResource(PlaceholderIconRes),
+                painter = painterResource(R.drawable.ic_image),
                 contentDescription = null,
                 tint = XhsColor.Text3,
                 modifier = Modifier.fillMaxSize(0.42f),

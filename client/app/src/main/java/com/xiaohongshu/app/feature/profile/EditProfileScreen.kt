@@ -83,6 +83,7 @@ internal fun EditProfileScreen(
                     if (draft.avatarLocalPath != null) {
                         LocalImagePreview(
                             path = draft.avatarLocalPath,
+                            isAvatar = true,
                             modifier = Modifier
                                 .size(Dimens.avatarProfile)
                                 .clip(CircleShape),
@@ -132,6 +133,7 @@ internal fun EditProfileScreen(
                     if (draft.backgroundLocalPath != null) {
                         LocalImagePreview(
                             path = draft.backgroundLocalPath,
+                            isAvatar = false,
                             modifier = Modifier
                                 .size(Dimens.rowEditBackground)
                                 .clip(RoundedCornerShape(Dimens.radiusCard)),
