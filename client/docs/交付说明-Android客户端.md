@@ -148,23 +148,25 @@ cd client
 
 ---
 
-## 8. ⚠️ 待替换的占位素材（你要求的收尾提醒）
+## 8. 图标补齐与图片占位
 
-按你的指示「找不到的图标和矢量图插画就先都使用同一个素材顶替」。以下清单按 2026-10-30 当前代码维护；新增同义素材后，在对应调用处接入资源，避免改动共用占位影响其他语义。
+以下清单按 2026-10-30 当前代码维护。固定图标已补齐；图片加载兜底仍保留原有占位素材。
 
 - **`ic_placeholder.xml`** —— 缺失图标与图片加载兜底共用的占位（带斜杠的圆角方框）。
 - **`ic_placeholder_illus.xml`** —— 仅保留资源，当前无页面引用；`XhsIllustrationSlot` 已移除。空态已使用 `ic_no_data / ic_no_network / ic_no_msg` 正式插画。
 - 另：**结构性控件已用 Canvas 精确绘制**（`XhsPlusGlyph` ＋ / `XhsCheckCircle` 协议勾选），**不需要替换**；原先同一批就地画的 ☰ / ▶ / 人形已改为矢量资源（`ic_menu` / `ic_play` / `ic_user_circle`），见 §8.1。
 
-**仍缺素材的固定图标槽位：21 个**（AI 回复操作栏按一组计算，不累计多条回复；不含图片加载兜底）：
+**固定图标占位：0 个**（不含图片加载兜底）。2026-10-30 已绘制并接入剩余 21 个槽位，SVG、Android 资源、逐项映射和预览见 [图标交付清单](assets/图标清单-2026-10-30.md)。
 
-| 位置 | 具体缺哪些图标 | 槽位数 |
+| 位置 | 本轮已接入图标 | 槽位数 |
 |------|---------------|--------|
 | `feature/ai/AiComponents.kt` | 语音、复制、踩、重新生成 | 4 |
-| `feature/profile/ProfileDrawer.kt` | 社区公约、退出登录，以及底部三个无标签图标 | 5 |
+| `feature/profile/ProfileDrawer.kt` | 社区公约、退出登录，以及底部夜间模式/二维码/意见反馈候选字形 | 5 |
 | `feature/detail/VideoDetailScreen.kt` | 作者行音乐碟 | 1 |
 | `feature/publish/PublishComponents.kt` | 「写长文」卡片图标 | 1 |
 | `feature/profile/SettingsScreen.kt` | 账号与安全、多语言和翻译、隐私设置、存储空间、内容偏好调节、收货地址、添加小组件、未成年人模式、新功能体验、帮助与客服 | 10 |
+
+抽屉底部三格在代码及归档线框中均无用途定义；本轮只补充候选字形，保持无标签、无点击事件与装饰性语义，不表示已实现对应功能。其余 18 个图标按既有用途接入。
 
 **条件触发的图片占位**：`core/ui/XhsAsyncImage.kt` 的头像、个人页背景、AI 推荐卡封面与通知缩略图在未加载出位图时显示共用占位；`ProfileCommon.LocalImagePreview` 和 `PublishComponents.LocalMediaThumb` 的本地预览在加载中/失败时显示占位；`VideoDetailScreen` 的视频地址为空时显示占位。`core/ui/XhsLocalImage.kt` 和 `XhsPlaceholderBox` 内仍保留占位实现，目前无业务调用方。
 
@@ -173,6 +175,8 @@ cd client
 此前清单中的搜索相机/历史删除、消息页创建、个人页搜索及详情分享已使用正式素材；复制小红书号改为点击文字，个人页页签及评论面板的旧图标已取消渲染。
 
 **已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_share / ic_scan / ic_edit / ic_broom / ic_play / ic_menu / ic_user / ic_user_circle / ic_pin_top / ic_notify_mute / ic_camera / ic_emoji / ic_plus_circle / ic_settings / ic_delete / ic_discover / ic_image`。
+
+本轮新增的 21 枚图标见上述清单，源 SVG 位于 `docs/assets/icons-2026-10-30/`，同名 VectorDrawable 位于 `app/src/main/res/drawable/`；均为 24 视口、1.8dp 圆角描边，图形外缘长边约 19.5dp。
 
 > 2026-10-18 更新：新增两个 iconfont **实心**字形（24 视口 / 占位按长边 19.5dp）——`ic_pin_top`（置顶：上箭头 + 顶横条）已接线到 `MessageRoutes.kt` 会话行的 12dp 置顶位，上表对应条目已移除；`ic_notify_mute`（消息免打扰：带斜杠的铃铛）**当前无调用方**，留作备用（会话模型尚无免打扰字段）。源 SVG 为 `docs/assets/top-filling.svg` 与 `docs/assets/消息免打扰.svg`（后者转换时用了临时 ASCII 副本，仓库只保留中文名源）。
 
@@ -235,7 +239,7 @@ cd client
 - 当前代码原本已不渲染小组件卡和「去发布」banner，本次同步清理旧说明；计数字段仍保留既有接口语义。
 - 性别独立成行后，资料头从固定高度改为最小高度，顶部留白参与测量，换取访客操作行与页签不重叠；背景图与遮罩随内容增高。
 - 主页页签放弃原图标加文字的默认展示，换成文字加下划线；保留显式传入图标的能力，现有 drawable 素材继续保留。
-- 现有占位不扩展：复制、更多、页签搜索框、抽屉条目等仍使用占位素材；扫一扫/分享和更多菜单仍无业务行为。头图按用户指定使用均匀黑色遮罩，放弃此前待议的渐变方案；仅在资料头显式使用暗色文字，页签、瀑布流及全局浅色主题沿用原配色。
+- 当时保留的图标占位已在后续补齐，当前资源清单见 §8；扫一扫/分享和更多菜单的业务范围沿用各轮记录。头图按用户指定使用均匀黑色遮罩，放弃此前待议的渐变方案；仅在资料头显式使用暗色文字，页签、瀑布流及全局浅色主题沿用原配色。
 
 ### 验证
 
@@ -279,5 +283,14 @@ cd client
 ## 14. 复用现有图标（2026-10-30）
 
 - 接入 7 个语义匹配的图标槽位，固定占位由 28 个减至 21 个，具体映射与剩余清单见 §8；同步修正架构规范中的旧空态插画组件引用。
-- 已知取舍：本轮仅接入已有 drawable，沿用原尺寸、颜色与点击行为；语音、复制、踩、重新生成等缺少对应素材的位置继续使用统一占位。
+- 已知取舍（本轮历史状态）：仅接入已有 drawable，沿用原尺寸、颜色与点击行为；当时保留的语音、复制、踩、重新生成等占位已在 §15 补齐。
 - `:app:compileDebugKotlin :app:assembleDebug --offline` 通过，零编译 error / warning；Debug APK 已刷新至 `dist/xiaohongshu-clone-debug.apk`。按用户要求未运行测试，未进行真机或模拟器验收。
+
+---
+
+## 15. 补全剩余图标（2026-10-30）
+
+- 手工绘制 21 枚 SVG 并生成同名 Android VectorDrawable，接入 AI、抽屉、设置、视频作者行及长文卡片；固定图标占位由 21 个减至 0 个。设计规范、逐项清单及两张预览图见 `docs/assets/图标清单-2026-10-30.md`。
+- 已知取舍：抽屉底部三格采用夜间模式、二维码、意见反馈候选字形，沿用无业务行为的装饰性展示；其余位置沿用原尺寸、颜色与点击回调。图片加载及视频地址为空时的兜底占位保留。
+- 21 枚新图标几何检查通过，并完成与现有图标的等大对照；全量扫描报告的 `ic_about` 线宽与 `ic_live` 外缘偏差属于既有资源，记录在图标清单中。
+- `:app:compileDebugKotlin :app:assembleDebug --offline` 通过，零编译 error / warning；Debug APK 已刷新至 `dist/xiaohongshu-clone-debug.apk`，与构建产物 SHA256 一致。沿用用户要求未运行单元测试或界面测试，未进行真机或模拟器验收。

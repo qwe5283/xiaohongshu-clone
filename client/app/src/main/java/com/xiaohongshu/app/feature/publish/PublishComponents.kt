@@ -482,9 +482,8 @@ internal fun WriteLongFormCard(
                 .background(XhsColor.Bg),
             contentAlignment = Alignment.Center,
         ) {
-            // 项目内无「长文」专用素材：按 §4.5 统一用占位素材（验收时一眼可见待替换）
             Icon(
-                painter = painterResource(PlaceholderIconRes),
+                painter = painterResource(R.drawable.ic_long_article),
                 contentDescription = null,
                 tint = XhsColor.Text3,
                 modifier = Modifier.size(Dimens.icon24),

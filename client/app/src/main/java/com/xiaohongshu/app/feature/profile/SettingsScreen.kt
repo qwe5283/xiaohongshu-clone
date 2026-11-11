@@ -25,7 +25,6 @@ import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
-import com.xiaohongshu.app.core.ui.PlaceholderIconRes
 import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.ui.XhsTopBar
 
@@ -37,7 +36,6 @@ import com.xiaohongshu.app.core.ui.XhsTopBar
  * 添加小组件/未成年人模式｜新功能体验｜帮助与客服/关于小红书；底部居中「切换账号」15sp。
  *
  * **子页全部为占位**（范围待产品定义），故除「退出登录」外一律无跳转；
- * 行图标仅在缺少同义素材时使用 `ic_placeholder`（§4.5）。
  */
 @Composable
 internal fun SettingsScreen(
@@ -58,42 +56,42 @@ internal fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
             SettingsGroup {
-                SettingRow(label = "账号与安全")
+                SettingRow(label = "账号与安全", iconRes = R.drawable.ic_account_security)
                 XhsDivider()
                 SettingRow(label = "通用设置", iconRes = R.drawable.ic_settings)
                 XhsDivider()
                 SettingRow(label = "通知设置", iconRes = R.drawable.ic_notify)
                 XhsDivider()
-                SettingRow(label = "多语言和翻译")
+                SettingRow(label = "多语言和翻译", iconRes = R.drawable.ic_language)
                 XhsDivider()
-                SettingRow(label = "隐私设置")
+                SettingRow(label = "隐私设置", iconRes = R.drawable.ic_privacy)
             }
 
             SettingsGroupGap()
 
             SettingsGroup {
                 // 「2.25 GB」为占位数值（本地未接存储统计）
-                SettingRow(label = "存储空间", value = "2.25 GB")
+                SettingRow(label = "存储空间", iconRes = R.drawable.ic_storage, value = "2.25 GB")
                 XhsDivider()
-                SettingRow(label = "内容偏好调节")
+                SettingRow(label = "内容偏好调节", iconRes = R.drawable.ic_content_preferences)
                 XhsDivider()
-                SettingRow(label = "收货地址")
+                SettingRow(label = "收货地址", iconRes = R.drawable.ic_shipping_address)
                 XhsDivider()
-                SettingRow(label = "添加小组件")
+                SettingRow(label = "添加小组件", iconRes = R.drawable.ic_widget)
                 XhsDivider()
-                SettingRow(label = "未成年人模式")
+                SettingRow(label = "未成年人模式", iconRes = R.drawable.ic_minor_mode)
             }
 
             SettingsGroupGap()
 
             SettingsGroup {
-                SettingRow(label = "新功能体验")
+                SettingRow(label = "新功能体验", iconRes = R.drawable.ic_new_features)
             }
 
             SettingsGroupGap()
 
             SettingsGroup {
-                SettingRow(label = "帮助与客服")
+                SettingRow(label = "帮助与客服", iconRes = R.drawable.ic_support)
                 XhsDivider()
                 SettingRow(label = "关于小红书", iconRes = R.drawable.ic_about)
             }
@@ -137,7 +135,7 @@ private fun SettingsGroupGap() {
 @Composable
 private fun SettingRow(
     label: String,
-    iconRes: Int = PlaceholderIconRes,
+    iconRes: Int,
     value: String? = null,
     onClick: (() -> Unit)? = null,
     height: Dp = Dimens.rowSetting,

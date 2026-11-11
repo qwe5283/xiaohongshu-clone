@@ -52,7 +52,6 @@ import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
-import com.xiaohongshu.app.core.ui.PlaceholderIconRes
 import com.xiaohongshu.app.core.ui.XhsAsyncImage
 import com.xiaohongshu.app.core.ui.XhsAvatar
 import com.xiaohongshu.app.core.ui.XhsDivider
@@ -317,7 +316,7 @@ private fun AiActionRow(
         horizontalArrangement = Arrangement.spacedBy(Dimens.s8),
     ) {
         AiActionIcon(
-            iconRes = PlaceholderIconRes,
+            iconRes = R.drawable.ic_copy,
             contentDescription = "复制",
             onClick = onCopy,
         )
@@ -335,12 +334,12 @@ private fun AiActionRow(
         Spacer(modifier = Modifier.weight(1f))
 
         AiActionIcon(
-            iconRes = PlaceholderIconRes,
+            iconRes = R.drawable.ic_dislike,
             contentDescription = "踩",
             onClick = onPlaceholderAction,
         )
         AiActionIcon(
-            iconRes = PlaceholderIconRes,
+            iconRes = R.drawable.ic_regenerate,
             contentDescription = "重新生成",
             onClick = onPlaceholderAction,
         )
@@ -421,7 +420,7 @@ internal fun AiInputBar(
                     .padding(horizontal = Dimens.s12),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                AiInputIcon(iconRes = PlaceholderIconRes, contentDescription = "语音")
+                AiInputIcon(iconRes = R.drawable.ic_voice, contentDescription = "语音")
                 AiInputIcon(iconRes = R.drawable.ic_emoji, contentDescription = "表情")
                 AiInputIcon(iconRes = R.drawable.ic_plus_circle, contentDescription = "更多")
 

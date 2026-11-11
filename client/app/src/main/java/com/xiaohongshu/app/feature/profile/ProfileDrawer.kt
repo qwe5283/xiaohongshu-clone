@@ -32,7 +32,6 @@ import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
-import com.xiaohongshu.app.core.ui.PlaceholderIconRes
 import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.ui.XhsScrim
 import com.xiaohongshu.app.domain.model.User
@@ -90,7 +89,7 @@ internal fun ProfileDrawer(
                 ) {
                     DrawerItem(label = "设置", iconRes = R.drawable.ic_settings, onClick = onSettings)
                     XhsDivider()
-                    DrawerItem(label = "社区公约", onClick = {})
+                    DrawerItem(label = "社区公约", iconRes = R.drawable.ic_community_rules, onClick = {})
                     XhsDivider()
                     DrawerItem(label = "关于我们", iconRes = R.drawable.ic_about, onClick = {})
                 }
@@ -102,7 +101,7 @@ internal fun ProfileDrawer(
                         .fillMaxWidth()
                         .padding(horizontal = Dimens.s12),
                 ) {
-                    DrawerItem(label = "退出登录", onClick = onLogout, emphasized = true)
+                    DrawerItem(label = "退出登录", iconRes = R.drawable.ic_logout, onClick = onLogout, emphasized = true)
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -113,7 +112,7 @@ internal fun ProfileDrawer(
                         .padding(horizontal = Dimens.s12)
                         .height(Dimens.drawerGridCell),
                 ) {
-                    repeat(DRAWER_GRID_CELLS) {
+                    DrawerGridIcons.forEach { iconRes ->
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -121,7 +120,7 @@ internal fun ProfileDrawer(
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
-                                painter = painterResource(PlaceholderIconRes),
+                                painter = painterResource(iconRes),
                                 contentDescription = null,
                                 tint = XhsColor.Text3,
                                 modifier = Modifier.size(Dimens.icon24),
@@ -136,13 +135,14 @@ internal fun ProfileDrawer(
     }
 }
 
-private const val DRAWER_GRID_CELLS = 3
+// 交付说明 §8：三格用途尚未定义，仅展示候选字形，不启用入口。
+private val DrawerGridIcons = listOf(R.drawable.ic_moon, R.drawable.ic_qr_code, R.drawable.ic_feedback)
 
 @Composable
 private fun DrawerItem(
     label: String,
     onClick: () -> Unit,
-    iconRes: Int = PlaceholderIconRes,
+    iconRes: Int,
     emphasized: Boolean = false,
 ) {
     Row(

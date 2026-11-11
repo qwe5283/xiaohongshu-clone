@@ -568,9 +568,8 @@ private fun VideoAuthorRow(
             )
         }
         Spacer(modifier = Modifier.width(Dimens.s12))
-        // 音乐碟 22：素材缺失 → 统一占位（点击无行为定义）
         Icon(
-            painter = painterResource(R.drawable.ic_placeholder),
+            painter = painterResource(R.drawable.ic_music_disc),
             contentDescription = null,
             tint = Color.White,
             modifier = Modifier.size(MusicDiscSize),
