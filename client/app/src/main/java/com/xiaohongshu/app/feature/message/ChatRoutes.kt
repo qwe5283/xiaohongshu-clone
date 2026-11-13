@@ -45,6 +45,8 @@ fun ChatRoute(
     peerNickname: String,
     peerAvatar: String,
 ) {
+    val container = LocalAppContainer.current
+    val session by container.sessionManager.state.collectAsStateWithLifecycle()
     val vm: ChatViewModel = appViewModel(key = "chat-$conversationId") {
         ChatViewModel(
             conversationId = conversationId,
@@ -60,6 +62,7 @@ fun ChatRoute(
 
     ChatScreen(
         state = state,
+        myAvatar = session.user.avatar,
         onBack = navigator::back,
         onInputChange = vm::onInputChange,
         onSend = vm::send,
@@ -69,10 +72,11 @@ fun ChatRoute(
     )
 }
 
-/** 无状态内容层：状态全部来自 [ChatUiState]。 */
+/** 无状态内容层：本人头像与消息身份共用同一登录态。 */
 @Composable
 private fun ChatScreen(
     state: ChatUiState,
+    myAvatar: String,
     onBack: () -> Unit,
     onInputChange: (String) -> Unit,
     onSend: () -> Unit,
@@ -136,6 +140,8 @@ private fun ChatScreen(
                     else -> ChatMessageList(
                         messages = state.messages,
                         loadingEarlier = state.loadingEarlier,
+                        myAvatar = myAvatar,
+                        peerAvatar = state.peerAvatar,
                         onRetry = onRetryMessage,
                     )
                 }

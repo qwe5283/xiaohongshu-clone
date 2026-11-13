@@ -4,7 +4,6 @@ package com.xiaohongshu.app.feature.message
 //   按「不许写魔法数」的要求先收敛成本文件顶部的具名常量（与 feature/ai 的 AiComponents
 //   同一处理方式）。若 G8 形态定稿，建议由架构负责人下沉到 Dimens：
 //   - 顶栏中央头像 32
-//   另：气泡最大宽度占比 0.62 与 AiUserBubble 一致（H2 实测）。
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -41,6 +41,7 @@ import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
+import com.xiaohongshu.app.core.ui.XhsAvatar
 import com.xiaohongshu.app.core.ui.XhsIconButton
 import com.xiaohongshu.app.core.ui.XhsInlineLoading
 import com.xiaohongshu.app.core.ui.XhsPrimaryButton
@@ -50,22 +51,20 @@ import com.xiaohongshu.app.domain.model.ImMessage
 // ---- 实测尺寸（Dimens 暂无 token，见文件头 TODO）----
 private val ChatTopBarAvatar = 32.dp
 
-/** 气泡最大宽度占比（同 H2 实测 `max-width:62%`，右对齐灰气泡）。 */
-private const val BubbleWidthFraction = 0.62f
-
 /** 相邻两条消息间隔超过 5 分钟才插时间分隔（G8）。 */
 private const val DividerThresholdMs = 5 * 60 * 1000L
 
 /**
  * G8 消息流（契约 §12.8）。
  *
- * 视觉语言**有意**与 H1/H2 点点对话保持一致（同 [BubbleWidthFraction]、同 [ChatCard] 外观），
- * 但组件在本 feature 内自持——feature 之间零引用（架构规范 §2），不 import feature/ai。
+ * 组件在本 feature 内自持——feature 之间零引用（架构规范 §2），不 import feature/ai。
  */
 @Composable
 internal fun ChatMessageList(
     messages: List<ImMessage>,
     loadingEarlier: Boolean,
+    myAvatar: String,
+    peerAvatar: String,
     onRetry: (ImMessage) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -102,42 +101,39 @@ internal fun ChatMessageList(
                 ChatTimeDivider(time = message.time)
             }
             if (message.isMine) {
-                MyBubble(message = message, onRetry = onRetry)
+                MyBubble(message = message, avatarUrl = myAvatar, onRetry = onRetry)
             } else {
-                PeerBubble(message = message, onRetry = onRetry)
+                PeerBubble(message = message, avatarUrl = peerAvatar)
             }
         }
     }
 }
 
-/** 我发出的消息：右侧灰气泡；失败态可点按重试。 */
+/** 我发出的消息：右侧蓝气泡；失败态可点按重试。 */
 @Composable
 private fun MyBubble(
     message: ImMessage,
+    avatarUrl: String,
     onRetry: (ImMessage) -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.Top,
     ) {
-        Column(horizontalAlignment = Alignment.End) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = Dimens.avatarComment + Dimens.s8),
+            horizontalAlignment = Alignment.End,
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(BubbleWidthFraction)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = Dimens.radiusCard,
-                            // 右上角做成直角（对齐 H2 用户气泡 `10px 0 10 10`）
-                            topEnd = 0.dp,
-                            bottomEnd = Dimens.radiusCard,
-                            bottomStart = Dimens.radiusCard,
-                        ),
-                    )
+                    .clip(RoundedCornerShape(Dimens.radiusCard))
                     .background(
                         if (message.state == ImMessage.SendState.Failed) {
                             XhsColor.Error.copy(alpha = 0.12f)
                         } else {
-                            XhsColor.BgGray
+                            XhsColor.ChatMineBubble
                         },
                     )
                     .then(
@@ -156,7 +152,15 @@ private fun MyBubble(
                     }
                     .padding(horizontal = Dimens.s12, vertical = Dimens.s8),
             ) {
-                Text(text = message.content, style = XhsType.body, color = XhsColor.Text1)
+                Text(
+                    text = message.content,
+                    style = XhsType.body,
+                    color = if (message.state == ImMessage.SendState.Failed) {
+                        XhsColor.Text1
+                    } else {
+                        XhsColor.OnChatMineBubble
+                    },
+                )
             }
             // 状态小字（发送中 / 发送失败，点击气泡重试）
             if (message.state != ImMessage.SendState.Sent) {
@@ -168,24 +172,31 @@ private fun MyBubble(
                 )
             }
         }
+        Spacer(modifier = Modifier.width(Dimens.s8))
+        XhsAvatar(url = avatarUrl, size = Dimens.avatarComment)
     }
 }
 
-/** 对方发来的消息：左侧白卡片（hairline 边框，对齐 H2 AI 卡片语言）。 */
+/** 对方发来的消息：左侧浅灰气泡，无边框。 */
 @Composable
 private fun PeerBubble(
     message: ImMessage,
-    onRetry: (ImMessage) -> Unit,
+    avatarUrl: String,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.Top,
     ) {
-        ChatCard(
-            modifier = Modifier.fillMaxWidth(BubbleWidthFraction),
-            squareTopStart = true,
+        XhsAvatar(url = avatarUrl, size = Dimens.avatarComment)
+        Spacer(modifier = Modifier.width(Dimens.s8))
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = Dimens.avatarComment + Dimens.s8),
         ) {
-            Text(text = message.content, style = XhsType.body, color = XhsColor.Text1)
+            ChatCard {
+                Text(text = message.content, style = XhsType.body, color = XhsColor.Text1)
+            }
         }
     }
 }
@@ -280,28 +291,16 @@ internal fun ChatInputBar(
     }
 }
 
-/** 私聊卡片外观：白底、hairline 边框、卡片圆角（对齐 H2 AI 卡片）。 */
+/** 对方私聊气泡：浅灰底、无边框、四角圆角。 */
 @Composable
 private fun ChatCard(
     modifier: Modifier = Modifier,
-    squareTopStart: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val shape = if (squareTopStart) {
-        RoundedCornerShape(
-            topStart = 0.dp,
-            topEnd = Dimens.radiusCard,
-            bottomEnd = Dimens.radiusCard,
-            bottomStart = Dimens.radiusCard,
-        )
-    } else {
-        RoundedCornerShape(Dimens.radiusCard)
-    }
     Column(
         modifier = modifier
-            .clip(shape)
-            .background(XhsColor.Bg)
-            .border(width = Dimens.hairline, color = XhsColor.Divider, shape = shape)
+            .clip(RoundedCornerShape(Dimens.radiusCard))
+            .background(XhsColor.BgGray)
             .padding(horizontal = Dimens.s12, vertical = Dimens.s8),
     ) {
         content()

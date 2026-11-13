@@ -45,6 +45,10 @@ object XhsColor {
     /** 浅灰胶囊/分隔底：详情输入胶囊、灰底块、覆盖层图标底。 */
     val BgGray = Color(0xFFF5F5F5)
 
+    /** G8 己方消息气泡及气泡文字。 */
+    val ChatMineBubble = Color(0xFF437FF7)
+    val OnChatMineBubble = Color(0xFFFFFFFF)
+
     /** 视频沉浸页底栏区。 */
     val Dark = Color(0xFF1A1A1A)
 
