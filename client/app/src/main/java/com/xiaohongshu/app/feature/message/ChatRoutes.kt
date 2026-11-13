@@ -136,7 +136,6 @@ private fun ChatScreen(
                     else -> ChatMessageList(
                         messages = state.messages,
                         loadingEarlier = state.loadingEarlier,
-                        noMoreEarlier = state.noMoreEarlier,
                         onRetry = onRetryMessage,
                     )
                 }

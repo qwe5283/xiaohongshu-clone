@@ -66,7 +66,6 @@ private const val DividerThresholdMs = 5 * 60 * 1000L
 internal fun ChatMessageList(
     messages: List<ImMessage>,
     loadingEarlier: Boolean,
-    noMoreEarlier: Boolean,
     onRetry: (ImMessage) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -86,26 +85,12 @@ internal fun ChatMessageList(
         ),
         verticalArrangement = Arrangement.spacedBy(Dimens.s8),
     ) {
-        // 更早历史：顶部指示器（到达最旧一页后显示「没有更多了」）
         if (loadingEarlier) {
             item(key = "earlier-loading") {
                 XhsInlineLoading(
                     modifier = Modifier.fillMaxWidth(),
                     text = "加载更早消息...",
                 )
-            }
-        } else if (noMoreEarlier && messages.isNotEmpty()) {
-            item(key = "earlier-end") {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "没有更多了",
-                        style = XhsType.captionSub,
-                        color = XhsColor.Text3,
-                    )
-                }
             }
         }
 

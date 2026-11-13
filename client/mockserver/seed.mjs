@@ -829,12 +829,17 @@ export function buildDb({ publicBase, now = Date.now() } = {}) {
     db.chatConversationByPair.set(`${Math.min(aId, bId)}:${Math.max(aId, bId)}`, conv);
     const list = [];
     db.chatMessagesByConv.set(conv.id, list);
-    // 每条消息间隔 = 会话总跨度 / 条数；跨度随会话序号收窄，末条贴近"几小时前"
+    // 首末消息锚定原时间；中间穿插 2 分钟连发，供 G8 验证 5 分钟时间分隔。
     const convSpan = Math.max(1, Math.round((3 * DAY - ci * 11 * HOUR) - 2 * HOUR));
     const step = Math.max(5 * MIN, Math.floor(convSpan / Math.max(1, msgs.length)));
+    let previousMessageAt = chatMsgAt;
     for (let mi = 0; mi < msgs.length; mi++) {
       const [senderId, content, read] = msgs[mi];
-      const atMs = chatMsgAt + mi * step;
+      const scheduledAt = chatMsgAt + mi * step;
+      const atMs = mi % 2 === 1 && mi < msgs.length - 1
+        ? previousMessageAt + 2 * MIN
+        : scheduledAt;
+      previousMessageAt = atMs;
       db.counters.chatMessage += 1;
       const msg = {
         id: db.counters.chatMessage,
