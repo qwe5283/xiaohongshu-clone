@@ -7,10 +7,13 @@ import com.xiaohongshu.app.core.interact.InteractionStore
 import com.xiaohongshu.app.core.list.PagedList
 import com.xiaohongshu.app.core.list.PagedState
 import com.xiaohongshu.app.core.net.ApiResult
+import com.xiaohongshu.app.core.net.map
 import com.xiaohongshu.app.core.ui.ToastController
 import com.xiaohongshu.app.data.local.SessionManager
 import com.xiaohongshu.app.data.repo.PostRepository
 import com.xiaohongshu.app.domain.model.Note
+import com.xiaohongshu.app.domain.model.Paged
+import com.xiaohongshu.app.domain.model.UserBrief
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +43,7 @@ data class HomeUiState(
     /** 已经过 [InteractionStore] 合并的展示数据（点赞在详情页变化后返回列表不跳回）。 */
     val discoverNotes: List<Note> = emptyList(),
     val followingNotes: List<Note> = emptyList(),
+    val followingAuthors: List<UserBrief> = emptyList(),
 ) {
     /** 当前 Tab 的分页态，交给 `XhsListStateHost` 决定 B4 四态。 */
     val page: PagedState<Note> get() = if (tab == HomeTab.DISCOVER) discover else following
@@ -68,6 +72,8 @@ class HomeViewModel(
 
     private val _tab = MutableStateFlow(HomeTab.DISCOVER)
     private val _channel = MutableStateFlow(HomeChannels.first())
+    private val followingAuthors = MutableStateFlow<List<UserBrief>>(emptyList())
+    private var followingRefreshVersion = 0L
 
     /**
      * 两个页签的瀑布流滚动状态。
@@ -92,7 +98,7 @@ class HomeViewModel(
     private val following = PagedList<Note>(
         keyOf = { it.id },
         toasts = toasts,
-        fetch = { page, size -> posts.followingFeed(page = page, pageSize = size) },
+        fetch = { page, size -> fetchFollowingPage(page, size) },
     )
 
     private var discoverLoaded = false
@@ -119,6 +125,8 @@ class HomeViewModel(
             discoverNotes = interactions.mergeAll(discoverState.items),
             followingNotes = interactions.mergeAll(followingState.items),
         )
+    }.combine(followingAuthors) { uiState, authors ->
+        uiState.copy(followingAuthors = authors)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
@@ -131,7 +139,7 @@ class HomeViewModel(
         // 前后值——登录页是推入式页面，返回时 HomeRoute 会重新组合，Composable 侧的「上一个值」会丢。
         viewModelScope.launch {
             session.state
-                .map { it.loggedIn }
+                .map { if (it.loggedIn) it.user.id else null }
                 .distinctUntilChanged()
                 .collect { if (sessionReady) onSessionChanged() else sessionReady = true }
         }
@@ -142,7 +150,11 @@ class HomeViewModel(
     fun selectTab(tab: HomeTab) {
         if (_tab.value == tab) return
         _tab.value = tab
-        ensureLoaded()
+        if (tab == HomeTab.FOLLOWING && followingLoaded) {
+            refreshFollowing()
+        } else {
+            ensureLoaded()
+        }
     }
 
     /** 频道点击仅高亮，不发请求。 */
@@ -151,7 +163,7 @@ class HomeViewModel(
     }
 
     /**
-     * 确保当前 Tab 的数据已加载（只加载一次，页签来回切换不重新拉取）。
+     * 确保当前 Tab 已发起初次加载。
      * 由 HomeRoute 在「首次进入 / 切换页签 / 登录态变化」时调用。
      */
     fun ensureLoaded() {
@@ -189,6 +201,31 @@ class HomeViewModel(
         viewModelScope.launch { list.loadMore() }
     }
 
+    private suspend fun fetchFollowingPage(
+        page: Int,
+        pageSize: Int,
+        prependFreshNotes: Boolean = false,
+    ): ApiResult<Paged<Note>> {
+        val version = if (page == 1) ++followingRefreshVersion else followingRefreshVersion
+        val userId = session.currentUserId
+        return posts.followingFeed(page, pageSize).map { feed ->
+            // 契约 §2.8：后续页不带关注作者。只接受当前登录用户最新的首页请求。
+            if (page == 1 && version == followingRefreshVersion &&
+                session.isLoggedIn && session.currentUserId == userId
+            ) {
+                followingAuthors.value = feed.followingAuthors
+                if (prependFreshNotes) {
+                    if (feed.notes.items.isEmpty()) {
+                        following.resetTo(emptyList())
+                    } else {
+                        following.mutate { it.prependFresh(feed.notes.items) }
+                    }
+                }
+            }
+            feed.notes
+        }
+    }
+
     // ------------------------------------------------------------------ 互动
 
     /**
@@ -220,23 +257,24 @@ class HomeViewModel(
      */
     fun onResumed() {
         if (resumes++ == 0) return // 首次与 ensureLoaded 的首刷重合
-        val tab = _tab.value
-        if (tab == HomeTab.FOLLOWING && !session.isLoggedIn) return
-        viewModelScope.launch {
-            when (tab) {
-                HomeTab.DISCOVER -> {
-                    val result = posts.feed(page = 1, pageSize = PagedList.DEFAULT_PAGE_SIZE)
-                    if (result is ApiResult.Ok) {
-                        discover.mutate { existing -> existing.prependFresh(result.data.items) }
-                    }
+        when (_tab.value) {
+            HomeTab.DISCOVER -> viewModelScope.launch {
+                val result = posts.feed(page = 1, pageSize = PagedList.DEFAULT_PAGE_SIZE)
+                if (result is ApiResult.Ok) {
+                    discover.mutate { existing -> existing.prependFresh(result.data.items) }
                 }
+            }
+            HomeTab.FOLLOWING -> refreshFollowing()
+        }
+    }
 
-                HomeTab.FOLLOWING -> {
-                    val result = posts.followingFeed(page = 1, pageSize = PagedList.DEFAULT_PAGE_SIZE)
-                    if (result is ApiResult.Ok) {
-                        following.mutate { existing -> existing.prependFresh(result.data.items) }
-                    }
-                }
+    private fun refreshFollowing() {
+        if (!session.isLoggedIn || !followingLoaded || following.state.value.loading) return
+        viewModelScope.launch {
+            if (following.state.value.hasContent) {
+                fetchFollowingPage(1, PagedList.DEFAULT_PAGE_SIZE, prependFreshNotes = true)
+            } else {
+                following.refresh()
             }
         }
     }
@@ -252,6 +290,8 @@ class HomeViewModel(
      */
     private fun onSessionChanged() {
         followingLoaded = false
+        followingRefreshVersion++
+        followingAuthors.value = emptyList()
         following.resetTo(emptyList())
         viewModelScope.launch { discover.refresh() }
         ensureLoaded()

@@ -28,6 +28,7 @@ object XhsType {
 
     // ---- 12sp：卡片脚栏昵称/日期、IP、页码角标、点点 AI 声明 ----
     val cardFooter = s(12)
+    val followingAuthorNickname = s(12)
     val aiDisclaimer = s(12)
     val pageIndicator = s(12)
 

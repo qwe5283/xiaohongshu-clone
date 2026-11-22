@@ -202,6 +202,11 @@ data class Paged<T>(
     }
 }
 
+data class FollowingFeedPage(
+    val notes: Paged<Note>,
+    val followingAuthors: List<UserBrief>,
+)
+
 /** 点点对话消息（H1–H3）。仅内存保存，不做持久化。 */
 data class ChatMessage(
     val id: Long,
@@ -280,7 +285,7 @@ object LocalUserIdProvider {
     var currentUserId: Long = 0L
 }
 
-/** 搜索结果里「用户」Tab 的行（B3-1 的 Tab 之一）。 */
+/** 搜索结果和关注流使用的用户简要资料。 */
 data class UserBrief(
     val id: Long,
     val nickname: String,

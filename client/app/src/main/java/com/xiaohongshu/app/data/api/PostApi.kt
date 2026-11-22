@@ -2,6 +2,7 @@ package com.xiaohongshu.app.data.api
 
 import com.xiaohongshu.app.core.net.ApiEnvelope
 import com.xiaohongshu.app.data.dto.CreatePostRequest
+import com.xiaohongshu.app.data.dto.FollowingFeedPageDto
 import com.xiaohongshu.app.data.dto.PageDto
 import com.xiaohongshu.app.data.dto.PostDto
 import com.xiaohongshu.app.data.dto.TextImageDto
@@ -58,12 +59,12 @@ interface PostApi {
         @Query("sortType") sortType: String? = null,
     ): ApiEnvelope<PageDto<PostDto>>
 
-    /** 关注流（B5，契约变更 #3）：仅已关注作者的已发布笔记，时间倒序。 */
+    /** 关注流（B5，契约 §2.8）。 */
     @GET("api/post/following-feed")
     suspend fun followingFeed(
         @Query("pageNum") pageNum: Int,
         @Query("pageSize") pageSize: Int = 20,
-    ): ApiEnvelope<PageDto<PostDto>>
+    ): ApiEnvelope<FollowingFeedPageDto>
 
     /** 猜你想搜词条（B2，契约变更 #5）。 */
     @GET("api/post/hot-keywords")

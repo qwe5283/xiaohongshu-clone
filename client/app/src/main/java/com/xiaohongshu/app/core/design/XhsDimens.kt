@@ -77,6 +77,7 @@ object Dimens {
     /** 瀑布流页边距 4、列距 4。 */
     val waterfallMargin = 4.dp
     val waterfallGap = 4.dp
+    val followingAuthorItemWidth = 60.dp
 
     // ---- 圆角 ----
     /** 卡片 8。 */
@@ -100,10 +101,11 @@ object Dimens {
     /** 空态插画图像。 */
     val illustrationSize = 120.dp
 
-    // ---- 头像档 18 / 24 / 36 / 48 / 108 ----
+    // ---- 头像 ----
     val avatarCard = 18.dp   // 卡片脚栏
     val avatarComment = 36.dp
     val avatarDetailAuthor = 36.dp
+    val avatarFollowingAuthor = 44.dp
     val avatarConversation = 48.dp
     val avatarProfile = 72.dp
     val avatarBorderWidthPx = 2f

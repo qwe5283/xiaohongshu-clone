@@ -29,6 +29,16 @@ data class PostDto(
     val updateTime: String = "",
 )
 
+/** 契约 §2.8。默认空作者列表兼容只返回分页字段的服务端。 */
+@Serializable
+data class FollowingFeedPageDto(
+    val records: List<PostDto> = emptyList(),
+    val total: Long = 0,
+    val current: Long = 1,
+    val pages: Long = 0,
+    val followingAuthors: List<UserBriefDto> = emptyList(),
+)
+
 @Serializable
 data class PostImageDto(
     val id: Long = 0,

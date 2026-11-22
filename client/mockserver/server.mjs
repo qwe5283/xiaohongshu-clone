@@ -30,6 +30,7 @@ const SAMPLE_VIDEO = path.join(ASSET_DIR, 'sample.mp4');
 const DEFAULT_LATENCY_MIN = 80;
 const DEFAULT_LATENCY_MAX = 250;
 const PAGED_DEFAULT_SIZE = 20; // contract: pageSize default 20
+const FOLLOWING_AUTHOR_LIMIT = 10; // 契约 §2.8
 
 /* ========================================================================== *
  * small helpers
@@ -1043,9 +1044,14 @@ R('GET', '/api/post/my', { auth: true }, (ctx) => {
 
 R('GET', '/api/post/following-feed', { auth: true }, (ctx) => {
   const following = new Set(db.follows.filter((f) => f.followerId === ctx.viewer.id).map((f) => f.followingId));
-  const feed = db.posts.filter((p) => following.has(p.userId));
-  const page = paginate(sortedPosts(feed, ctx.query), ctx.query);
+  const feed = sortedPosts(db.posts.filter((p) => following.has(p.userId)), new URLSearchParams());
+  const page = paginate(feed, ctx.query);
   page.records = page.records.map((p) => postVO(p, ctx.viewer));
+  if (page.current === 1) {
+    // 契约 §2.8：排序基于全部已发布笔记，避免高频作者占满首屏时挤掉其他关注对象。
+    const authorIds = [...new Set(feed.map((p) => p.userId))].slice(0, FOLLOWING_AUTHOR_LIMIT);
+    page.followingAuthors = authorIds.map((id) => userBriefVO(db.usersById.get(id), ctx.viewer));
+  }
   return J(page);
 });
 

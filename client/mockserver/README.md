@@ -136,7 +136,7 @@ amendment-#16 fields `collectedPostCount` / `likedPostCount`.
 | GET | `/api/post/list` | — | `pageNum,pageSize,keyword,type,sortType(latest\|hot)` | `IPage<PostVO>` |
 | GET | `/api/post/user/{userId}` | — | same as list | `IPage<PostVO>` |
 | GET | `/api/post/my` | 🔒 | same as list | `IPage<PostVO>` |
-| GET | `/api/post/following-feed` | 🔒 | `pageNum,pageSize` | `IPage<PostVO>` (only followed authors, newest first) |
+| GET | `/api/post/following-feed` | 🔒 | `pageNum,pageSize` | `IPage<PostVO>` with `followingAuthors: UserBriefVO[]` on page 1 |
 | GET | `/api/post/hot-keywords` | — | — | `string[]` (10 items) |
 | GET | `/api/post/text-image/generate` | — | `text` (≤20 chars) | **302 → Lorem Picsum** 800×1200 (seeded by the text) |
 | POST | `/api/post/text-image` | — | `{text}` | `{url,width:800,height:1200}` (server fetches a picsum photo, url served by `/files/{id}`) |

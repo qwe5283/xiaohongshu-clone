@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -39,9 +41,11 @@ import com.xiaohongshu.app.R
 import com.xiaohongshu.app.core.design.Dimens
 import com.xiaohongshu.app.core.design.XhsColor
 import com.xiaohongshu.app.core.design.XhsType
+import com.xiaohongshu.app.core.ui.XhsAvatar
 import com.xiaohongshu.app.core.ui.XhsChevronRight
 import com.xiaohongshu.app.core.ui.XhsDivider
 import com.xiaohongshu.app.core.ui.XhsIconButton
+import com.xiaohongshu.app.domain.model.UserBrief
 
 /**
  * B1/A1 首页顶栏：高 44（含状态栏 inset）。
@@ -204,6 +208,38 @@ internal fun ChannelBar(
                 tint = XhsColor.Text1,
                 modifier = Modifier.padding(end = Dimens.s4),
             )
+        }
+    }
+}
+
+@Composable
+internal fun FollowingAuthorBar(
+    followingAuthors: List<UserBrief>,
+    onAuthorClick: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyRow(
+        modifier = modifier.fillMaxWidth().background(XhsColor.Bg),
+        contentPadding = PaddingValues(horizontal = Dimens.pagePadding, vertical = Dimens.s12),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.s8),
+    ) {
+        items(followingAuthors, key = { it.id }) { author ->
+            Column(
+                modifier = Modifier
+                    .width(Dimens.followingAuthorItemWidth)
+                    .clickable { onAuthorClick(author.id) },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Dimens.s8),
+            ) {
+                XhsAvatar(url = author.avatar, size = Dimens.avatarFollowingAuthor)
+                Text(
+                    text = author.nickname.ifBlank { "用户${author.id}" },
+                    style = XhsType.followingAuthorNickname,
+                    color = XhsColor.Text1,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

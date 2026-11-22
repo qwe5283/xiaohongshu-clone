@@ -37,8 +37,7 @@ import com.xiaohongshu.app.navigation.AppNavigator
 /**
  * A1/B1/B4/B5 首页：顶栏 + 双列瀑布流（关注 / 发现两页签）。
  *
- * 频道栏（B1）仅「发现」页有，作为瀑布流首项随内容滚动——向下浏览时移出视口；
- * 「关注」页不显示频道栏。
+ * 发现频道栏（B1）和关注作者栏（B5）随瀑布流滚动，避免占用看帖视口。
  *
  * 底 Tab 与 ＋ 按钮由 `MainScaffold` 持有，本页不渲染（A1/B1 的 tabbar 不在本组件内）；
  * 游客态的登录悬浮条则由本页渲染（A1：悬浮在瀑布流之上、底 Tab 之上）。
@@ -57,7 +56,7 @@ fun HomeRoute(navigator: AppNavigator) {
     val state by vm.state.collectAsStateWithLifecycle()
     val session by container.sessionManager.state.collectAsStateWithLifecycle()
 
-    // 首次进入 / 切换页签 / 登录态变化 → 确保当前页签已加载（只加载一次，来回切换不重拉）
+    // 登录态也可能在页面重组后恢复，不能只靠页签点击发起首刷。
     LaunchedEffect(state.tab, session.loggedIn) { vm.ensureLoaded() }
 
     // 首页重新可见 → 静默把服务端最新笔记置顶（E5-2「列表自动刷新，新笔记置顶」）
@@ -166,28 +165,38 @@ private fun HomeScreen(
                     // 白底用 drawBehind 向下多画 waterfallGap——verticalItemSpacing 是
                     // 项间统一间距、无法按项免除——以吃掉它与第一行卡片之间的缝，底缘贴合卡片；
                     // 内容同步下移 gap/2，让词条在 44dp 的白条（40 + 缝）里视觉居中
-                    header = if (state.tab == HomeTab.DISCOVER) {
-                        {
-                            ChannelBar(
-                                channels = HomeChannels,
-                                selected = state.channel,
-                                onSelect = onChannelSelect,
-                                modifier = Modifier
-                                    .bleedHorizontally(Dimens.waterfallMargin)
-                                    .drawBehind {
-                                        drawRect(
-                                            color = XhsColor.Bg,
-                                            size = Size(
-                                                width = size.width,
-                                                height = size.height + Dimens.waterfallGap.toPx(),
-                                            ),
-                                        )
-                                    }
-                                    .offset(y = Dimens.waterfallGap / 2),
-                            )
+                    header = when {
+                        state.tab == HomeTab.DISCOVER -> {
+                            {
+                                ChannelBar(
+                                    channels = HomeChannels,
+                                    selected = state.channel,
+                                    onSelect = onChannelSelect,
+                                    modifier = Modifier
+                                        .bleedHorizontally(Dimens.waterfallMargin)
+                                        .drawBehind {
+                                            drawRect(
+                                                color = XhsColor.Bg,
+                                                size = Size(
+                                                    width = size.width,
+                                                    height = size.height + Dimens.waterfallGap.toPx(),
+                                                ),
+                                            )
+                                        }
+                                        .offset(y = Dimens.waterfallGap / 2),
+                                )
+                            }
                         }
-                    } else {
-                        null
+                        loggedIn && state.followingAuthors.isNotEmpty() -> {
+                            {
+                                FollowingAuthorBar(
+                                    followingAuthors = state.followingAuthors,
+                                    onAuthorClick = onAuthorClick,
+                                    modifier = Modifier.bleedHorizontally(Dimens.waterfallMargin),
+                                )
+                            }
+                        }
+                        else -> null
                     },
                     footer = { XhsListFooter(state = state.page) },
                 )
@@ -237,7 +246,7 @@ private const val PRELOAD_ITEM_COUNT = 6
 
 /**
  * 让瀑布流 header 逃出横向 contentPadding（waterfallMargin）：测量放宽两侧 inset、
- * 整体反向平移 inset，[ChannelBar] 的右渐隐才能贴到屏幕右缘。占位尺寸仍守约束。
+ * 整体反向平移 inset，让横向滚动内容贴到屏幕边缘。占位尺寸仍守约束。
  */
 private fun Modifier.bleedHorizontally(inset: Dp): Modifier = layout { measurable, constraints ->
     val insetPx = inset.roundToPx()

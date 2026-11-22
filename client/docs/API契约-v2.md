@@ -25,7 +25,7 @@
 |---|------|-----------|------|-------------------|
 | 1 | 新增字段 | `PostVO.collected:Boolean` | 当前用户是否已收藏笔记 | C1-1 底栏 ★ 态、D1 |
 | 2 | 新增字段 | `PostVO.followed:Boolean` | 当前用户是否已关注该笔记作者 | C1-1/C2-1 作者栏关注钮、D2 |
-| 3 | 新增端点 | `GET /api/post/following-feed` | 关注流分页 | B5 |
+| 3 | 新增端点 | `GET /api/post/following-feed` | 关注流分页与首屏关注作者列表 | B5 |
 | 4 | 新增端点 | `GET /api/like/posts/{userId}` | 某用户「赞过」的笔记分页 | F1「赞过」Tab |
 | 5 | 新增端点 | `GET /api/post/hot-keywords` | 热搜/猜你想搜词条 | B2「猜你想搜」 |
 | 6 | 新增字段 | `unread-count` 响应 +3 个分类未读数 | 三入口/底 Tab 角标 | G1 |
@@ -178,8 +178,12 @@
 ### 2.7 我的笔记 — [已有] `GET /api/post/my` · 🔒（参数同 2.5）
 
 ### 2.8 [新增] 关注流 — `GET /api/post/following-feed` · 🔒
-参数：`pageNum`、`pageSize`。响应 `data`：`IPage<PostVO>`，按创建时间倒序，仅含已关注作者的已发布笔记。
-> B5：无关注或关注者无笔记 → 空数组（客户端渲染空态「还没有关注的人，去发现逛逛吧」）。
+
+接收 `pageNum`、`pageSize`。响应 `data` 沿用 `IPage<PostVO>`，按发布时间倒序返回已关注作者的已发布笔记。
+
+- `current=1` 时附带 `followingAuthors: UserBriefVO[]`（§1.9）。服务端从分页前的全部已发布笔记中为每位关注作者取最新一条，按这条笔记的发布时间倒序返回作者，作者唯一且最多 10 位。
+- 后续页省略 `followingAuthors`。如果关注对象都没有已发布笔记，或者用户还未关注任何人，第一页的 `records` 和 `followingAuthors` 均为 `[]`。
+- B5 按返回顺序从左到右展示头像与昵称。作者列表为空或缺省时隐藏头像栏。关注流为空时展示「还没有关注的人，去发现逛逛吧」。
 
 ### 2.9 [新增] 热搜词 — `GET /api/post/hot-keywords` · 公开
 响应 `data`：`["咖啡拉花", "周末徒步", ...]`（`string[]`，建议 6–10 条）。

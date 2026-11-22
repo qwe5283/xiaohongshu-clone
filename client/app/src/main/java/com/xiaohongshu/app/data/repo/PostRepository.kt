@@ -12,6 +12,7 @@ import com.xiaohongshu.app.data.dto.SortType
 import com.xiaohongshu.app.data.dto.TextImageRequest
 import com.xiaohongshu.app.data.dto.UpdatePostRequest
 import com.xiaohongshu.app.data.mapper.*
+import com.xiaohongshu.app.domain.model.FollowingFeedPage
 import com.xiaohongshu.app.domain.model.Note
 import com.xiaohongshu.app.domain.model.Paged
 
@@ -44,10 +45,22 @@ class PostRepository(
         ).unwrap()
     }.map { it.toNotePage() }
 
-    /** B5 关注流：仅已关注作者的已发布笔记。 */
-    suspend fun followingFeed(page: Int, pageSize: Int): ApiResult<Paged<Note>> = apiCall {
+    suspend fun followingFeed(page: Int, pageSize: Int): ApiResult<FollowingFeedPage> = apiCall {
         postApi.followingFeed(pageNum = page, pageSize = pageSize).unwrap()
-    }.map { it.toNotePage() }
+    }.map {
+        FollowingFeedPage(
+            notes = Paged(
+                items = it.records.toNoteList(),
+                page = it.current.toInt(),
+                total = it.total,
+                pages = it.pages,
+            ),
+            followingAuthors = it.followingAuthors
+                .distinctBy { author -> author.id }
+                .take(FOLLOWING_AUTHOR_LIMIT)
+                .map { author -> author.toDomain() },
+        )
+    }
 
     /** F2 他人主页「笔记」Tab。 */
     suspend fun userPosts(userId: Long, page: Int, pageSize: Int): ApiResult<Paged<Note>> = apiCall {
@@ -117,6 +130,9 @@ class PostRepository(
     }.map { it.url }
 
     companion object {
+        /** 契约 §2.8 */
+        private const val FOLLOWING_AUTHOR_LIMIT = 10
+
         /** 首页默认排序。 */
         const val DEFAULT_SORT = SortType.LATEST
 
