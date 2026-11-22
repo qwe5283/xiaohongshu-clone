@@ -43,9 +43,8 @@ object XhsType {
     val topBarNickname = s(14)
     val inputPlaceholder = s(14)
 
-    // ---- 15sp：列表标题、会话标题、设置行、segment、搜索条目、编辑资料行 ----
+    // ---- 15sp：列表标题、会话标题、segment、搜索条目、编辑资料行 ----
     val listTitle = s(15)
-    val settingRow = s(15)
     val segment = s(15)
     val searchEntry = s(15)
 

@@ -105,7 +105,7 @@ cd client
 - **E1 发布入口弹层**：遮罩 + 三行（从相册选择/拍摄/写文字）20sp 居中 + 间隔 + 取消。
 - **F1 我的主页**：共用 `ProfileScreen`，头图、浮层顶栏（☰/编辑主页 pill/扫一扫/分享）、头像、昵称、小红书号+复制+IP 属地、统计行（关注/粉丝/**获赞与收藏**）、简介、性别图标、segment 三 Tab、各 Tab 瀑布流；当前不渲染小组件卡或「去发布」banner。
 - **F2 推入主页**：共用 `ProfileScreen`，他人访问时 Tab 为「笔记/收藏」并展示关注/私信；本人访问时显示编辑入口及「赞过」，通过返回按钮回来源页，无底 Tab。2026-10-18 重构记录见 §11。
-- **F4 抽屉 / F6 退出确认**：抽屉宽 308 + 设置/社区公约/关于我们/退出登录 + 底部三宫格；确认退出后**回到 A1 游客首页**（＋ 变灰、角标消失、悬浮条回来）。
+- **F4 抽屉 / F6 退出确认**：抽屉宽 308 + 社区公约/关于我们/退出登录 + 底部三宫格；确认退出后**回到 A1 游客首页**（＋ 变灰、角标消失、悬浮条回来）。
 - **G1 消息页**：三入口卡角标 **4 / 2 / 1**（分别来自接口的三个分类未读数），底 Tab 角标 **7 = 三者之和**（契约变更 #6 端到端跑通）；点点会话行带 ai 小标。
 - **G2 收到的赞和收藏**：抓包确认 `category=1`（契约变更 #7 跑通）；三种子类型文案、未读左侧红点 + 已读整行变淡、右侧笔记封面缩略图、时间「刚刚 / 7小时前 / 12小时前 / 昨天 / 09-12」。
 - **H1 点点空态**：5 条建议问题来自 `GET /api/ai/suggestions`、底部输入条 48 + 「内容由AI生成」声明行、无底 Tab（推入式）。
@@ -128,7 +128,6 @@ cd client
 | D2 关注/取关状态机、D3 发评论/回复成功反馈 | 关注按钮两种形态（详情描边胶囊 / 他人主页通栏）、Toast「回复成功」 |
 | E2–E7 发布全流程 | 相册多选、相机（I4 权限）、E3 文字配图生成、E4 校验、E5-1 提交中、E5-2 发布成功后首页刷新置顶、E7 放弃确认 |
 | F3 / F3-1 / F3-2 编辑资料 | 遮罩输入与选项、仅提交变化字段、头像/背景图先上传再保存 |
-| F5 设置页 | 行距 52、右值灰、底部「切换账号」 |
 | G3 / G4 / G5 / G6 | 评论和@ 的行内回复、新增关注的「回关」、三入口共用的空/加载/失败态、🧹 一键已读 |
 | H3-1 / H3-2 | 三点脉冲、失败时对话流内红色气泡 + 超时文案 |
 | I1 会话过期 | 用 `X-Mock-Fail: 401` 触发：清登录态 + 推入登录页 |
@@ -150,38 +149,37 @@ cd client
 
 ## 8. 图标补齐与图片占位
 
-以下清单按 2026-11-12 当前代码维护。固定图标已补齐；图片占位按场景使用现有素材，不再共用缺失素材图案。
+以下清单随当前代码维护。固定图标已补齐。图片占位按场景使用现有素材。
 
 - **已移除 `ic_placeholder.xml` / `ic_placeholder_illus.xml`**。空态使用 `ic_no_data / ic_no_network / ic_no_msg` 正式插画。
 - 另：**结构性控件已用 Canvas 精确绘制**（`XhsPlusGlyph` ＋ / `XhsCheckCircle` 协议勾选），**不需要替换**；原先同一批就地画的 ☰ / ▶ / 人形已改为矢量资源（`ic_menu` / `ic_play` / `ic_user_circle`），见 §8.1。
 
-**固定图标占位：0 个**（不含图片加载兜底）。2026-10-30 已绘制并接入剩余 21 个槽位，SVG、Android 资源、逐项映射和预览见 [图标交付清单](assets/图标清单-2026-10-30.md)。
+**固定图标占位为 0 个**（不含图片加载兜底）。2026-10-30 新绘的 21 枚图标中，当前使用 11 枚。SVG、Android 资源、逐项映射和预览见 [图标交付清单](assets/图标清单-2026-10-30.md)。
 
-| 位置 | 本轮已接入图标 | 槽位数 |
+| 位置 | 已接入图标 | 槽位数 |
 |------|---------------|--------|
 | `feature/ai/AiComponents.kt` | 语音、复制、踩、重新生成 | 4 |
 | `feature/profile/ProfileDrawer.kt` | 社区公约、退出登录，以及底部夜间模式/二维码/意见反馈候选字形 | 5 |
 | `feature/detail/VideoDetailScreen.kt` | 作者行音乐碟 | 1 |
 | `feature/publish/PublishComponents.kt` | 「写长文」卡片图标 | 1 |
-| `feature/profile/SettingsScreen.kt` | 账号与安全、多语言和翻译、隐私设置、存储空间、内容偏好调节、收货地址、添加小组件、未成年人模式、新功能体验、帮助与客服 | 10 |
 
-抽屉底部三格在代码及归档线框中均无用途定义；本轮只补充候选字形，保持无标签、无点击事件与装饰性语义，不表示已实现对应功能。其余 18 个图标按既有用途接入。
+抽屉底部三格展示装饰性候选字形。其余 8 枚图标按既有用途接入。
 
 **条件触发的图片占位**：头像（含编辑资料的本地头像预览）在加载中、URL/路径为空或解码失败时显示原色 `ic_avatar_fallback`；个人页背景、AI 推荐卡封面与通知缩略图不叠加占位图案。发布页本地媒体缩略图和编辑资料的本地背景预览在加载中或失败时显示淡色 `ic_image`（`XhsColor.Text3`）；视频地址为空时显示 `ic_logo`。通用 `XhsAsyncImage` 仅在显式提供 `fallbackPainter` 时绘制兜底图片。
 
 **死代码清理**：删除 `PlaceholderIconRes`、`showGlyphOnFailure`、`XhsPlaceholderBox`、无调用的 `XhsCoverImage`，以及整个无业务调用方的 `XhsLocalImage.kt`（含 `XhsLocalImage / XhsMediaImage / XhsMediaThumb`）；旧占位资源的审计分类同步移除。
 
-**2026-10-30 已复用 7 个槽位（28 → 21）**：头像相机角标 → `ic_camera`；AI 表情/更多 → `ic_emoji / ic_plus_circle`；抽屉设置/关于我们 → `ic_settings / ic_about`；设置页通用设置/通知设置 → `ic_settings / ic_notify`。沿用各位置原尺寸、颜色和点击行为，未修改 drawable。
+2026-10-30 复用的槽位中，头像相机角标、AI 表情、AI 更多及抽屉关于我们分别使用 `ic_camera`、`ic_emoji`、`ic_plus_circle` 和 `ic_about`。当时的其余 3 个槽位随 F5 和抽屉「设置」入口移除（§17）。
 
 此前清单中的搜索相机/历史删除、消息页创建、个人页搜索及详情分享已使用正式素材；复制小红书号改为点击文字，个人页页签及评论面板的旧图标已取消渲染。
 
-**已有真实素材可直接用**：`ic_home / ic_assistant / ic_notify / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_logo_filled / ic_share / ic_scan / ic_edit / ic_broom / ic_play / ic_menu / ic_user / ic_user_circle / ic_pin_top / ic_notify_mute / ic_camera / ic_emoji / ic_plus_circle / ic_settings / ic_delete / ic_discover / ic_image`。
+**可复用的真实素材**包括 `ic_home / ic_assistant / ic_heart(_filled) / ic_star(_filled) / ic_comment / ic_search / ic_more / ic_close / ic_chevron_left / ic_chevron_right / ic_publish / ic_live / ic_male / ic_female / ic_about / ic_red / ic_logo / ic_logo_filled / ic_share / ic_scan / ic_edit / ic_broom / ic_play / ic_menu / ic_user / ic_user_circle / ic_pin_top / ic_notify_mute / ic_camera / ic_emoji / ic_plus_circle / ic_delete / ic_discover / ic_image`。
 
 **2026-11-12 LOGO 资源拆分**：原 `ic_logo.png` 重命名为 `ic_logo_filled.png`，登录/注册页及文档引用同步迁移；新 `ic_logo.xml` 复制自 `ic_launcher_foreground.xml`，仅将默认填充改为常规图标黑色 `#FF000000`，保留启动前景的路径、108 视口、分组变换与留白（品牌资源例外）。
 
 验证：`:app:compileDebugKotlin :app:assembleDebug --offline` 通过，零编译 error / warning；已核对包含分组变换的等大对照图，原 PNG 与启动前景的 SHA256 均未变化，新矢量仅默认颜色不同。Debug APK 已刷新至 `dist/xiaohongshu-clone-debug.apk` 并核对 SHA256，未进行真机验收。
 
-本轮新增的 21 枚图标见上述清单，源 SVG 位于 `docs/assets/icons-2026-10-30/`，同名 VectorDrawable 位于 `app/src/main/res/drawable/`；均为 24 视口、1.8dp 圆角描边，图形外缘长边约 19.5dp。
+2026-10-30 新绘图标的源 SVG 位于 `docs/assets/icons-2026-10-30/`。仍在使用的图标在 `app/src/main/res/drawable/` 有同名 VectorDrawable，均为 24 视口、1.8dp 圆角描边，图形外缘长边约 19.5dp。
 
 > 2026-10-18 更新：新增两个 iconfont **实心**字形（24 视口 / 占位按长边 19.5dp）——`ic_pin_top`（置顶：上箭头 + 顶横条）已接线到 `MessageRoutes.kt` 会话行的 12dp 置顶位，上表对应条目已移除；`ic_notify_mute`（消息免打扰：带斜杠的铃铛）**当前无调用方**，留作备用（会话模型尚无免打扰字段）。源 SVG 为 `docs/assets/top-filling.svg` 与 `docs/assets/消息免打扰.svg`（后者转换时用了临时 ASCII 副本，仓库只保留中文名源）。
 
@@ -309,3 +307,18 @@ cd client
 - 已知取舍：放弃用单一缺失素材图案提示所有图片问题，改为按场景选择已有资源；通用 `XhsAsyncImage` 默认只保留容器，显式传入 `fallbackPainter` 时在尚无位图的状态显示兜底图片。
 - 删除两份旧占位资源、`PlaceholderIconRes` 和 `showGlyphOnFailure`，清除未使用的 `XhsPlaceholderBox`、`XhsCoverImage` 与 `XhsLocalImage.kt` 及其媒体包装组件；同步清理调用参数、文档规则和审计分类。
 - 验证：`:app:compileDebugKotlin :app:assembleDebug --offline` 通过，零编译 error / warning；源码无旧占位引用，APK 资源表确认旧资源已移除、替代资源均已打包。Debug APK 已刷新至 `dist/xiaohongshu-clone-debug.apk`，与构建产物 SHA256 一致。未运行界面测试或进行真机验收。
+
+---
+
+## 17. 移除独立设置页（2026-11-22）
+
+删除 F5 页面、导航和个人主页抽屉的「设置」入口，并清理专用的设计 Token 和 12 个 Android 图标资源。
+
+### 已知取舍
+
+设置分类和「切换账号」占位随 F5 移除。退出登录由 F4 抽屉直接打开 F6 确认弹层，确认后回到游客首页（A1）。
+
+### 验证
+
+- `:app:compileDebugKotlin :app:assembleDebug --offline` 通过，零编译错误和警告。源码引用检查与 `git diff --check` 通过。
+- APK 资源表已确认移除 12 个图标，抽屉的 6 个图标均已打包。已刷新 `dist/xiaohongshu-clone-debug.apk` 并核对构建产物的 SHA256。

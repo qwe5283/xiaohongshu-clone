@@ -171,9 +171,6 @@ object Dimens {
     /** 会话项 72。 */
     val rowConversation = 72.dp
 
-    /** 设置行 52。 */
-    val rowSetting = 52.dp
-
     /** 编辑资料行 48。 */
     val rowEditProfile = 48.dp
 
@@ -248,10 +245,6 @@ object Dimens {
     val editLabelWidth = 89.dp
     val editLabelStart = 32.dp
     val editValueStart = 137.dp
-
-    /** F5 设置：label 15sp @68、icon 24 @28。 */
-    val settingLabelStart = 68.dp
-    val settingIconStart = 28.dp
 
     /** F4 抽屉宽 308、项 284×52 @12（icon 24 @28、字 @64）、分组隔 8、底部三宫格 94.6×72。 */
     val drawerWidth = 308.dp

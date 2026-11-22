@@ -23,14 +23,13 @@ import com.xiaohongshu.app.navigation.AppNavigator
 import kotlinx.coroutines.launch
 
 /**
- * WS-Profile 的四个入口（F1–F6），全部由本文件暴露；内容层在同目录的 Screen 文件里。
+ * WS-Profile 的页面入口。
  *
  * | 入口 | 屏号 | 实现文件 |
  * |------|------|----------|
  * | [MyProfileRoute] | F1 + F4 + F6 | `ProfileScreen.kt` / `ProfileDrawer.kt` |
  * | [UserProfileRoute] | F2 | `ProfileScreen.kt` |
  * | [EditProfileRoute] | F3 + F3-1 + F3-2 | `EditProfileScreen.kt` |
- * | [SettingsRoute] | F5 + F6 | `SettingsScreen.kt` |
  *
  * 公共件：`ProfileCommon.kt`（页签行 / 本地选图 / F6 弹层）、
  * `ProfileHeader.kt`（F1/F2 共用资料头）。
@@ -270,25 +269,5 @@ fun EditProfileRoute(navigator: AppNavigator) {
             genderSheet = false
         },
         onDismiss = { genderSheet = false },
-    )
-}
-
-/** F5 设置（推入式）；子页均为占位，底部「退出登录」→ F6。 */
-@Composable
-fun SettingsRoute(navigator: AppNavigator) {
-    var logoutVisible by remember { mutableStateOf(false) }
-
-    SettingsScreen(
-        onBack = navigator::back,
-        onLogoutClick = { logoutVisible = true },
-    )
-
-    ProfileLogoutSheet(
-        visible = logoutVisible,
-        onDismiss = { logoutVisible = false },
-        onLoggedOut = {
-            logoutVisible = false
-            navigator.toMain()
-        },
     )
 }

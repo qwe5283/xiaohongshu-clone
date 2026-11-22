@@ -27,7 +27,6 @@ import com.xiaohongshu.app.feature.detail.VideoDetailRoute
 import com.xiaohongshu.app.feature.message.ChatRoute
 import com.xiaohongshu.app.feature.message.NotificationListRoute
 import com.xiaohongshu.app.feature.profile.EditProfileRoute
-import com.xiaohongshu.app.feature.profile.SettingsRoute
 import com.xiaohongshu.app.feature.profile.UserProfileRoute
 import com.xiaohongshu.app.feature.publish.PublishFormRoute
 import com.xiaohongshu.app.feature.publish.WriteTextRoute
@@ -106,7 +105,7 @@ fun AppNavHost(container: AppContainer) {
     NavHost(
         navController = navController,
         startDestination = Routes.MAIN,
-        // 全部推入页（Auth/搜索/详情/发布/主页/设置/通知/点点）统一「右进左出 + 旧页 1/4 视差」，
+        // 推入页统一「右进左出 + 旧页 1/4 视差」，
         // 返回自动反向。个别页面要换观感时，在该 composable 上覆盖这四个参数即可。
         enterTransition = { pushEnter() },
         exitTransition = { pushExit() },
@@ -173,7 +172,6 @@ fun AppNavHost(container: AppContainer) {
         }
 
         composable(Routes.EDIT_PROFILE) { EditProfileRoute(navigator) }
-        composable(Routes.SETTINGS) { SettingsRoute(navigator) }
 
         composable(
             route = Routes.NOTIFICATIONS_PATTERN,
@@ -282,10 +280,6 @@ private class NavControllerNavigator(
 
     override fun toEditProfile() {
         navigateChecked(Routes.EDIT_PROFILE)
-    }
-
-    override fun toSettings() {
-        navigateChecked(Routes.SETTINGS)
     }
 
     override fun toNotifications(category: NotificationCategory) {

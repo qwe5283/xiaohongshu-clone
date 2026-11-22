@@ -323,7 +323,7 @@ private fun previewOptions(): BitmapFactory.Options = BitmapFactory.Options().ap
     inSampleSize = PREVIEW_SAMPLE_SIZE
 }
 
-// ---------------------------------------------------------------- F6 退出登录确认（F4 / F5 共用）
+// ---------------------------------------------------------------- F6 退出登录确认
 
 /**
  * F6 退出登录确认（遮罩 + 底部确认/取消，与 E7/G6 同款结构 → `XhsConfirmSheet`）。

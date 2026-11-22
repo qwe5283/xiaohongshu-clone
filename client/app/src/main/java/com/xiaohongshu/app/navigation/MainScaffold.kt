@@ -121,17 +121,12 @@ fun MainScaffold(navigator: AppNavigator) {
         visible = drawerOpen,
         user = session.user,
         onDismiss = { drawerOpen = false },
-        onSettings = {
-            drawerOpen = false
-            navigator.toSettings()
-        },
         onLogout = {
             drawerOpen = false
             logoutVisible = true
         },
     )
 
-    // F6 退出登录确认（F4 / F5 共用的同一弹层；F5 推入页上有自己的实例）
     ProfileLogoutSheet(
         visible = logoutVisible,
         onDismiss = { logoutVisible = false },

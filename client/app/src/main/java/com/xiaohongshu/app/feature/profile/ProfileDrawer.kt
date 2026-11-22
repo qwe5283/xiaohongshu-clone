@@ -42,7 +42,6 @@ internal fun ProfileDrawer(
     visible: Boolean,
     user: User,
     onDismiss: () -> Unit,
-    onSettings: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -87,8 +86,6 @@ internal fun ProfileDrawer(
                         .fillMaxWidth()
                         .padding(horizontal = Dimens.s12),
                 ) {
-                    DrawerItem(label = "设置", iconRes = R.drawable.ic_settings, onClick = onSettings)
-                    XhsDivider()
                     DrawerItem(label = "社区公约", iconRes = R.drawable.ic_community_rules, onClick = {})
                     XhsDivider()
                     DrawerItem(label = "关于我们", iconRes = R.drawable.ic_about, onClick = {})

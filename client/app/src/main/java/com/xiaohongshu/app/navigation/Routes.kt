@@ -36,9 +36,6 @@ object Routes {
     /** F3 编辑资料页。 */
     const val EDIT_PROFILE = "profile/edit"
 
-    /** F5 设置页。 */
-    const val SETTINGS = "settings"
-
     /** G2/G3/G4 通知列表（按入口分类）。 */
     const val NOTIFICATIONS = "notifications"
 

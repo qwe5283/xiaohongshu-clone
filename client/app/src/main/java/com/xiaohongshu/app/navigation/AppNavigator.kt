@@ -48,9 +48,6 @@ interface AppNavigator {
     /** F3 编辑资料。 */
     fun toEditProfile()
 
-    /** F5 设置。 */
-    fun toSettings()
-
     /** G2/G3/G4 通知列表。 */
     fun toNotifications(category: NotificationCategory)
 
