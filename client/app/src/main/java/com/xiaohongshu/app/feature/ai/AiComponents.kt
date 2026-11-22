@@ -420,12 +420,6 @@ internal fun AiInputBar(
                     .padding(horizontal = Dimens.s12),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                AiInputIcon(iconRes = R.drawable.ic_voice, contentDescription = "语音")
-                AiInputIcon(iconRes = R.drawable.ic_emoji, contentDescription = "表情")
-                AiInputIcon(iconRes = R.drawable.ic_plus_circle, contentDescription = "更多")
-
-                Spacer(modifier = Modifier.width(Dimens.s8))
-
                 Box(modifier = Modifier.weight(1f)) {
                     if (input.isEmpty()) {
                         Text(
